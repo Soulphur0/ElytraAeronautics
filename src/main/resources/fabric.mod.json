@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "elytra_aeronautics",
+  "version": "${version}",
+
+  "name": "Elytra aeronautics",
+  "description": "Description is WIP",
+  "authors": [
+    "Soulphur"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/modid/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.github.Soulphur0.ElytraAeronautics"
+    ],
+    "modmenu": [
+      "com.github.Soulphur0.config.ModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "elytraaeronautics.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "minecraft": "1.18.x",
+    "java": ">=17"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
