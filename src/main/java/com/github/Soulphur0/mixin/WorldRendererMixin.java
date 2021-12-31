@@ -77,8 +77,10 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
             // Render mode info
             renderMode = layer.getRenderMode();
             float renderDistance = layer.getCloudRenderDistance();
+            boolean usingCustomRenderDistance = false;
             lodRenderMode = layer.getLodRenderMode();
             float lodRenderDistance = layer.getLodRenderDistance();
+            boolean usingCustomLODRenderDistance = false;
 
             // Calculate relative distances
             if (counter == 0)
@@ -94,27 +96,29 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
 
             // Set which relative distances to use
             switch (renderMode){
-                case NEVER_RENDER -> renderDistance = Float.MIN_VALUE;
+                case NEVER_RENDER -> renderDistance = -1000000.0F;
                 case TWO_IN_ADVANCE -> renderDistance = distanceFromPreviousPreviousLayer;
                 case ONE_IN_ADVANCE -> renderDistance = distanceFromLastLayer;
-                case CUSTOM_ALTITUDE -> renderDistance = layer.getCloudRenderDistance();
+                case CUSTOM_ALTITUDE -> usingCustomRenderDistance = true;
                 case ALWAYS_RENDER -> renderDistance = infinity;
             }
 
             switch (lodRenderMode){
                 case TWO_IN_ADVANCE -> lodRenderDistance = distanceFromPreviousPreviousLayer;
                 case ONE_IN_ADVANCE -> lodRenderDistance = distanceFromLastLayer;
-                case CUSTOM_ALTITUDE -> renderDistance = layer.getLodRenderDistance();
+                case CUSTOM_ALTITUDE -> usingCustomLODRenderDistance = true;
                 case ALWAYS_RENDER -> lodRenderDistance = infinity;
             }
 
             // Call render method
-            renderCloudLayer(horizontalDisplacement, verticalDisplacement, cloudType, renderDistance, lodRenderDistance);
+            renderCloudLayer(horizontalDisplacement, verticalDisplacement, cloudType, renderDistance, lodRenderDistance, usingCustomRenderDistance, usingCustomLODRenderDistance, layer.getAltitude());
             counter++;
         }
     }
 
-    private void renderCloudLayer(float horizontalDisplacement, float verticalDisplacement, CloudTypes cloudType, float renderDistance, float highLODDistance){
+    private void renderCloudLayer(float horizontalDisplacement, float verticalDisplacement, CloudTypes cloudType, float renderDistance, float highLODDistance,
+                                  boolean customRenderDistance, boolean customLODRenderDistance, float cloudAltitude) // Parameters used only when customRenderAltitude is being used.
+    {
         // ? CONSTANTS
         float k = (float)MathHelper.floor(renderCloudsX) * 0.00390625F;
         float l = (float)MathHelper.floor(renderCloudsZ) * 0.00390625F;
@@ -136,11 +140,11 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
         playerRelativeDistanceFromCloudLayer += verticalDisplacement;
         float cloudThickness;
 
-        // ! Make this an optional setting (Name: Smooth LODs - Description: gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources.)
-        if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer > 100){
+        // ! Make this an optional setting (Name: Smooth LODs - Description: gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources. Clouds begin to puff up at 100~ blocks of distance from their layer.)
+        if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer > 95){
             cloudThickness = 0.0F;
-        } else if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer < 100 && playerRelativeDistanceFromCloudLayer > 0){
-            cloudThickness = -0.04F*playerRelativeDistanceFromCloudLayer+4;
+        } else if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer < 95 && playerRelativeDistanceFromCloudLayer > 5){
+            cloudThickness = -0.042105263157894736F*playerRelativeDistanceFromCloudLayer+4.2105263157894735F;
         } else {
             cloudThickness = 4.0F;
         }
@@ -149,8 +153,22 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
         boolean fancyClouds = cloudType.equals(CloudTypes.FANCY);
         boolean fastClouds = cloudType.equals(CloudTypes.FAST);
         boolean lodClouds = cloudType.equals(CloudTypes.LOD);
-        boolean withinRenderDistance = playerRelativeDistanceFromCloudLayer < renderDistance;
-        boolean withinHighLODDistance = playerRelativeDistanceFromCloudLayer < highLODDistance;
+
+        // Check if the player is withing the render distance either if custom render altitude is being used or not.
+        boolean withinRenderDistance;
+        boolean withinHighLODDistance;
+        if (customRenderDistance){
+            withinRenderDistance = playerRelativeDistanceFromCloudLayer < (cloudAltitude-renderDistance);
+        } else {
+            withinRenderDistance = playerRelativeDistanceFromCloudLayer < renderDistance;
+        }
+
+        if (customLODRenderDistance){
+            withinHighLODDistance = playerRelativeDistanceFromCloudLayer < (cloudAltitude-highLODDistance);
+        } else {
+            withinHighLODDistance = playerRelativeDistanceFromCloudLayer < highLODDistance;
+        }
+
 
         // * RENDER FANCY clouds either if (fancy clouds are enabled and withing render range) or (within high LOD altitude range and maximum LOD render distance).
         if (fancyClouds && withinRenderDistance || lodClouds && withinHighLODDistance){

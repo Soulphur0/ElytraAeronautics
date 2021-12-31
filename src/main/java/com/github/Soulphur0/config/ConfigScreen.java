@@ -340,9 +340,9 @@ public class ConfigScreen {
 
             // Render distance
             layerAttributesList.get(layerNum).add(entryBuilder
-                    .startFloatField(new TranslatableText("Custom render altitude"), 0.0F)
+                    .startFloatField(new TranslatableText("Custom render altitude"), layer.getCloudRenderDistance())
                     .setTooltip(new TranslatableText("This value is only used if \"Custom altitude\" was selected as the render mode."))
-                    .setDefaultValue(layer.getCloudRenderDistance())
+                    .setDefaultValue(0.0F)
                     .setSaveConsumer(layer::setCloudRenderDistance)
                     .build());
 
@@ -382,7 +382,7 @@ public class ConfigScreen {
             layerAttributesList.get(layerNum).add(entryBuilder
                     .startFloatField(new TranslatableText("Custom LOD render altitude"), layer.getLodRenderDistance())
                     .setTooltip(new TranslatableText("This value is only used if \"Custom altitude\" was selected as the LOD render mode."))
-                    .setDefaultValue(layer.getLodRenderDistance())
+                    .setDefaultValue(0.0F)
                     .setSaveConsumer(layer::setLodRenderDistance)
                     .build());
 
