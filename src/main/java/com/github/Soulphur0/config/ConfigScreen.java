@@ -1,7 +1,10 @@
 package com.github.Soulphur0.config;
 
 import com.github.Soulphur0.ElytraAeronautics;
-import me.shedaniel.clothconfig2.api.*;
+import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
+import me.shedaniel.clothconfig2.api.ConfigBuilder;
+import me.shedaniel.clothconfig2.api.ConfigCategory;
+import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.DropdownMenuBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -40,6 +43,7 @@ public class ConfigScreen {
         // ? Set what to do when the config screen is saved.
         builder.setSavingRunnable(() ->{
             ConfigFileWriter.writeToFile(eanConfigFile);
+            resetToDefault = false;
             ElytraAeronautics.readConfigFileCue_WorldRendererMixin = true;
             ElytraAeronautics.readConfigFileCue_LivingEntityMixin = true;
         });
@@ -50,9 +54,14 @@ public class ConfigScreen {
 
     // * [Elytra flight] methods and variables
     private void buildElytraFlightCategory(){
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed constant " + "(Estimated max speed at max altitude and 0 degree pitch = "+ Math.floor(31.7966+0.560503*Math.exp(679.292*eanConfigFile.getSpeedConstantAdditionalValue())) +"m/s)"), eanConfigFile.getSpeedConstantAdditionalValue())
+        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Enable elytra extra behaviour"), eanConfigFile.isElytraExtraBehaviour())
+                .setTooltip(new TranslatableText("Set to true if you want to elytra flight be faster at higher altitudes as this menu's settings dictate."))
+                .setSaveConsumer(eanConfigFile::setElytraExtraBehaviour)
+                .build());
+
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed constant (Change with caution) "), eanConfigFile.getSpeedConstantAdditionalValue())
                 .setDefaultValue(0.0088D)
-                .setTooltip(new TranslatableText("WARNINIG: Proceed with caution as even the slightest increase to this constant may cause flight speed to rapidly spike up! Re-enter this menu to update the maximum speed estimate shown in this label."))
+                .setTooltip(new TranslatableText("Estimated max speed at max altitude and 0 degree pitch = " + Math.floor(31.7966+0.560503*Math.exp(679.292*eanConfigFile.getSpeedConstantAdditionalValue())) +"m/s. Re-enter this menu to update the maximum speed estimate shown in this tooltip."))
                 .setSaveConsumer(newValue ->{
                     eanConfigFile.setSpeedConstantAdditionalValue(newValue);
                 })
@@ -64,7 +73,6 @@ public class ConfigScreen {
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve beginning"), eanConfigFile.getCurveStart())
                 .setDefaultValue(0.0D)
-                .setMax(eanConfigFile.getCurveMiddle())
                 .setTooltip(new TranslatableText("Altitude at which flight speed start to increase very very slightly."))
                 .setSaveConsumer(newValue ->{
                     eanConfigFile.setCurveStart(newValue);
@@ -73,8 +81,6 @@ public class ConfigScreen {
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve middle point"), eanConfigFile.getCurveMiddle())
                 .setDefaultValue(250.0D)
-                .setMin(eanConfigFile.getCurveStart())
-                .setMax(eanConfigFile.getCurveEnd())
                 .setTooltip(new TranslatableText("Altitude at which flight speed starts to increase exponentially."))
                 .setSaveConsumer(newValue ->{
                     eanConfigFile.setCurveMiddle(newValue);
@@ -83,7 +89,6 @@ public class ConfigScreen {
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve end"), eanConfigFile.getCurveEnd())
                 .setDefaultValue(1000.0D)
-                .setMin(eanConfigFile.getCurveMiddle())
                 .setTooltip(new TranslatableText("Altitude at which flight speed stops to increase (maximum flight speed is achieved)."))
                 .setSaveConsumer(newValue ->{
                     eanConfigFile.setCurveEnd(newValue);
@@ -92,6 +97,8 @@ public class ConfigScreen {
     }
 
     // * [Cloud category] methods and variables
+    boolean resetToDefault = false;
+
     private void buildCloudCategory(EanConfigFile eanConfigFile){
         // ? Get cloud layer list
         List<CloudLayer> cloudLayerList = eanConfigFile.getCloudLayerList();
@@ -106,10 +113,8 @@ public class ConfigScreen {
                 .setDefaultValue(true).setTooltip(new TranslatableText("By resetting to the default preset, cloud layers will be placed at the flight-speed-curve's middle and highest points."))
                 .setSaveConsumer(newValue->{
                     if (newValue){
-                        cloudLayerList.clear();
-                        eanConfigFile.setLayerAmount(2);
-                        cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveMiddle(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0));
-                        cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveEnd(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0));
+                        resetToDefault = true;
+                        updateLayerListEntries(cloudLayerList,-1);
                     }
                 })
                 .build());
@@ -124,9 +129,11 @@ public class ConfigScreen {
                 .setTooltip(new TranslatableText("This value determines the amount of cloud layers there are. Besides the vanilla clouds. To make new layers show up in the config, re-enter the menu without restarting. For changes to apply in-game however, restarting is necessary."))
                 .setDefaultValue(2)
                 .setSaveConsumer(newValue -> {
-                    // Save layer amount in class field and add all new layers (or remove exceeding ones) from the cloud layer list upon save.
-                    eanConfigFile.setLayerAmount(newValue);
-                    updateLayerListEntries(cloudLayerList, -1);
+                    if (newValue != eanConfigFile.getLayerAmount()){
+                        // Save layer amount in class field and add all new layers (or remove exceeding ones) from the cloud layer list upon save.
+                        eanConfigFile.setLayerAmount(newValue);
+                        updateLayerListEntries(cloudLayerList, -1);
+                    }
                 })
                 .build());
 
@@ -209,7 +216,7 @@ public class ConfigScreen {
                             } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
                                 return new TranslatableText("ALWAYS_RENDER");
                             }
-                            return new TranslatableText("NEVER_RENDER");
+                            return new TranslatableText("UNKNOWN RENDER MODE");
                         }))
                 .setDefaultValue(CloudRenderModes.ALWAYS_RENDER)
                 .setTooltip(new TranslatableText("This value determines when a cloud layer begins to render."))
@@ -243,7 +250,7 @@ public class ConfigScreen {
                             } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
                                 return new TranslatableText("ALWAYS_RENDER");
                             }
-                            return new TranslatableText("NEVER_RENDER");
+                            return new TranslatableText("UNKNOWN RENDER MODE");
                         }))
                 .setDefaultValue(CloudRenderModes.TWO_IN_ADVANCE)
                 .setTooltip(new TranslatableText("This value determines when a cloud layer begins to render in high level of detail. It is only used if the cloud type is set to LOD."))
@@ -253,6 +260,19 @@ public class ConfigScreen {
                     if (newValue != eanConfigFile.getLodRenderMode()) {
                         eanConfigFile.setLodRenderMode(newValue);
                         updateLayerListEntries(cloudLayerList, 3);
+                    }
+                })
+                .build());
+
+        // Use smooth LODs
+        cloudSettings.addEntry(entryBuilder
+                .startBooleanToggle(new TranslatableText("Smooth LODs"), eanConfigFile.isUseSmoothLODs())
+                .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources. Clouds begin to puff up at 100~ blocks of distance from their layer."))
+                .setDefaultValue(false)
+                .setSaveConsumer(newValue -> {
+                    if (newValue != eanConfigFile.isUseSmoothLODs()){
+                        eanConfigFile.setUseSmoothLODs(newValue);
+                        updateLayerListEntries(cloudLayerList,4);
                     }
                 })
                 .build());
@@ -386,6 +406,14 @@ public class ConfigScreen {
                     .setSaveConsumer(layer::setLodRenderDistance)
                     .build());
 
+            // Use smooth LODs
+            layerAttributesList.get(layerNum).add(entryBuilder
+                    .startBooleanToggle(new TranslatableText("Smooth LODs"), layer.isUseSmoothLODs())
+                    .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources. Clouds begin to puff up at 100~ blocks of distance from their layer."))
+                    .setDefaultValue(false)
+                    .setSaveConsumer(layer::setUseSmoothLODs)
+                    .build());
+
             // Add to the counter to list next layer's attributes.
             layerNum++;
         }
@@ -406,6 +434,15 @@ public class ConfigScreen {
 
     // Add empty layers if the layer amount setting is greater than the actual layer amount. Or remove layers if it is lower.
     private void updateLayerListEntries(List<CloudLayer> cloudLayerList, int parameterToChange){
+        // * Reset to default
+        if (resetToDefault){
+            eanConfigFile.setLayerAmount(2);
+            cloudLayerList.clear();
+            cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveMiddle(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0, false));
+            cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveEnd(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0, false));
+            return;
+        }
+
         // * Add to or subtract from the cloud layer list if the layer amount value has changed.
         int layerAmount = eanConfigFile.getLayerAmount();
         int layerAmountDifference = layerAmount - cloudLayerList.size();
@@ -424,15 +461,13 @@ public class ConfigScreen {
             // Add a layer for each layer there's missing from the total amount.
             for(int i = 0; i<layerAmountDifference;i++){
                 lastLayerAltitude += eanConfigFile.getLayerDistance();
-                cloudLayerList.add(new CloudLayer(lastLayerAltitude, eanConfigFile.getCloudType(), eanConfigFile.getRenderMode(), 0.0F, eanConfigFile.getLodRenderMode(), 0.0F));
+                cloudLayerList.add(new CloudLayer(lastLayerAltitude, eanConfigFile.getCloudType(), eanConfigFile.getRenderMode(), 0.0F, eanConfigFile.getLodRenderMode(), 0.0F, eanConfigFile.isUseSmoothLODs()));
             }
         } else if (layerAmountDifference < 0){
             while (cloudLayerList.size()>layerAmount) {
                 cloudLayerList.remove(cloudLayerList.size()-1);
             }
         }
-
-        System.out.println("Updated layers, current layer amount = " + cloudLayerList.size());
 
         // * Change a parameter of every cloud layer if it has been indicated.
         List<CloudLayer> auxList = new ArrayList<>();
@@ -441,28 +476,35 @@ public class ConfigScreen {
                 float altitude = eanConfigFile.getStackingAltitude();
                 for (CloudLayer layer : cloudLayerList) {
                     altitude += eanConfigFile.getLayerDistance();
-                    auxList.add(new CloudLayer(altitude, layer.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance()));
+                    auxList.add(new CloudLayer(altitude, layer.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance(), layer.isUseSmoothLODs()));
                 }
                 cloudLayerList.clear();
                 cloudLayerList.addAll(auxList);
             }
             case 1 -> {
                 for (CloudLayer layer : cloudLayerList) {
-                    auxList.add(new CloudLayer(layer.getAltitude(), eanConfigFile.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance()));
+                    auxList.add(new CloudLayer(layer.getAltitude(), eanConfigFile.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance(), layer.isUseSmoothLODs()));
                 }
                 cloudLayerList.clear();
                 cloudLayerList.addAll(auxList);
             }
             case 2 -> {
                 for (CloudLayer layer : cloudLayerList) {
-                    auxList.add(new CloudLayer(layer.getAltitude(), layer.getCloudType(), eanConfigFile.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance()));
+                    auxList.add(new CloudLayer(layer.getAltitude(), layer.getCloudType(), eanConfigFile.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance(), layer.isUseSmoothLODs()));
                 }
                 cloudLayerList.clear();
                 cloudLayerList.addAll(auxList);
             }
             case 3 -> {
                 for (CloudLayer layer : cloudLayerList) {
-                    auxList.add(new CloudLayer(layer.getAltitude(), layer.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), eanConfigFile.getLodRenderMode(), layer.getLodRenderDistance()));
+                    auxList.add(new CloudLayer(layer.getAltitude(), layer.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), eanConfigFile.getLodRenderMode(), layer.getLodRenderDistance(), layer.isUseSmoothLODs()));
+                }
+                cloudLayerList.clear();
+                cloudLayerList.addAll(auxList);
+            }
+            case 4 ->{
+                for (CloudLayer layer : cloudLayerList) {
+                    auxList.add(new CloudLayer(layer.getAltitude(), layer.getCloudType(), layer.getRenderMode(), layer.getCloudRenderDistance(), layer.getLodRenderMode(), layer.getLodRenderDistance(), eanConfigFile.isUseSmoothLODs()));
                 }
                 cloudLayerList.clear();
                 cloudLayerList.addAll(auxList);

@@ -6,6 +6,7 @@ import java.util.List;
 
 public class EanConfigFile implements Serializable {
     // Elytra flight
+    boolean elytraExtraBehaviour;
     private double speedConstantAdditionalValue;
 
     private double curveStart;
@@ -21,6 +22,7 @@ public class EanConfigFile implements Serializable {
     CloudTypes cloudType;
     CloudRenderModes renderMode;
     CloudRenderModes lodRenderMode;
+    boolean useSmoothLODs;
 
     List<CloudLayer> cloudLayerList = new ArrayList<>();
 
@@ -93,7 +95,6 @@ public class EanConfigFile implements Serializable {
         this.stackingAltitude = stackingAltitude;
     }
 
-    // ? General configuration methods (Setters with extra behaviour)
     public void setLayerAmount(int layerAmount) {
         this.layerAmount = layerAmount;
     }
@@ -102,6 +103,23 @@ public class EanConfigFile implements Serializable {
         this.layerDistance = distance;
     }
 
+    public boolean isUseSmoothLODs() {
+        return useSmoothLODs;
+    }
+
+    public void setUseSmoothLODs(boolean useSmoothLODs) {
+        this.useSmoothLODs = useSmoothLODs;
+    }
+
+    public boolean isElytraExtraBehaviour() {
+        return elytraExtraBehaviour;
+    }
+
+    public void setElytraExtraBehaviour(boolean elytraExtraBehaviour) {
+        this.elytraExtraBehaviour = elytraExtraBehaviour;
+    }
+
+    // ? General configuration methods (Setters with extra behaviour)
     public void setCloudType(CloudTypes cloudType){
         this.cloudType = cloudType;
 
@@ -124,17 +142,11 @@ public class EanConfigFile implements Serializable {
         }
     }
 
-    // ? Preset setup methods
-    public void applyPreset(CloudPresets preset){
-        switch (preset){
-            case DEFAULT -> defaultPreset();
-            case BLANKET_CLOUDS -> System.out.println("Yet to be implemented.");
-            case THICK_CLOUDS -> System.out.println("Yet to be implemented too.");
-        }
-    }
+    // ? Preset setup method
 
     public void defaultPreset(){
         // Elytra flight configuration
+        elytraExtraBehaviour = true;
         speedConstantAdditionalValue = 0.0088D;
         curveStart = 0.0D;
         curveMiddle = 250.0D;
@@ -147,10 +159,11 @@ public class EanConfigFile implements Serializable {
         cloudType = CloudTypes.LOD;
         renderMode = CloudRenderModes.ALWAYS_RENDER;
         lodRenderMode = CloudRenderModes.TWO_IN_ADVANCE;
+        useSmoothLODs = false;
 
         cloudLayerList = new ArrayList<>();
-        cloudLayerList.add(new CloudLayer(250.0F, CloudTypes.LOD, CloudRenderModes.ALWAYS_RENDER, 0.0F, CloudRenderModes.ONE_IN_ADVANCE, 0.0F));
-        cloudLayerList.add(new CloudLayer(1000.0F, CloudTypes.LOD, CloudRenderModes.ALWAYS_RENDER, 0.0F, CloudRenderModes.ONE_IN_ADVANCE, 0.0F));
+        cloudLayerList.add(new CloudLayer(250.0F, CloudTypes.LOD, CloudRenderModes.ALWAYS_RENDER, 0.0F, CloudRenderModes.ONE_IN_ADVANCE, 0.0F, false));
+        cloudLayerList.add(new CloudLayer(1000.0F, CloudTypes.LOD, CloudRenderModes.ALWAYS_RENDER, 0.0F, CloudRenderModes.ONE_IN_ADVANCE, 0.0F, false));
     }
 
     // ? Initialize method

@@ -3,6 +3,7 @@ package com.github.Soulphur0.mixin;
 import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.ConfigFileReader;
 import com.github.Soulphur0.config.EanConfigFile;
+import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -39,52 +40,25 @@ public abstract class LivingEntityMixin extends Entity {
             ElytraAeronautics.readConfigFileCue_LivingEntityMixin = false;
         }
 
-        final double maxAddedMultiplier = configFile.getSpeedConstantAdditionalValue(); // 0.007875=defalut 0.0088=257ms 0.009=310ms
+        final double maxAddedMultiplier;
+        if (configFile.isElytraExtraBehaviour())
+            maxAddedMultiplier = configFile.getSpeedConstantAdditionalValue(); // 0.007875=defalut 0.0088=257ms 0.009=310ms
+        else
+            maxAddedMultiplier = 0.0D;
+
         Vec3d positionVector = super.getPos();
         double playerAltitude = positionVector.y;
         double divider = calcDivider(playerAltitude, configFile.getCurveStart(), configFile.getCurveMiddle(), configFile.getCurveEnd());
-        return movementVector.multiply(0.9900000095367432D + maxAddedMultiplier/divider, 0.9800000190734863D, 0.9900000095367432D + maxAddedMultiplier/divider);
-    }
-
-    private double getFirstCurveDivider(double curveStart, double curveEnd, double altitude){
-        // Curve's Limit points
-        double pointA_X = curveStart;
-        double pointA_Y = 10; // Sqr(100) -> double
-
-        double pointB_X = curveEnd;
-        double pointB_Y = 1.118033988749895; // Sqr(1.25) -> double
-
-        // Calc the curve's slope and intercept
-        double slope = (pointB_Y-pointA_Y)/(pointB_X-pointA_X);
-        double intercept = 1 - slope*curveEnd;
-
-        // Return the equation's value squared
-        return Math.pow(slope*altitude+intercept,2);
-    }
-
-    private double getSecondCurveDivider(double curveStart, double curveEnd, double altitude){
-        // Curve's Limit points
-        double pointA_X = curveStart;
-        double pointA_Y = 1.118033988749895; // Sqr(1.25) -> double
-
-        double pointB_X = curveEnd;
-        double pointB_Y = 1;
-
-        // Calc the curve's slope and intercept
-        double slope = (pointB_Y-pointA_Y)/(pointB_X-pointA_X);
-        double intercept = 1 - slope*curveEnd;
-
-        // Return the equation's value squared
-        return Math.pow(slope*altitude+intercept,2);
+        return movementVector.multiply(0.9900000095367432D + maxAddedMultiplier/divider, 0.9800000190734863D + maxAddedMultiplier/divider, 0.9900000095367432D + maxAddedMultiplier/divider);
     }
 
     private double calcDivider(double altitude, double curveStart, double inflectionPoint, double curveEnd){
         if (altitude < curveStart)
             return Double.MAX_VALUE;
         else if (altitude > curveStart && altitude < inflectionPoint)
-            return getFirstCurveDivider(curveStart,inflectionPoint,altitude);
+            return Math.pow(EanMath.getLinealValue(curveStart,10 /* Sqr(100)*/,inflectionPoint, 1.118033988749895 /* Sqr(1.25)*/, altitude),2);
         else if (altitude > inflectionPoint && altitude < curveEnd)
-            return getSecondCurveDivider(inflectionPoint,curveEnd,altitude);
+            return Math.pow(EanMath.getLinealValue(inflectionPoint,1.118033988749895 /* Sqr(1.25)*/,curveEnd, 1, altitude),2);
         else
             return 1;
     }

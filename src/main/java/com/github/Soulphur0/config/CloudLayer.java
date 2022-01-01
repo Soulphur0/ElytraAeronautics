@@ -12,15 +12,17 @@ public class CloudLayer implements Serializable {
 
     private CloudRenderModes lodRenderMode;
     private float lodRenderDistance;
+    private boolean useSmoothLODs;
 
     // * Constructors
-    public CloudLayer(float altitude, CloudTypes cloudType, CloudRenderModes renderMode, float cloudRenderDistance, CloudRenderModes lodRenderMode, float lodRenderDistance) {
+    public CloudLayer(float altitude, CloudTypes cloudType, CloudRenderModes renderMode, float cloudRenderDistance, CloudRenderModes lodRenderMode, float lodRenderDistance, boolean useSmoothLODs) {
         this.altitude = altitude;
         this.cloudType = cloudType;
         this.renderMode = renderMode;
         this.cloudRenderDistance = cloudRenderDistance;
         this.lodRenderMode = lodRenderMode;
         this.lodRenderDistance = lodRenderDistance;
+        this.useSmoothLODs = useSmoothLODs;
     }
 
     // * Instance methods
@@ -78,5 +80,13 @@ public class CloudLayer implements Serializable {
 
     public void setLodRenderDistance(float lodRenderDistance) {
         this.lodRenderDistance = lodRenderDistance;
+    }
+
+    public boolean isUseSmoothLODs() {
+        return useSmoothLODs;
+    }
+
+    public void setUseSmoothLODs(boolean useSmoothLODs) {
+        this.useSmoothLODs = useSmoothLODs;
     }
 }

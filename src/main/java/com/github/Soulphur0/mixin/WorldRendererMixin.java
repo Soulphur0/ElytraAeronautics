@@ -2,6 +2,7 @@ package com.github.Soulphur0.mixin;
 
 import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.*;
+import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.resource.SynchronousResourceReloader;
@@ -78,9 +79,11 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
             renderMode = layer.getRenderMode();
             float renderDistance = layer.getCloudRenderDistance();
             boolean usingCustomRenderDistance = false;
+
             lodRenderMode = layer.getLodRenderMode();
             float lodRenderDistance = layer.getLodRenderDistance();
             boolean usingCustomLODRenderDistance = false;
+            boolean usingSmoothLODs = layer.isUseSmoothLODs();
 
             // Calculate relative distances
             if (counter == 0)
@@ -96,7 +99,7 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
 
             // Set which relative distances to use
             switch (renderMode){
-                case NEVER_RENDER -> renderDistance = -1000000.0F;
+                case NEVER_RENDER -> {}
                 case TWO_IN_ADVANCE -> renderDistance = distanceFromPreviousPreviousLayer;
                 case ONE_IN_ADVANCE -> renderDistance = distanceFromLastLayer;
                 case CUSTOM_ALTITUDE -> usingCustomRenderDistance = true;
@@ -111,12 +114,13 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
             }
 
             // Call render method
-            renderCloudLayer(horizontalDisplacement, verticalDisplacement, cloudType, renderDistance, lodRenderDistance, usingCustomRenderDistance, usingCustomLODRenderDistance, layer.getAltitude());
+            if (!CloudRenderModes.NEVER_RENDER.equals(renderMode))
+                renderCloudLayer(horizontalDisplacement, verticalDisplacement, cloudType, renderDistance, lodRenderDistance, usingSmoothLODs, usingCustomRenderDistance, usingCustomLODRenderDistance, layer.getAltitude());
             counter++;
         }
     }
 
-    private void renderCloudLayer(float horizontalDisplacement, float verticalDisplacement, CloudTypes cloudType, float renderDistance, float highLODDistance,
+    private void renderCloudLayer(float horizontalDisplacement, float verticalDisplacement, CloudTypes cloudType, float renderDistance, float highLODDistance, boolean usingSmoothLODs,
                                   boolean customRenderDistance, boolean customLODRenderDistance, float cloudAltitude) // Parameters used only when customRenderAltitude is being used.
     {
         // ? CONSTANTS
@@ -138,15 +142,16 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
         // ? Variables
         float playerRelativeDistanceFromCloudLayer = (float)Math.floor(renderCloudsY / 4.0D) * 4.0F;
         playerRelativeDistanceFromCloudLayer += verticalDisplacement;
-        float cloudThickness;
+        float cloudThickness = 4.0F;
 
-        // ! Make this an optional setting (Name: Smooth LODs - Description: gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources. Clouds begin to puff up at 100~ blocks of distance from their layer.)
-        if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer > 95){
-            cloudThickness = 0.0F;
-        } else if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer < 95 && playerRelativeDistanceFromCloudLayer > 5){
-            cloudThickness = -0.042105263157894736F*playerRelativeDistanceFromCloudLayer+4.2105263157894735F;
-        } else {
-            cloudThickness = 4.0F;
+        if (usingSmoothLODs) {
+            float puffUpStartDistance = highLODDistance/2;
+            float puffUpStopDistance = highLODDistance/5;
+            if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer > puffUpStartDistance){
+                cloudThickness = 0.0F;
+            } else if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer < puffUpStartDistance && playerRelativeDistanceFromCloudLayer > puffUpStopDistance){
+                cloudThickness = EanMath.getLinealValue(puffUpStartDistance,0,puffUpStopDistance,4,playerRelativeDistanceFromCloudLayer);
+            }
         }
 
         // ? Render predicates
@@ -179,18 +184,18 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
 
                     // This renders the bottom face of clouds.
                     if (playerRelativeDistanceFromCloudLayer > -6.0F) {
-                        renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 8.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                        renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 8.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                        renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 0.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                        renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 0.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 8.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 8.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
                     }
 
                     // This renders the top face of clouds.
                     if (playerRelativeDistanceFromCloudLayer <= 5.0F) {
-                        renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F), (double)(af + 8.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F), (double)(af + 8.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F), (double)(af + 0.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F), (double)(af + 0.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F, af + 8.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F, af + 8.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F, af + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness - 9.765625E-4F, af + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
                     }
 
                     int aj;
@@ -198,38 +203,38 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
                     // Horizontal displacement is added to the if statement to properly cull the west face of clouds.
                     if (ac > -1 - horizontalDisplacement) {
                         for(aj = 0; aj < 8; ++aj) {
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 8.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + 8.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + 0.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 0.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
                         }
                     }
 
                     if (ac <= 1) {
                         // This renders the right face of clouds.
                         for(aj = 0; aj < 8; ++aj) {
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 8.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + 8.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + 0.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + 0.0F)).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
                         }
                     }
                     // This renders the front(north) face of clouds.
                     if (ad > -1) {
                         for(aj = 0; aj < 8; ++aj) {
-                            renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + (float)aj + 0.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + (float)aj + 0.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + (float)aj + 0.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + (float)aj + 0.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + (float)aj + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + (float)aj + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + (float)aj + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + (float)aj + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
                         }
                     }
                     // This renders the back(south) face of clouds.
                     if (ad <= 1) {
                         for(aj = 0; aj < 8; ++aj) {
-                            renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + (float)aj + 1.0F - 9.765625E-4F)).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + cloudThickness), (double)(af + (float)aj + 1.0F - 9.765625E-4F)).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + 8.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + (float)aj + 1.0F - 9.765625E-4F)).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            renderCloudsBufferBuilder.vertex((double)(ae + 0.0F + horizontalDisplacement), (double)(playerRelativeDistanceFromCloudLayer + 0.0F), (double)(af + (float)aj + 1.0F - 9.765625E-4F)).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + cloudThickness, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
                         }
                     }
                 }
@@ -241,10 +246,10 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
                 for(int ad = -3; ad <= 4; ++ad) {
                     float ae = (float) (ac * 8);
                     float af = (float) (ad * 8);
-                    renderCloudsBufferBuilder.vertex((double) (ae + 0.0F + horizontalDisplacement), (double) (playerRelativeDistanceFromCloudLayer + 0.0F), (double) (af + 8.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                    renderCloudsBufferBuilder.vertex((double) (ae + 8.0F + horizontalDisplacement), (double) (playerRelativeDistanceFromCloudLayer + 0.0F), (double) (af + 8.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                    renderCloudsBufferBuilder.vertex((double) (ae + 8.0F + horizontalDisplacement), (double) (playerRelativeDistanceFromCloudLayer + 0.0F), (double) (af + 0.0F)).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                    renderCloudsBufferBuilder.vertex((double) (ae + 0.0F + horizontalDisplacement), (double) (playerRelativeDistanceFromCloudLayer + 0.0F), (double) (af + 0.0F)).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 8.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 8.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    renderCloudsBufferBuilder.vertex(ae + 8.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    renderCloudsBufferBuilder.vertex(ae + 0.0F + horizontalDisplacement, playerRelativeDistanceFromCloudLayer + 0.0F, af + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
                 }
             }
         }
