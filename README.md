@@ -22,7 +22,7 @@ If you are like me, a player who likes to explore the world, and travel very far
 
 The average player would be smart and link everything with a nether highway system. But I personally find elytra travelling very enjoyable, and for an endgame item which purpose is to specifically make travelling more convenient, it lacks utility when it is used in long-distance travel. 
 
-The premise behind this mod is to make elytra travel more useful when covering large distances, making it travel at airplane speeds when flying at airplane heights.
+The premise behind this mod is to make elytra travel more useful when covering large distances, making the player move at airplane speeds when flying at airplane heights.
 
 When using Elytra Aeronautics with default settings, flight speed increases with altitude following this curve:
 
@@ -31,15 +31,17 @@ When using Elytra Aeronautics with default settings, flight speed increases with
 As you can see, speed increment is very low from y=0 to y=250. 
 This is to not make low altitude flight go easily out of control, again, if you are like me and use the elytra to travel just 20 blocks across your base, you don't have to worry about reaching MACH5 when going for some potatoes. 
 
-Beyond the 250 blocks of altitude mark, flight speed increases exponentially up to its maximum at y=1000. At this altitude, cruise speed is around 250 block/second, matching commercial flight average cruise speed.
+Beyond the 250 blocks of altitude mark, flight speed increases exponentially up to its maximum at y=1000. At this altitude, cruise speed is around 250 block/second, matching commercial flight average speed.
 
 ## Keeping it vanilla
-When developing a mod my intention is to make everything feel as vanilla as possible. When making this one I came across a problem: "How could I make some sort of altimeter and speedometer without adding fancy items or any GUI?" because some kind of guide is needed when flying far up from the ground, and using the debug (F3) screen is not very immersive.
+When developing a mod my intention is to make everything feel as vanilla as possible, since I make mods for myself that put in the game features that I feel are missing, to later use in my own survival worlds, this time I took a step further and published it.
+
+When making this one I came across a problem: "How could I make some sort of altimeter and speedometer without adding fancy items or any GUI?", because some kind of guide is needed when flying far up from the ground, and using the debug (F3) screen is not very immersive.
 
 After giving it some thought, I got an idea: using clouds as some kind of reference point for the player's vertical position.
 
-By default Elytra Aeronautics adds two additional cloud layers, one at the middle point of the speed curve (y=250) and another at the end of the speed curve (y=1000); 
-these serve as an altitude marker like previously mentioned and as a speed marker, as these will appear moving faster relative to the player when they are travelling at high speeds.
+By default, Elytra Aeronautics adds two additional cloud layers, one at the middle point of the speed curve (y=250) and another at the end of the speed curve (y=1000); 
+these serve as an altitude marker like previously mentioned and as a speed marker, as these will appear moving faster relative to the player when travelling at high speeds.
 
 This leads me to the second and third features of the mod, clouds and customization.
 
@@ -50,7 +52,7 @@ Using the config screen you can add as many cloud layers as you wish, and use di
 ![howdidwegethere](https://cdn.discordapp.com/attachments/754495868861677628/927174474787348530/2022-01-02_13.19.34.png)
 _"How did we get here?"_
 
-Furthermore, this mod adds "LOD clouds", these clouds will render as "Fast clouds" when far away from them and as "Fancy clouds" when close to them.
+Furthermore, this mod adds "LOD clouds", these clouds will render as "Fast clouds" when far away from them, and as "Fancy clouds" when close to them.
 
 ![lodclouds](postResources/lod.GIF)
 
@@ -58,7 +60,7 @@ You can even make it so when a cloud layer is far away enough from the player it
 
 ![unlimitedclouds](postResources/layers.GIF)
 
-As previously mentioned each layer can be configured individually, or all of them at once, giving to the player full access to the additional cloud functionality of the mod.
+As previously mentioned you can either configure each layer individually, or all of them at once, providing full access to the additional cloud functionality of the mod.
 
 ![cloudconfigscreen](https://media.discordapp.net/attachments/754495868861677628/927180129971601448/unknown.png?width=1290&height=701)
 
@@ -83,6 +85,8 @@ Remember, this is using default settings, maximum flight speed can be increased 
 - [ModMenu](https://www.curseforge.com/minecraft/mc-mods/modmenu) (3.0.1 or higher) -> required to access config screen.
 - [ClothConfig](https://www.curseforge.com/minecraft/mc-mods/cloth-config) (0.6.0 or higher) -> required to build config screen.
 
+(Expect ModMenu not being a mandatory requirement for accesing the config screen in a future version)
+
 ## Compatibility
 - Right now there were no compatibility issues found, the mod is still pretty new so, if you find any issue, please let me know.  
 
@@ -102,12 +106,11 @@ Yes, you can, but you have to respect the mod's license and credit the original 
 
 ___Will this mod be ever ported to an older version?___
 
-Right now, I can **almost** assure you that I won't, **but**, if I see a lot of people requesting it, I might make a single version for the most requested older versions.
-
+Right now, I can **almost** assure you that I won't, **but**, if I see a lot of people requesting it, I might make a single version for each of the most requested older MC versions.
 ## Contact
 - If any issue is found is preferable to report it via the "Issues" section in the mod's GitHub repository.
-- You can also join the mod's [discord server](https://discord.gg/58C3qZsSHk), but be aware the server is very WIP and I won't be answering a lot.
+- You can also join the mod's [discord server](https://discord.gg/58C3qZsSHk), but be aware the server is very WIP, and I am not very active lately.
 
 ## Support
 
-You can support me simply by downloading the mod and sharing it with friends! 
+You can support me by simply downloading the mod and sharing it with friends! 
