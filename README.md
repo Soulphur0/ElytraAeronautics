@@ -52,7 +52,7 @@ _"How did we get here?"_
 
 Furthermore, this mod adds "LOD clouds", these clouds will render as "Fast clouds" when far away from them and as "Fancy clouds" when close to them.
 
-![lodclouds](src/main/resources/assets/elytra_aeronautics/test2.GIF)
+![lodclouds](postResources/lod.GIF)
 
 You can even make it so when a cloud layer is far away enough from the player it stops rendering, so you can set up hundreds of cloud layers and lose almost no performance.
 
@@ -80,17 +80,34 @@ When using Elytra Aeronautics with default settings, flight speed can reach 250 
 Remember, this is using default settings, maximum flight speed can be increased or decreased.
 
 ## Integration
-- ModMenu (3.0.1 or higher) -> required to access config screen.
-- ClothConfig (0.6.0 or higher) -> required to build config screen.
+- [ModMenu](https://www.curseforge.com/minecraft/mc-mods/modmenu) (3.0.1 or higher) -> required to access config screen.
+- [ClothConfig](https://www.curseforge.com/minecraft/mc-mods/cloth-config) (0.6.0 or higher) -> required to build config screen.
 
 ## Compatibility
-- Right now there were no compatibility issues found, the mod is still pretty new, if you find any issue, please let me know.  
+- Right now there were no compatibility issues found, the mod is still pretty new so, if you find any issue, please let me know.  
 
 ## Future development
+- Expect the mod to be ported to future versions.
+- Expansion updates are planned but I don't have that much time, so those might take longer to be released. Some planned features include: more cloud customization, an altimeter item (for those who play with no clouds), and new sky effects.
 
 ## F.A.Q.
 
+___Will this ever be ported to Forge?___
+
+Nope, sorry I don't work with Forge and most likely never will.
+
+___Can I port it to Forge?___
+
+Yes, you can, but you have to respect the mod's license and credit the original work.
+
+___Will this mod be ever ported to an older version?___
+
+Right now, I can **almost** assure you that I won't, **but**, if I see a lot of people requesting it, I might make a single version for the most requested older versions.
+
 ## Contact
+- If any issue is found is preferable to report it via the "Issues" section in the mod's GitHub repository.
+- You can also join the mod's [discord server](https://discord.gg/58C3qZsSHk), but be aware the server is very WIP and I won't be answering a lot.
 
 ## Support
 
+You can support me simply by downloading the mod and sharing it with friends! 
