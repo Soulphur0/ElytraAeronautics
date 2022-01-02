@@ -145,8 +145,8 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
         float cloudThickness = 4.0F;
 
         if (usingSmoothLODs) {
-            float puffUpStartDistance = highLODDistance/2;
-            float puffUpStopDistance = highLODDistance/5;
+            float puffUpStartDistance = (highLODDistance+4.0F)/2;
+            float puffUpStopDistance = (highLODDistance+4.0F)/5;
             if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer > puffUpStartDistance){
                 cloudThickness = 0.0F;
             } else if (CloudTypes.LOD.equals(cloudType) && playerRelativeDistanceFromCloudLayer < puffUpStartDistance && playerRelativeDistanceFromCloudLayer > puffUpStopDistance){

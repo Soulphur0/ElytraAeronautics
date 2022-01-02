@@ -4,17 +4,18 @@
   "version": "${version}",
 
   "name": "Elytra aeronautics",
-  "description": "Description is WIP",
+  "description": "Fly faster with the higher you travel! For more information, visit the mod's Github page.",
   "authors": [
     "Soulphur"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://github.com/Soulphur0/ElytraAeronautics",
+    "sources": "https://github.com/Soulphur0/ElytraAeronautics",
+    "issues": "https://github.com/Soulphur0/ElytraAeronautics/issues"
   },
 
-  "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "license": "MIT",
+  "icon": "assets/elytra_aeronautics/icon.png",
 
   "environment": "*",
   "entrypoints": {
@@ -31,11 +32,11 @@
 
   "depends": {
     "fabricloader": ">=0.11.3",
-    "fabric": "*",
     "minecraft": "1.18.x",
     "java": ">=17"
   },
   "suggests": {
-    "another-mod": "*"
+    "clothconfig": ">=0.6.0",
+    "modmenu": ">=3.0.1"
   }
 }

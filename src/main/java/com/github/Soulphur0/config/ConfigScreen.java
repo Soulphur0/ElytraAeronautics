@@ -55,8 +55,13 @@ public class ConfigScreen {
     // * [Elytra flight] methods and variables
     private void buildElytraFlightCategory(){
         elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Enable elytra extra behaviour"), eanConfigFile.isElytraExtraBehaviour())
-                .setTooltip(new TranslatableText("Set to true if you want to elytra flight be faster at higher altitudes as this menu's settings dictate."))
+                .setTooltip(new TranslatableText("Set to true if you want to elytra flight be faster at higher altitudes and use this menu's settings."))
                 .setSaveConsumer(eanConfigFile::setElytraExtraBehaviour)
+                .build());
+
+
+        elytraFlightSettings.addEntry(entryBuilder.startTextDescription(new TranslatableText("--- Speed curve settings ---"))
+                .setTooltip(new TranslatableText("Please note that each of the following values must be greater than the previous one (in ascending order)."))
                 .build());
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed constant (Change with caution) "), eanConfigFile.getSpeedConstantAdditionalValue())
@@ -65,10 +70,6 @@ public class ConfigScreen {
                 .setSaveConsumer(newValue ->{
                     eanConfigFile.setSpeedConstantAdditionalValue(newValue);
                 })
-                .build());
-
-        elytraFlightSettings.addEntry(entryBuilder.startTextDescription(new TranslatableText("--- Speed curve settings ---"))
-                .setTooltip(new TranslatableText("Please note that each of the following values must be greater than the previous one (in ascending order)."))
                 .build());
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve beginning"), eanConfigFile.getCurveStart())
@@ -108,9 +109,9 @@ public class ConfigScreen {
         List<AbstractConfigListEntry> layerList = new ArrayList<>(); // Used to store all layer subcategory menus.
         List<List<AbstractConfigListEntry>> layerAttributesList = new ArrayList<>(); // Used to store each layer subcategory menus' attributes.
 
-        // ? Presets
-        cloudSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Reset to default preset?"), false)
-                .setDefaultValue(true).setTooltip(new TranslatableText("By resetting to the default preset, cloud layers will be placed at the flight-speed-curve's middle and highest points."))
+        // ? General settings
+        cloudSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Reset to the default preset?"), false)
+                .setDefaultValue(true).setTooltip(new TranslatableText("Set this to \"yes\" and save to reset cloud layers to the default preset. All previous cloud layers will be removed and 2 new layers will be placed at the flight-speed-curve's middle and highest points."))
                 .setSaveConsumer(newValue->{
                     if (newValue){
                         resetToDefault = true;
@@ -119,7 +120,6 @@ public class ConfigScreen {
                 })
                 .build());
 
-        // ? General settings
         cloudSettings.addEntry(entryBuilder.startTextDescription(new TranslatableText("--- General settings ---"))
                 .setTooltip(new TranslatableText("Settings applied to all cloud layers at once!"))
                 .build());
@@ -216,7 +216,7 @@ public class ConfigScreen {
                             } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
                                 return new TranslatableText("ALWAYS_RENDER");
                             }
-                            return new TranslatableText("UNKNOWN RENDER MODE");
+                            return new TranslatableText("");
                         }))
                 .setDefaultValue(CloudRenderModes.ALWAYS_RENDER)
                 .setTooltip(new TranslatableText("This value determines when a cloud layer begins to render."))
@@ -250,7 +250,7 @@ public class ConfigScreen {
                             } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
                                 return new TranslatableText("ALWAYS_RENDER");
                             }
-                            return new TranslatableText("UNKNOWN RENDER MODE");
+                            return new TranslatableText("");
                         }))
                 .setDefaultValue(CloudRenderModes.TWO_IN_ADVANCE)
                 .setTooltip(new TranslatableText("This value determines when a cloud layer begins to render in high level of detail. It is only used if the cloud type is set to LOD."))
@@ -267,7 +267,7 @@ public class ConfigScreen {
         // Use smooth LODs
         cloudSettings.addEntry(entryBuilder
                 .startBooleanToggle(new TranslatableText("Smooth LODs"), eanConfigFile.isUseSmoothLODs())
-                .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources. Clouds begin to puff up at 100~ blocks of distance from their layer."))
+                .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option may use up more resources. Clouds begin to puff up at half distance from their layer."))
                 .setDefaultValue(false)
                 .setSaveConsumer(newValue -> {
                     if (newValue != eanConfigFile.isUseSmoothLODs()){
@@ -409,7 +409,7 @@ public class ConfigScreen {
             // Use smooth LODs
             layerAttributesList.get(layerNum).add(entryBuilder
                     .startBooleanToggle(new TranslatableText("Smooth LODs"), layer.isUseSmoothLODs())
-                    .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option uses up more resources. Clouds begin to puff up at 100~ blocks of distance from their layer."))
+                    .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option may use up more resources. Clouds begin to puff up at half distance from their layer."))
                     .setDefaultValue(false)
                     .setSaveConsumer(layer::setUseSmoothLODs)
                     .build());

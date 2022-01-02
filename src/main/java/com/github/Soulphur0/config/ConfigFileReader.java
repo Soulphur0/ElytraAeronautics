@@ -1,6 +1,8 @@
 package com.github.Soulphur0.config;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 
 public class ConfigFileReader {
 
@@ -14,15 +16,12 @@ public class ConfigFileReader {
             fileIn.close();
             return output;
         } catch (IOException e){
-            System.out.println("A problem has occurred when loading the config data.");
             e.printStackTrace();
             return output;
         } catch (ClassNotFoundException f){
-            System.out.println("CloudLayer class not found.");
             f.printStackTrace();
             return output;
         } catch (NullPointerException g){
-            System.out.println("There were no files found to read.");
             g.printStackTrace();
             return output;
         }
