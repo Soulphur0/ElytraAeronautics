@@ -128,6 +128,7 @@ public class ConfigScreen {
         cloudSettings.addEntry(entryBuilder.startIntField(new TranslatableText("Cloud layer amount"), eanConfigFile.getLayerAmount())
                 .setTooltip(new TranslatableText("This value determines the amount of cloud layers there are. Besides the vanilla clouds. To make new layers show up in the config, re-enter the menu without restarting. For changes to apply in-game however, restarting is necessary."))
                 .setDefaultValue(2)
+                .setMin(0)
                 .setSaveConsumer(newValue -> {
                     if (newValue != eanConfigFile.getLayerAmount()){
                         // Save layer amount in class field and add all new layers (or remove exceeding ones) from the cloud layer list upon save.
@@ -139,8 +140,9 @@ public class ConfigScreen {
 
         // Distance between layers.
         cloudSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Distance between cloud layers"), eanConfigFile.getLayerDistance())
-                        .setTooltip(new TranslatableText("When this value is changed, all cloud layers are relocated, and, starting from the altitude specified in the field below; they are placed on top of each other separated by this distance."))
+                .setTooltip(new TranslatableText("When this value is changed, all cloud layers are relocated, and, starting from the altitude specified in the field below; they are placed on top of each other separated by this distance."))
                 .setDefaultValue(250.0F)
+                .setMin(0)
                 .setSaveConsumer(newValue -> {
                     if (newValue != eanConfigFile.getLayerDistance()){
                         eanConfigFile.setLayerDistance(newValue);
