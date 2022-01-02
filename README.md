@@ -62,7 +62,7 @@ As previously mentioned each layer can be configured individually, or all of the
 
 ![cloudconfigscreen](https://media.discordapp.net/attachments/754495868861677628/927180129971601448/unknown.png?width=1290&height=701)
 
-## Real example (Only in github)
+## Real example
 Wood land Mansions can easily be more than 20k blocks away from the spawn, sometimes even 50k blocks in large biomes worlds. 
 
 This is a real seed (-962156719158439332, generated in MC 1.16.5) and the nearest mansion is 21898 blocks away.
