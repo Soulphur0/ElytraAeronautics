@@ -3,7 +3,6 @@ package com.github.Soulphur0.mixin;
 import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.ConfigFileReader;
 import com.github.Soulphur0.config.EanConfigFile;
-import com.github.Soulphur0.test.DebugSpeedometer;
 import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -50,8 +49,6 @@ public abstract class LivingEntityMixin extends Entity {
                 }
             }
         }
-
-
 
         // ? Get player altitude
         Vec3d positionVector = super.getPos();
