@@ -54,46 +54,51 @@ public class ConfigScreen {
 
     // * [Elytra flight] methods and variables
     private void buildElytraFlightCategory(){
-        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Enable elytra extra behaviour"), eanConfigFile.isElytraExtraBehaviour())
-                .setTooltip(new TranslatableText("Set to true if you want to elytra flight be faster at higher altitudes and use this menu's settings."))
-                .setSaveConsumer(eanConfigFile::setElytraExtraBehaviour)
+        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Altitude determines flight speed"), eanConfigFile.isAltitudeDeterminesSpeed())
+                .setTooltip(new TranslatableText("Set to true if you want to elytra flight be faster at higher altitudes. If set to false, your flight speed will be determined by the minimal speed."))
+                .setSaveConsumer(eanConfigFile::setAltitudeDeterminesSpeed)
                 .build());
 
-
-        elytraFlightSettings.addEntry(entryBuilder.startTextDescription(new TranslatableText("--- Speed curve settings ---"))
-                .setTooltip(new TranslatableText("Please note that each of the following values must be greater than the previous one (in ascending order)."))
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Minimal flight speed"), eanConfigFile.getMaxSpeed())
+                .setDefaultValue(30.35D)
+                .setTooltip(new TranslatableText("Minimal flight speed achieved by travelling at a zero degree angle."))
+                .setSaveConsumer(newValue -> eanConfigFile.setMinSpeed(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed constant (Change with caution) "), eanConfigFile.getSpeedConstantAdditionalValue())
-                .setDefaultValue(0.0088D)
-                .setTooltip(new TranslatableText("Estimated max speed at max altitude and 0 degree pitch = " + Math.floor(31.7966+0.560503*Math.exp(679.292*eanConfigFile.getSpeedConstantAdditionalValue())) +"m/s. Re-enter this menu to update the maximum speed estimate shown in this tooltip."))
-                .setSaveConsumer(newValue ->{
-                    eanConfigFile.setSpeedConstantAdditionalValue(newValue);
-                })
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Maximum flight speed"), eanConfigFile.getMaxSpeed())
+                .setDefaultValue(257.22D)
+                .setTooltip(new TranslatableText("Maximum flight speed achieved by travelling at a zero degree angle."))
+                .setSaveConsumer(newValue -> eanConfigFile.setMaxSpeed(newValue))
                 .build());
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve beginning"), eanConfigFile.getCurveStart())
                 .setDefaultValue(0.0D)
-                .setTooltip(new TranslatableText("Altitude at which flight speed start to increase very very slightly."))
-                .setSaveConsumer(newValue ->{
-                    eanConfigFile.setCurveStart(newValue);
-                })
-                .build());
-
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve middle point"), eanConfigFile.getCurveMiddle())
-                .setDefaultValue(250.0D)
-                .setTooltip(new TranslatableText("Altitude at which flight speed starts to increase exponentially."))
-                .setSaveConsumer(newValue ->{
-                    eanConfigFile.setCurveMiddle(newValue);
-                })
+                .setTooltip(new TranslatableText("Altitude at which flight speed start to increase."))
+                .setSaveConsumer(newValue -> eanConfigFile.setCurveStart(newValue))
                 .build());
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve end"), eanConfigFile.getCurveEnd())
                 .setDefaultValue(1000.0D)
                 .setTooltip(new TranslatableText("Altitude at which flight speed stops to increase (maximum flight speed is achieved)."))
-                .setSaveConsumer(newValue ->{
-                    eanConfigFile.setCurveEnd(newValue);
-                })
+                .setSaveConsumer(newValue -> eanConfigFile.setCurveEnd(newValue))
+                .build());
+
+        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Sneaking realigns pitch."), eanConfigFile.isSneakRealignsPitch())
+                .setDefaultValue(true)
+                .setTooltip(new TranslatableText("When true, sneaking mid-flight will realign your pitch."))
+                .setSaveConsumer(newValue -> eanConfigFile.setSneakRealignsPitch(newValue))
+                .build());
+
+        elytraFlightSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Pitch realignment angle."), eanConfigFile.getRealignmentAngle())
+                .setDefaultValue(0)
+                .setTooltip(new TranslatableText("Pitch angle at which the player will stay when sneaking mid-flight."))
+                .setSaveConsumer(newValue -> eanConfigFile.setRealignmentAngle(newValue))
+                .build());
+
+        elytraFlightSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Pitch realignment rate."), eanConfigFile.getRealignmentRate())
+                .setDefaultValue(0.1F)
+                .setTooltip(new TranslatableText("Amount of rotation (angle-per-tick), at which the player will be rotating towards the pitch realignment angle when sneaking mid-air."))
+                .setSaveConsumer(newValue -> eanConfigFile.setRealignmentRate(newValue))
                 .build());
     }
 
@@ -440,7 +445,7 @@ public class ConfigScreen {
         if (resetToDefault){
             eanConfigFile.setLayerAmount(2);
             cloudLayerList.clear();
-            cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveMiddle(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0, false));
+            cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveStart(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0, false));
             cloudLayerList.add(new CloudLayer((float)eanConfigFile.getCurveEnd(),CloudTypes.LOD,CloudRenderModes.ALWAYS_RENDER,0, CloudRenderModes.TWO_IN_ADVANCE,0, false));
             return;
         }

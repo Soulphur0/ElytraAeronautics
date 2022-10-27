@@ -120,6 +120,9 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
         }
     }
 
+    // FIXME There are two current issues regarding this method:
+    //  The bottom face of clouds doesn't render when looking at it from the lower half of the cloud inside the cloud.
+    //  When using smooth LODs, clouds sometimes pop-in at full size before returning flat and starting to puff up.
     private void renderCloudLayer(float horizontalDisplacement, float verticalDisplacement, CloudTypes cloudType, float renderDistance, float highLODDistance, boolean usingSmoothLODs,
                                   boolean customRenderDistance, boolean customLODRenderDistance, float cloudAltitude) // Parameters used only when customRenderAltitude is being used.
     {

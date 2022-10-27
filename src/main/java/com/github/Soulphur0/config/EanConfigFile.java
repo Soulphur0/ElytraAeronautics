@@ -6,12 +6,16 @@ import java.util.List;
 
 public class EanConfigFile implements Serializable {
     // Elytra flight
-    boolean elytraExtraBehaviour;
-    private double speedConstantAdditionalValue;
+    boolean altitudeDeterminesSpeed;
+    private double minSpeed;
+    private double maxSpeed;
 
     private double curveStart;
-    private double curveMiddle;
     private double curveEnd;
+
+    boolean sneakRealignsPitch;
+    float realignmentAngle;
+    float realignmentRate;
 
     // Cloud customization
     private int layerAmount;
@@ -55,12 +59,20 @@ public class EanConfigFile implements Serializable {
         return lodRenderMode;
     }
 
-    public double getSpeedConstantAdditionalValue() {
-        return speedConstantAdditionalValue;
+    public double getMinSpeed() {
+        return minSpeed;
     }
 
-    public void setSpeedConstantAdditionalValue(double speedConstantAdditionalValue) {
-        this.speedConstantAdditionalValue = speedConstantAdditionalValue;
+    public void setMinSpeed(double minSpeed) {
+        this.minSpeed = minSpeed;
+    }
+
+    public double getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    public void setMaxSpeed(double maxSpeed) {
+        this.maxSpeed = maxSpeed;
     }
 
     public double getCurveStart() {
@@ -71,20 +83,36 @@ public class EanConfigFile implements Serializable {
         this.curveStart = curveStart;
     }
 
-    public double getCurveMiddle() {
-        return curveMiddle;
-    }
-
-    public void setCurveMiddle(double curveMiddle) {
-        this.curveMiddle = curveMiddle;
-    }
-
     public double getCurveEnd() {
         return curveEnd;
     }
 
     public void setCurveEnd(double curveEnd) {
         this.curveEnd = curveEnd;
+    }
+
+    public boolean isSneakRealignsPitch() {
+        return sneakRealignsPitch;
+    }
+
+    public void setSneakRealignsPitch(boolean sneakRealignsPitch) {
+        this.sneakRealignsPitch = sneakRealignsPitch;
+    }
+
+    public float getRealignmentRate() {
+        return realignmentRate;
+    }
+
+    public void setRealignmentRate(float realignmentRate) {
+        this.realignmentRate = realignmentRate;
+    }
+
+    public float getRealignmentAngle() {
+        return realignmentAngle;
+    }
+
+    public void setRealignmentAngle(float realignmentAngle) {
+        this.realignmentAngle = realignmentAngle;
     }
 
     public float getStackingAltitude() {
@@ -111,12 +139,12 @@ public class EanConfigFile implements Serializable {
         this.useSmoothLODs = useSmoothLODs;
     }
 
-    public boolean isElytraExtraBehaviour() {
-        return elytraExtraBehaviour;
+    public boolean isAltitudeDeterminesSpeed() {
+        return altitudeDeterminesSpeed;
     }
 
-    public void setElytraExtraBehaviour(boolean elytraExtraBehaviour) {
-        this.elytraExtraBehaviour = elytraExtraBehaviour;
+    public void setAltitudeDeterminesSpeed(boolean altitudeDeterminesSpeed) {
+        this.altitudeDeterminesSpeed = altitudeDeterminesSpeed;
     }
 
     // ? General configuration methods (Setters with extra behaviour)
@@ -146,11 +174,15 @@ public class EanConfigFile implements Serializable {
 
     public void defaultPreset(){
         // Elytra flight configuration
-        elytraExtraBehaviour = true;
-        speedConstantAdditionalValue = 0.0088D;
-        curveStart = 0.0D;
-        curveMiddle = 250.0D;
+        altitudeDeterminesSpeed = true;
+        minSpeed = 30.35D;
+        maxSpeed = 257.22D;
+        curveStart = 250.0D;
         curveEnd = 1000.0D;
+
+        sneakRealignsPitch = true;
+        realignmentAngle = 0.0F;
+        realignmentRate = 0.1F;
 
         // Cloud configuration
         layerAmount = 2;
