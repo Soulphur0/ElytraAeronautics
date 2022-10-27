@@ -59,13 +59,13 @@ public class ConfigScreen {
                 .setSaveConsumer(eanConfigFile::setAltitudeDeterminesSpeed)
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Minimal flight speed"), eanConfigFile.getMaxSpeed())
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Minimal flight speed (m/s)"), eanConfigFile.getMinSpeed())
                 .setDefaultValue(30.35D)
-                .setTooltip(new TranslatableText("Minimal flight speed achieved by travelling at a zero degree angle."))
+                .setTooltip(new TranslatableText("Minimal flight speed achieved by travelling at a zero degree angle. (The default value is the vanilla value.)"))
                 .setSaveConsumer(newValue -> eanConfigFile.setMinSpeed(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Maximum flight speed"), eanConfigFile.getMaxSpeed())
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Maximum flight speed (m/s)"), eanConfigFile.getMaxSpeed())
                 .setDefaultValue(257.22D)
                 .setTooltip(new TranslatableText("Maximum flight speed achieved by travelling at a zero degree angle."))
                 .setSaveConsumer(newValue -> eanConfigFile.setMaxSpeed(newValue))
@@ -91,7 +91,7 @@ public class ConfigScreen {
 
         elytraFlightSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Pitch realignment angle."), eanConfigFile.getRealignmentAngle())
                 .setDefaultValue(0)
-                .setTooltip(new TranslatableText("Pitch angle at which the player will stay when sneaking mid-flight."))
+                .setTooltip(new TranslatableText("Pitch angle at which the player will align when sneaking mid-flight."))
                 .setSaveConsumer(newValue -> eanConfigFile.setRealignmentAngle(newValue))
                 .build());
 
