@@ -72,7 +72,7 @@ public class ConfigScreen {
                 .build());
 
         elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve beginning"), eanConfigFile.getCurveStart())
-                .setDefaultValue(0.0D)
+                .setDefaultValue(250.0D)
                 .setTooltip(new TranslatableText("Altitude at which flight speed start to increase."))
                 .setSaveConsumer(newValue -> eanConfigFile.setCurveStart(newValue))
                 .build());
