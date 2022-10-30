@@ -1,3 +1,8 @@
+### THIS IS THE INDEV REPO FOR ELYTRA AERONAUTICS
+**Only final versions are published to the public repo.**
+
+---
+
 ![ElytraAeronautics](https://media.discordapp.net/attachments/754495868861677628/927260411785539604/ean2.png?width=1289&height=255)
 
 # TLDR; What does this mod do?
