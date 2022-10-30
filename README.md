@@ -12,10 +12,6 @@ Important: right now both ModMenu and ClothConfig are required to access to the 
 # More insight into the mod
 
 ## Elytra flying
-First of all, let me clarify some terms used in the following explanation:
-- "Flight speed" refers to elytra flight/glide speed.
-- "Cruise speed" refers to flight speed at a constant 0° angle to the ground.
-
 ![flyingme](https://media.discordapp.net/attachments/754495868861677628/927264908012302367/best2.png?width=1618&height=910)
 
 If you are like me, a player who likes to explore the world, and travel very far away from the spawn to find unique generation and breathtaking landscapes to build your base and farms around, you might end up with your buildings spreaded across a 30,000-block-wide world.
@@ -26,12 +22,12 @@ The premise behind this mod is to make elytra travel more useful when covering l
 
 When using Elytra Aeronautics with default settings, flight speed increases with altitude following this curve:
 
-![speedcurve](https://media.discordapp.net/attachments/754495868861677628/926964552552300624/eanGraph.png?width=1249&height=910)
+![speedcurve](https://user-images.githubusercontent.com/75187144/198856688-f716734b-ff60-4850-847e-042f12a3b725.png)
 
-As you can see, speed increment is very low from y=0 to y=250. 
+As you can see, there is no speed increment from y=0 to y=250. 
 This is to not make low altitude flight go easily out of control, again, if you are like me and use the elytra to travel just 20 blocks across your base, you don't have to worry about reaching MACH5 when going for some potatoes. 
 
-Beyond the 250 blocks of altitude mark, flight speed increases exponentially up to its maximum at y=1000. At this altitude, cruise speed is around 250 block/second, matching commercial flight average speed.
+Beyond the 250 blocks of altitude mark, flight speed increases linearly up to its maximum at y=1000. At this altitude, cruise speed (what I call flight speed at a constant 0° angle to the ground) is around 250 block/second, matching commercial flight average speed.
 
 ## Keeping it vanilla
 When developing a mod my intention is to make everything feel as vanilla as possible, since I make mods for myself that put in the game features that I feel are missing, to later use in my own survival worlds, this time I took a step further and published it.
