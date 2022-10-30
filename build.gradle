@@ -18,6 +18,7 @@ repositories {
 	// for more information about repositories.
 	maven { url "https://maven.shedaniel.me/" }
 	maven {url "https://maven.terraformersmc.com/"}
+	maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -34,6 +35,10 @@ dependencies {
 	}
 
 	modImplementation "com.terraformersmc:modmenu:4.0.4"
+
+	// * LlamaLad's MixinExtras
+	include(implementation("com.github.LlamaLad7:MixinExtras:0.1.0"))
+	include(annotationProcessor("com.github.LlamaLad7:MixinExtras:0.1.0"))
 }
 
 processResources {
