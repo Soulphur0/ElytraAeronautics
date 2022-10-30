@@ -24,6 +24,9 @@
     ],
     "modmenu": [
       "com.github.Soulphur0.config.ModMenuIntegration"
+    ],
+    "preLaunch": [
+      "com.llamalad7.mixinextras.MixinExtrasBootstrap::init"
     ]
   },
   "mixins": [
