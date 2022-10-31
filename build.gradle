@@ -34,7 +34,7 @@ dependencies {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 
-	modImplementation "com.terraformersmc:modmenu:4.0.5"
+	modImplementation "com.terraformersmc:modmenu:4.0.6"
 
 	// * LlamaLad's MixinExtras
 	include(implementation("com.github.LlamaLad7:MixinExtras:0.1.0"))
