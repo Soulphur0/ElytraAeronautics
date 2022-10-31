@@ -16,6 +16,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -47,7 +48,8 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
     private Vec3d lastCloudsColor;
 
     @Shadow
-    private CloudRenderMode lastCloudsRenderMode;
+    @Nullable
+    private CloudRenderMode lastCloudRenderMode;
 
     @Shadow
     private int ticks;
@@ -91,12 +93,12 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
             int r = (int)Math.floor(l);
             int s = (int)Math.floor(m / 4.0D);
             int t = (int)Math.floor(n);
-            if (r != this.lastCloudsBlockX || s != this.lastCloudsBlockY || t != this.lastCloudsBlockZ || this.client.options.getCloudRenderMode() != this.lastCloudsRenderMode || this.lastCloudsColor.squaredDistanceTo(vec3d) > 2.0E-4D) {
+            if (r != this.lastCloudsBlockX || s != this.lastCloudsBlockY || t != this.lastCloudsBlockZ || this.client.options.getCloudRenderModeValue() != this.lastCloudRenderMode || this.lastCloudsColor.squaredDistanceTo(vec3d) > 2.0E-4D) {
                 this.lastCloudsBlockX = r;
                 this.lastCloudsBlockY = s;
                 this.lastCloudsBlockZ = t;
                 this.lastCloudsColor = vec3d;
-                this.lastCloudsRenderMode = this.client.options.getCloudRenderMode();
+                this.lastCloudRenderMode = this.client.options.getCloudRenderModeValue();
                 this.cloudsDirty = true;
             }
 
@@ -122,7 +124,7 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
             matrices.translate((double)(-o), (double)p, (double)(-q));
             if (this.cloudsBuffer != null) {
                 this.cloudsBuffer.bind();
-                int u = this.lastCloudsRenderMode == CloudRenderMode.FANCY ? 0 : 1;
+                int u = this.lastCloudRenderMode == CloudRenderMode.FANCY ? 0 : 1;
 
                 for(int v = u; v < 2; ++v) {
                     if (v == 0) {
