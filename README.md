@@ -50,17 +50,56 @@ _"How did we get here?"_
 
 Furthermore, this mod adds "LOD clouds", these clouds will render as "Fast clouds" when far away from them, and as "Fancy clouds" when close to them.
 
-![lodclouds](postResources/lod.GIF)
+![lodClouds](https://media.giphy.com/media/hCwDWDdtTeU153U37S/giphy.gif)
 
 You can even make it so when a cloud layer is far away enough from the player it stops rendering, so you can set up hundreds of cloud layers and lose almost no performance.
 
-![unlimitedclouds](postResources/layers.GIF)
+![cloudLayers](https://media.giphy.com/media/gELjxjYdTz1zCViEsU/giphy-downsized-large.gif)
 
 As previously mentioned you can either configure each layer individually, or all of them at once, providing full access to the additional cloud functionality of the mod.
 
 ![cloudconfigscreen](https://media.discordapp.net/attachments/754495868861677628/927180129971601448/unknown.png?width=1290&height=701)
 
-## Real example
+## Integration
+- [ModMenu](https://modrinth.com/mod/modmenu) -> required to access config screen.
+- [ClothConfig](https://modrinth.com/mod/cloth-config) -> required to build config screen.
+
+(Expect ModMenu not being a mandatory requirement for accesing the config screen in a future version)
+
+## Known Issues
+- There might be a way to harness infinite altitude when working with very high speeds.
+- Firework rockets reset your flight speed to max vanilla speed.
+- Very minor issues with cloud rendering.
+- For 1.19+ versions, cloud configuration does not work compleately as intended, I'll be fixing it as soon as I have some time; default configuration works perfectly though. And you can still get around some of the current issues with some clever tweaking.
+
+**For multiplayer:**
+
+- When playing on a server, setting the gamerule 'disableElytraMovementCheck' to true helps with jittering and position inconsistency.
+
+## Future development
+- Expect the mod to be ported to future versions.
+- I'll try to get rid of all big and medium sized issues before I add more content, but due to my tight schedule, I may not be able to publish next hotfix until winter holidays.
+- Expansion updates are planned but these might take longer to be released.
+
+## F.A.Q.
+
+___Will this ever be ported to Forge?___
+
+Nope, sorry I don't work with Forge and most likely never will.
+
+___Can I port it to Forge?___
+
+Yes, you can, but you have to respect the mod's license and credit the original work.
+
+___Will this mod be ever ported to an older version?___
+
+Right now, I can **almost** assure you that I won't, **but**, if I see a lot of people requesting it, I might make a single version for each of the most requested older MC versions.
+
+## Support
+
+You can support me by simply downloading the mod and sharing it with friends! 
+
+## GITHUB PAGE BONUS: Real example
 Wood land Mansions can easily be more than 20k blocks away from the spawn, sometimes even 50k blocks in large biomes worlds. 
 
 This is a real seed (-962156719158439332, generated in MC 1.16.5) and the nearest mansion is 21898 blocks away.
@@ -76,37 +115,3 @@ The maximum flight speed with elytra in Vanilla Minecraft is around 60 blocks/se
 When using Elytra Aeronautics with default settings, flight speed can reach 250 blocks/second when travelling parallel to the horizon, and 500 blocks/seconds when flying at a 45° angle. At horizontal speed it would take 1:27 minutes to travel that distance, and at maximum speed, it would just take 43 seconds to reach the mansion.
 
 Remember, this is using default settings, maximum flight speed can be increased or decreased.
-
-## Integration
-- [ModMenu](https://www.curseforge.com/minecraft/mc-mods/modmenu) (3.0.1 or higher) -> required to access config screen.
-- [ClothConfig](https://www.curseforge.com/minecraft/mc-mods/cloth-config) (0.6.0 or higher) -> required to build config screen.
-
-(Expect ModMenu not being a mandatory requirement for accesing the config screen in a future version)
-
-## Compatibility
-- Right now there were no compatibility issues found, the mod is still pretty new so, if you find any issue, please let me know.  
-
-## Future development
-- Expect the mod to be ported to future versions.
-- Expansion updates are planned but I don't have that much time, so those might take longer to be released. Some planned features include: more cloud customization, an altimeter item (for those who play with no clouds), and new sky effects.
-
-## F.A.Q.
-
-___Will this ever be ported to Forge?___
-
-Nope, sorry I don't work with Forge and most likely never will.
-
-___Can I port it to Forge?___
-
-Yes, you can, but you have to respect the mod's license and credit the original work.
-
-___Will this mod be ever ported to an older version?___
-
-Right now, I can **almost** assure you that I won't, **but**, if I see a lot of people requesting it, I might make a single version for each of the most requested older MC versions.
-## Contact
-- If any issue is found is preferable to report it via the "Issues" section in the mod's GitHub repository.
-- You can also join the mod's [discord server](https://discord.gg/58C3qZsSHk), but be aware the server is very WIP, and I am not very active lately.
-
-## Support
-
-You can support me by simply downloading the mod and sharing it with friends! 
