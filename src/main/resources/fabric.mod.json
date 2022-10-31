@@ -24,6 +24,9 @@
     ],
     "modmenu": [
       "com.github.Soulphur0.config.ModMenuIntegration"
+    ],
+    "preLaunch": [
+      "com.llamalad7.mixinextras.MixinExtrasBootstrap::init"
     ]
   },
   "mixins": [
@@ -32,7 +35,7 @@
 
   "depends": {
     "fabricloader": ">=0.11.3",
-    "minecraft": "1.18.x",
+    "minecraft": "1.19.x",
     "java": ">=17"
   },
   "suggests": {

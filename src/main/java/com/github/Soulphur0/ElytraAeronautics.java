@@ -19,6 +19,6 @@ public class ElytraAeronautics implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 		EanConfigFile.initializeConfigFile();
-		LOGGER.info("Mod initialized!");
+		LOGGER.info("Elytra Aeronautics initialized! Have a good flight!");
 	}
 }

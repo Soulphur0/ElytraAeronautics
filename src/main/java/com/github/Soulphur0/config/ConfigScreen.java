@@ -8,7 +8,7 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.DropdownMenuBuilder;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,12 +20,12 @@ public class ConfigScreen {
     Screen screen = MinecraftClient.getInstance().currentScreen;
 
     // Screen builder objects
-    ConfigBuilder builder = ConfigBuilder.create().setParentScreen(screen).setTitle(new TranslatableText("Elytra Aeronautics Configuration Screen"));
+    ConfigBuilder builder = ConfigBuilder.create().setParentScreen(screen).setTitle(Text.of("Elytra Aeronautics Configuration Screen"));
     ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
     // Config categories
-    ConfigCategory elytraFlightSettings = builder.getOrCreateCategory(new TranslatableText("Elytra flight settings"));
-    ConfigCategory cloudSettings = builder.getOrCreateCategory(new TranslatableText("Cloud settings"));
+    ConfigCategory elytraFlightSettings = builder.getOrCreateCategory(Text.of("Elytra flight settings"));
+    ConfigCategory cloudSettings = builder.getOrCreateCategory(Text.of("Cloud settings"));
 
     // * Config file
     static public EanConfigFile eanConfigFile;
@@ -54,50 +54,51 @@ public class ConfigScreen {
 
     // * [Elytra flight] methods and variables
     private void buildElytraFlightCategory(){
-        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Altitude determines flight speed"), eanConfigFile.isAltitudeDeterminesSpeed())
-                .setTooltip(new TranslatableText("Set to true if you want to elytra flight be faster at higher altitudes. If set to false, your flight speed will be determined by the minimal speed."))
+        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(Text.of("Altitude determines flight speed"), eanConfigFile.isAltitudeDeterminesSpeed())
+                .setDefaultValue(true)
+                .setTooltip(Text.of("Set to true if you want to elytra flight be faster at higher altitudes. If set to false, your flight speed will be determined by the minimal speed."))
                 .setSaveConsumer(eanConfigFile::setAltitudeDeterminesSpeed)
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Minimal flight speed"), eanConfigFile.getMaxSpeed())
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(Text.of("Minimal flight speed (m/s)"), eanConfigFile.getMinSpeed())
                 .setDefaultValue(30.35D)
-                .setTooltip(new TranslatableText("Minimal flight speed achieved by travelling at a zero degree angle."))
+                .setTooltip(Text.of("Minimal flight speed achieved by travelling at a zero degree angle. (The default value is the vanilla value.)"))
                 .setSaveConsumer(newValue -> eanConfigFile.setMinSpeed(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Maximum flight speed"), eanConfigFile.getMaxSpeed())
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(Text.of("Maximum flight speed (m/s)"), eanConfigFile.getMaxSpeed())
                 .setDefaultValue(257.22D)
-                .setTooltip(new TranslatableText("Maximum flight speed achieved by travelling at a zero degree angle."))
+                .setTooltip(Text.of("Maximum flight speed achieved by travelling at a zero degree angle."))
                 .setSaveConsumer(newValue -> eanConfigFile.setMaxSpeed(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve beginning"), eanConfigFile.getCurveStart())
-                .setDefaultValue(0.0D)
-                .setTooltip(new TranslatableText("Altitude at which flight speed start to increase."))
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(Text.of("Flight speed curve beginning"), eanConfigFile.getCurveStart())
+                .setDefaultValue(250.0D)
+                .setTooltip(Text.of("Altitude at which flight speed start to increase."))
                 .setSaveConsumer(newValue -> eanConfigFile.setCurveStart(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(new TranslatableText("Flight speed curve end"), eanConfigFile.getCurveEnd())
+        elytraFlightSettings.addEntry(entryBuilder.startDoubleField(Text.of("Flight speed curve end"), eanConfigFile.getCurveEnd())
                 .setDefaultValue(1000.0D)
-                .setTooltip(new TranslatableText("Altitude at which flight speed stops to increase (maximum flight speed is achieved)."))
+                .setTooltip(Text.of("Altitude at which flight speed stops to increase (maximum flight speed is achieved)."))
                 .setSaveConsumer(newValue -> eanConfigFile.setCurveEnd(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Sneaking realigns pitch."), eanConfigFile.isSneakRealignsPitch())
+        elytraFlightSettings.addEntry(entryBuilder.startBooleanToggle(Text.of("Sneaking realigns pitch."), eanConfigFile.isSneakRealignsPitch())
                 .setDefaultValue(true)
-                .setTooltip(new TranslatableText("When true, sneaking mid-flight will realign your pitch."))
+                .setTooltip(Text.of("When true, sneaking mid-flight will realign your pitch."))
                 .setSaveConsumer(newValue -> eanConfigFile.setSneakRealignsPitch(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Pitch realignment angle."), eanConfigFile.getRealignmentAngle())
+        elytraFlightSettings.addEntry(entryBuilder.startFloatField(Text.of("Pitch realignment angle."), eanConfigFile.getRealignmentAngle())
                 .setDefaultValue(0)
-                .setTooltip(new TranslatableText("Pitch angle at which the player will stay when sneaking mid-flight."))
+                .setTooltip(Text.of("Pitch angle at which the player will align when sneaking mid-flight."))
                 .setSaveConsumer(newValue -> eanConfigFile.setRealignmentAngle(newValue))
                 .build());
 
-        elytraFlightSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Pitch realignment rate."), eanConfigFile.getRealignmentRate())
+        elytraFlightSettings.addEntry(entryBuilder.startFloatField(Text.of("Pitch realignment rate."), eanConfigFile.getRealignmentRate())
                 .setDefaultValue(0.1F)
-                .setTooltip(new TranslatableText("Amount of rotation (angle-per-tick), at which the player will be rotating towards the pitch realignment angle when sneaking mid-air."))
+                .setTooltip(Text.of("Amount of rotation (angle-per-tick), at which the player will be rotating towards the pitch realignment angle when sneaking mid-air."))
                 .setSaveConsumer(newValue -> eanConfigFile.setRealignmentRate(newValue))
                 .build());
     }
@@ -115,8 +116,8 @@ public class ConfigScreen {
         List<List<AbstractConfigListEntry>> layerAttributesList = new ArrayList<>(); // Used to store each layer subcategory menus' attributes.
 
         // ? General settings
-        cloudSettings.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("Reset to the default preset?"), false)
-                .setDefaultValue(true).setTooltip(new TranslatableText("Set this to \"yes\" and save to reset cloud layers to the default preset. All previous cloud layers will be removed and 2 new layers will be placed at the flight-speed-curve's middle and highest points."))
+        cloudSettings.addEntry(entryBuilder.startBooleanToggle(Text.of("Reset to the default preset?"), false)
+                .setDefaultValue(true).setTooltip(Text.of("Set this to \"yes\" and save to reset cloud layers to the default preset. All previous cloud layers will be removed and 2 new layers will be placed at the flight-speed-curve's middle and highest points."))
                 .setSaveConsumer(newValue->{
                     if (newValue){
                         resetToDefault = true;
@@ -125,13 +126,13 @@ public class ConfigScreen {
                 })
                 .build());
 
-        cloudSettings.addEntry(entryBuilder.startTextDescription(new TranslatableText("--- General settings ---"))
-                .setTooltip(new TranslatableText("Settings applied to all cloud layers at once!"))
+        cloudSettings.addEntry(entryBuilder.startTextDescription(Text.of("--- General settings ---"))
+                .setTooltip(Text.of("Settings applied to all cloud layers at once!"))
                 .build());
 
         // Layer amount field.
-        cloudSettings.addEntry(entryBuilder.startIntField(new TranslatableText("Cloud layer amount"), eanConfigFile.getLayerAmount())
-                .setTooltip(new TranslatableText("This value determines the amount of cloud layers there are. Besides the vanilla clouds. To make new layers show up in the config, re-enter the menu without restarting. For changes to apply in-game however, restarting is necessary."))
+        cloudSettings.addEntry(entryBuilder.startIntField(Text.of("Cloud layer amount"), eanConfigFile.getLayerAmount())
+                .setTooltip(Text.of("This value determines the amount of cloud layers there are. Besides the vanilla clouds. To make new layers show up in the config, re-enter the menu without restarting. For changes to apply in-game however, restarting is necessary."))
                 .setDefaultValue(2)
                 .setMin(0)
                 .setSaveConsumer(newValue -> {
@@ -144,8 +145,8 @@ public class ConfigScreen {
                 .build());
 
         // Distance between layers.
-        cloudSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Distance between cloud layers"), eanConfigFile.getLayerDistance())
-                .setTooltip(new TranslatableText("When this value is changed, all cloud layers are relocated, and, starting from the altitude specified in the field below; they are placed on top of each other separated by this distance."))
+        cloudSettings.addEntry(entryBuilder.startFloatField(Text.of("Distance between cloud layers"), eanConfigFile.getLayerDistance())
+                .setTooltip(Text.of("When this value is changed, all cloud layers are relocated, and, starting from the altitude specified in the field below; they are placed on top of each other separated by this distance."))
                 .setDefaultValue(250.0F)
                 .setMin(0)
                 .setSaveConsumer(newValue -> {
@@ -157,8 +158,8 @@ public class ConfigScreen {
                 .build());
 
         // Cloud stacking start altitude
-        cloudSettings.addEntry(entryBuilder.startFloatField(new TranslatableText("Cloud layers' lowest altitude"), eanConfigFile.getStackingAltitude())
-                .setTooltip(new TranslatableText("When the distance between clouds is modified, clouds will re-stacked on top of each other starting at the altitude specified in this field."))
+        cloudSettings.addEntry(entryBuilder.startFloatField(Text.of("Cloud layers' lowest altitude"), eanConfigFile.getStackingAltitude())
+                .setTooltip(Text.of("When the distance between clouds is modified, clouds will re-stacked on top of each other starting at the altitude specified in this field."))
                 .setDefaultValue(192.0F)
                 .setSaveConsumer(newValue -> {
                     if (newValue != eanConfigFile.getStackingAltitude()){
@@ -171,7 +172,7 @@ public class ConfigScreen {
         // Cloud type
         cloudSettings.addEntry(entryBuilder
                 .startDropdownMenu(
-                        new TranslatableText("Cloud type"),
+                        Text.of("Cloud type"),
                         DropdownMenuBuilder.TopCellElementBuilder.of(eanConfigFile.getCloudType(), value ->
                                 switch (value) {
                                     case "FAST" -> CloudTypes.FAST;
@@ -181,13 +182,13 @@ public class ConfigScreen {
                         DropdownMenuBuilder.CellCreatorBuilder.of(value ->
                         {
                             if (CloudTypes.LOD.equals(value)) {
-                                return new TranslatableText("LOD");
+                                return Text.of("LOD");
                             } else if (CloudTypes.FAST.equals(value)) {
-                                return new TranslatableText("FAST");
+                                return Text.of("FAST");
                             } else if (CloudTypes.FANCY.equals(value)) {
-                                return new TranslatableText("FANCY");
+                                return Text.of("FANCY");
                             }
-                            return new TranslatableText("UNKNOWN CLOUD TYPE");
+                            return Text.of("UNKNOWN CLOUD TYPE");
                         }))
                 .setDefaultValue(CloudTypes.LOD)
                 .setSuggestionMode(false)
@@ -203,7 +204,7 @@ public class ConfigScreen {
         // Render mode
         cloudSettings.addEntry(entryBuilder
                 .startDropdownMenu(
-                        new TranslatableText("Render mode"),
+                        Text.of("Render mode"),
                         DropdownMenuBuilder.TopCellElementBuilder.of(eanConfigFile.getRenderMode(), value ->
                                 switch (value) {
                                     case "NEVER_RENDER" -> CloudRenderModes.NEVER_RENDER;
@@ -215,18 +216,18 @@ public class ConfigScreen {
                         DropdownMenuBuilder.CellCreatorBuilder.of(value ->
                         {
                             if (CloudRenderModes.NEVER_RENDER.equals(value)){
-                                return new TranslatableText("NEVER_RENDER");
+                                return Text.of("NEVER_RENDER");
                             } else if (CloudRenderModes.TWO_IN_ADVANCE.equals(value)) {
-                                return new TranslatableText("TWO_IN_ADVANCE");
+                                return Text.of("TWO_IN_ADVANCE");
                             } else if (CloudRenderModes.ONE_IN_ADVANCE.equals(value)) {
-                                return new TranslatableText("ONE_IN_ADVANCE");
+                                return Text.of("ONE_IN_ADVANCE");
                             } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
-                                return new TranslatableText("ALWAYS_RENDER");
+                                return Text.of("ALWAYS_RENDER");
                             }
-                            return new TranslatableText("");
+                            return Text.of("");
                         }))
                 .setDefaultValue(CloudRenderModes.ALWAYS_RENDER)
-                .setTooltip(new TranslatableText("This value determines when a cloud layer begins to render."))
+                .setTooltip(Text.of("This value determines when a cloud layer begins to render."))
                 .setSuggestionMode(false)
                 .setSelections(Arrays.asList(CloudRenderModes.values()))
                 .setSaveConsumer(newValue ->{
@@ -240,7 +241,7 @@ public class ConfigScreen {
         // LOD render mode
         cloudSettings.addEntry(entryBuilder
                 .startDropdownMenu(
-                        new TranslatableText("LOD render mode"),
+                        Text.of("LOD render mode"),
                         DropdownMenuBuilder.TopCellElementBuilder.of(eanConfigFile.getLodRenderMode(), value ->
                                 switch (value) {
                                     case "TWO_IN_ADVANCE" -> CloudRenderModes.TWO_IN_ADVANCE;
@@ -251,16 +252,16 @@ public class ConfigScreen {
                         DropdownMenuBuilder.CellCreatorBuilder.of(value ->
                         {
                             if (CloudRenderModes.TWO_IN_ADVANCE.equals(value)) {
-                                return new TranslatableText("TWO_IN_ADVANCE");
+                                return Text.of("TWO_IN_ADVANCE");
                             } else if (CloudRenderModes.ONE_IN_ADVANCE.equals(value)) {
-                                return new TranslatableText("ONE_IN_ADVANCE");
+                                return Text.of("ONE_IN_ADVANCE");
                             } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
-                                return new TranslatableText("ALWAYS_RENDER");
+                                return Text.of("ALWAYS_RENDER");
                             }
-                            return new TranslatableText("");
+                            return Text.of("");
                         }))
                 .setDefaultValue(CloudRenderModes.TWO_IN_ADVANCE)
-                .setTooltip(new TranslatableText("This value determines when a cloud layer begins to render in high level of detail. It is only used if the cloud type is set to LOD."))
+                .setTooltip(Text.of("This value determines when a cloud layer begins to render in high level of detail. It is only used if the cloud type is set to LOD."))
                 .setSuggestionMode(false)
                 .setSelections(Arrays.asList(CloudRenderModes.values()))
                 .setSaveConsumer(newValue ->{
@@ -273,8 +274,8 @@ public class ConfigScreen {
 
         // Use smooth LODs
         cloudSettings.addEntry(entryBuilder
-                .startBooleanToggle(new TranslatableText("Smooth LODs"), eanConfigFile.isUseSmoothLODs())
-                .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option may use up more resources. Clouds begin to puff up at half distance from their layer."))
+                .startBooleanToggle(Text.of("Smooth LODs"), eanConfigFile.isUseSmoothLODs())
+                .setTooltip(Text.of("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option may use up more resources. Clouds begin to puff up at half distance from their layer."))
                 .setDefaultValue(false)
                 .setSaveConsumer(newValue -> {
                     if (newValue != eanConfigFile.isUseSmoothLODs()){
@@ -297,7 +298,7 @@ public class ConfigScreen {
 
             // Altitude
             layerAttributesList.get(layerNum).add(entryBuilder
-                    .startFloatField(new TranslatableText("Altitude"), layer.getAltitude())
+                    .startFloatField(Text.of("Altitude"), layer.getAltitude())
                     .setDefaultValue(layer.getAltitude())
                     .setSaveConsumer(layer::setAltitude)
                     .build());
@@ -305,7 +306,7 @@ public class ConfigScreen {
             // Cloud type
             layerAttributesList.get(layerNum).add(entryBuilder
                     .startDropdownMenu(
-                            new TranslatableText("Cloud type"),
+                            Text.of("Cloud type"),
                             DropdownMenuBuilder.TopCellElementBuilder.of(layer.getCloudType(), value ->
                                     switch (value) {
                                         case "LOD" -> CloudTypes.LOD;
@@ -316,13 +317,13 @@ public class ConfigScreen {
                             DropdownMenuBuilder.CellCreatorBuilder.of(value ->
                             {
                                 if (CloudTypes.LOD.equals(value)) {
-                                    return new TranslatableText("LOD");
+                                    return Text.of("LOD");
                                 } else if (CloudTypes.FAST.equals(value)) {
-                                    return new TranslatableText("FAST");
+                                    return Text.of("FAST");
                                 } else if (CloudTypes.FANCY.equals(value)) {
-                                    return new TranslatableText("FANCY");
+                                    return Text.of("FANCY");
                                 }
-                                return new TranslatableText("UNKNOWN CLOUD TYPE");
+                                return Text.of("UNKNOWN CLOUD TYPE");
                             }))
                     .setDefaultValue(CloudTypes.LOD)
                     .setSuggestionMode(false)
@@ -333,7 +334,7 @@ public class ConfigScreen {
             // Render mode
             layerAttributesList.get(layerNum).add(entryBuilder
                     .startDropdownMenu(
-                            new TranslatableText("Render mode"),
+                            Text.of("Render mode"),
                             DropdownMenuBuilder.TopCellElementBuilder.of(layer.getRenderMode(), value ->
                                     switch (value) {
                                         case "NEVER_RENDER" -> CloudRenderModes.NEVER_RENDER;
@@ -346,20 +347,20 @@ public class ConfigScreen {
                             DropdownMenuBuilder.CellCreatorBuilder.of(value ->
                             {
                                 if (CloudRenderModes.NEVER_RENDER.equals(value)){
-                                    return new TranslatableText("NEVER_RENDER");
+                                    return Text.of("NEVER_RENDER");
                                 } else if (CloudRenderModes.TWO_IN_ADVANCE.equals(value)) {
-                                    return new TranslatableText("TWO_IN_ADVANCE");
+                                    return Text.of("TWO_IN_ADVANCE");
                                 } else if (CloudRenderModes.ONE_IN_ADVANCE.equals(value)) {
-                                    return new TranslatableText("ONE_IN_ADVANCE");
+                                    return Text.of("ONE_IN_ADVANCE");
                                 } else if (CloudRenderModes.CUSTOM_ALTITUDE.equals(value)) {
-                                    return new TranslatableText("CUSTOM_ALTITUDE");
+                                    return Text.of("CUSTOM_ALTITUDE");
                                 } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
-                                    return new TranslatableText("ALWAYS_RENDER");
+                                    return Text.of("ALWAYS_RENDER");
                                 }
-                                return new TranslatableText("NEVER_RENDER");
+                                return Text.of("NEVER_RENDER");
                             }))
                     .setDefaultValue(CloudRenderModes.ALWAYS_RENDER)
-                    .setTooltip(new TranslatableText("This value determines when the cloud layer begins to render. It can be one/two layers in advance, at a set altitude or always render."))
+                    .setTooltip(Text.of("This value determines when the cloud layer begins to render. It can be one/two layers in advance, at a set altitude or always render."))
                     .setSuggestionMode(false)
                     .setSelections(Arrays.asList(CloudRenderModes.values()))
                     .setSaveConsumer(layer::setRenderMode)
@@ -367,8 +368,8 @@ public class ConfigScreen {
 
             // Render distance
             layerAttributesList.get(layerNum).add(entryBuilder
-                    .startFloatField(new TranslatableText("Custom render altitude"), layer.getCloudRenderDistance())
-                    .setTooltip(new TranslatableText("This value is only used if \"Custom altitude\" was selected as the render mode."))
+                    .startFloatField(Text.of("Custom render altitude"), layer.getCloudRenderDistance())
+                    .setTooltip(Text.of("This value is only used if \"Custom altitude\" was selected as the render mode."))
                     .setDefaultValue(0.0F)
                     .setSaveConsumer(layer::setCloudRenderDistance)
                     .build());
@@ -376,7 +377,7 @@ public class ConfigScreen {
             // LOD render mode
             layerAttributesList.get(layerNum).add(entryBuilder
                     .startDropdownMenu(
-                            new TranslatableText("LOD render mode"),
+                            Text.of("LOD render mode"),
                             DropdownMenuBuilder.TopCellElementBuilder.of(layer.getLodRenderMode(), value ->
                                     switch (value) {
                                         case "TWO_IN_ADVANCE" -> CloudRenderModes.TWO_IN_ADVANCE;
@@ -388,18 +389,18 @@ public class ConfigScreen {
                             DropdownMenuBuilder.CellCreatorBuilder.of(value ->
                             {
                                 if (CloudRenderModes.TWO_IN_ADVANCE.equals(value)) {
-                                    return new TranslatableText("TWO_IN_ADVANCE");
+                                    return Text.of("TWO_IN_ADVANCE");
                                 } else if (CloudRenderModes.ONE_IN_ADVANCE.equals(value)) {
-                                    return new TranslatableText("ONE_IN_ADVANCE");
+                                    return Text.of("ONE_IN_ADVANCE");
                                 } else if (CloudRenderModes.CUSTOM_ALTITUDE.equals(value)) {
-                                    return new TranslatableText("CUSTOM_ALTITUDE");
+                                    return Text.of("CUSTOM_ALTITUDE");
                                 } else if (CloudRenderModes.ALWAYS_RENDER.equals(value)) {
-                                    return new TranslatableText("ALWAYS_RENDER");
+                                    return Text.of("ALWAYS_RENDER");
                                 }
-                                return new TranslatableText("NEVER_RENDER");
+                                return Text.of("NEVER_RENDER");
                             }))
                     .setDefaultValue(CloudRenderModes.TWO_IN_ADVANCE)
-                    .setTooltip(new TranslatableText("This value determines when the cloud layer begins to render in high level of detail. It is only used if the cloud type is set to LOD."))
+                    .setTooltip(Text.of("This value determines when the cloud layer begins to render in high level of detail. It is only used if the cloud type is set to LOD."))
                     .setSuggestionMode(false)
                     .setSelections(Arrays.asList(CloudRenderModes.values()))
                     .setSaveConsumer(layer::setLodRenderMode)
@@ -407,16 +408,16 @@ public class ConfigScreen {
 
             // LOD render distance
             layerAttributesList.get(layerNum).add(entryBuilder
-                    .startFloatField(new TranslatableText("Custom LOD render altitude"), layer.getLodRenderDistance())
-                    .setTooltip(new TranslatableText("This value is only used if \"Custom altitude\" was selected as the LOD render mode."))
+                    .startFloatField(Text.of("Custom LOD render altitude"), layer.getLodRenderDistance())
+                    .setTooltip(Text.of("This value is only used if \"Custom altitude\" was selected as the LOD render mode."))
                     .setDefaultValue(0.0F)
                     .setSaveConsumer(layer::setLodRenderDistance)
                     .build());
 
             // Use smooth LODs
             layerAttributesList.get(layerNum).add(entryBuilder
-                    .startBooleanToggle(new TranslatableText("Smooth LODs"), layer.isUseSmoothLODs())
-                    .setTooltip(new TranslatableText("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option may use up more resources. Clouds begin to puff up at half distance from their layer."))
+                    .startBooleanToggle(Text.of("Smooth LODs"), layer.isUseSmoothLODs())
+                    .setTooltip(Text.of("Gradually puffs up LOD clouds as the player approaches them so the LOD transition is not too rough. This option may use up more resources. Clouds begin to puff up at half distance from their layer."))
                     .setDefaultValue(false)
                     .setSaveConsumer(layer::setUseSmoothLODs)
                     .build());
@@ -427,15 +428,15 @@ public class ConfigScreen {
 
         // * Create each layer subCategory with their own attribute list.
         for (int i = 0; i < layerAttributesList.size(); i++){
-            layerList.add(i, entryBuilder.startSubCategory(new TranslatableText(cloudLayerList.get(i).getName()), layerAttributesList.get(i)).build());
+            layerList.add(i, entryBuilder.startSubCategory(Text.of(cloudLayerList.get(i).getName()), layerAttributesList.get(i)).build());
         }
 
         // * Add all layer subCategories to the main config subCategory.
-        cloudSettings.addEntry(entryBuilder.startTextDescription(new TranslatableText("--- Cloud layer individual configuration ---"))
-                .setTooltip(new TranslatableText("If you want to set up each cloud layer individually and in most detail, here is the place!"))
+        cloudSettings.addEntry(entryBuilder.startTextDescription(Text.of("--- Cloud layer individual configuration ---"))
+                .setTooltip(Text.of("If you want to set up each cloud layer individually and in most detail, here is the place!"))
                 .build());
 
-        cloudSettings.addEntry(entryBuilder.startSubCategory(new TranslatableText("Select a cloud layer:"), layerList)
+        cloudSettings.addEntry(entryBuilder.startSubCategory(Text.of("Select a cloud layer:"), layerList)
                 .build());
     }
 
