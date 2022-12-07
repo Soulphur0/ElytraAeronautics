@@ -6,6 +6,7 @@ import com.github.Soulphur0.utility.EanMath;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.option.CloudRenderMode;
 import net.minecraft.client.render.*;
@@ -14,9 +15,9 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.resource.SynchronousResourceReloader;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -68,7 +69,7 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
     @Shadow
     private VertexBuffer cloudsBuffer;
 
-    @Inject(method= "renderClouds(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/util/math/Matrix4f;FDDD)V", at = @At(value = "HEAD"))
+    @Inject(method= "renderClouds(Lnet/minecraft/client/util/math/MatrixStack;Lorg/joml/Matrix4f;FDDD)V", at = @At(value = "HEAD"))
     private void renderCloudsPublicOverwrite(MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double d, double e, double f, CallbackInfo ci){
         float g = this.world.getDimensionEffects().getCloudsHeight();
         if (!Float.isNaN(g)) {
@@ -116,7 +117,7 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
                 VertexBuffer.unbind();
             }
 
-            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
             RenderSystem.setShaderTexture(0, CLOUDS);
             BackgroundRenderer.setFogBlack();
             matrices.push();
@@ -133,8 +134,8 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
                         RenderSystem.colorMask(true, true, true, true);
                     }
 
-                    Shader shader = RenderSystem.getShader();
-                    this.cloudsBuffer.draw(matrices.peek().getPositionMatrix(), projectionMatrix, shader);
+                    ShaderProgram shaderProgram = RenderSystem.getShader();
+                    this.cloudsBuffer.draw(matrices.peek().getPositionMatrix(), projectionMatrix, shaderProgram);
                 }
 
                 VertexBuffer.unbind();
@@ -183,7 +184,7 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
         float v = m * 0.8F;
         float w = n * 0.8F;
         float aa = o * 0.8F;
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
         float playerRelativeDistanceFromCloudLayer = (float)Math.floor(renderCloudsY / 4.0D) * 4.0F; // Unmodified original variable.
 
