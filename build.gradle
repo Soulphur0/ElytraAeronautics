@@ -75,6 +75,18 @@ publishing {
 		mavenJava(MavenPublication) {
 			from components.java
 		}
+
+		maven(MavenPublication) {
+			groupId = 'com.Github'
+			artifactId = 'Soulphur0'
+			version = "1.1.0"
+			from components.java
+
+			pom {
+				description = 'Elytra Aeronatucs Jar Library'
+			}
+		}
+
 	}
 
 	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
