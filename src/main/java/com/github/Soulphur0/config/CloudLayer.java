@@ -3,29 +3,21 @@ package com.github.Soulphur0.config;
 import java.io.Serializable;
 
 public class CloudLayer implements Serializable {
-    private String name;
-    private float altitude;
-    private CloudTypes cloudType;
 
-    private CloudRenderModes renderMode;
-    private float cloudRenderDistance;
+    private String name; // Cloud layer name given by the system to sort it (Layer 1,  Layer2, ...)
+    private float altitude; // Altitude at which the cloud layer will render.
+    private float displacement; // Amount of pixels the texture for clouds will be moved in this layer.
+    private CloudTypes cloudType; // FAST, FANCY, LOD, more planned for the future.
+    private int renderDistance; // Number of layers to skip before rendering this layer
+    private boolean useSmoothLODs; // Fast clouds will puff-up gradually.
 
-    private CloudRenderModes lodRenderMode;
-    private float lodRenderDistance;
-    private boolean useSmoothLODs;
-
-    // * Constructors
-    public CloudLayer(float altitude, CloudTypes cloudType, CloudRenderModes renderMode, float cloudRenderDistance, CloudRenderModes lodRenderMode, float lodRenderDistance, boolean useSmoothLODs) {
+    public CloudLayer(float altitude, CloudTypes cloudType, boolean useSmoothLODs) {
         this.altitude = altitude;
         this.cloudType = cloudType;
-        this.renderMode = renderMode;
-        this.cloudRenderDistance = cloudRenderDistance;
-        this.lodRenderMode = lodRenderMode;
-        this.lodRenderDistance = lodRenderDistance;
         this.useSmoothLODs = useSmoothLODs;
     }
 
-    // * Instance methods
+    // $ GETTERS & SETTERS
     public String getName() {
         return name;
     }
@@ -48,38 +40,6 @@ public class CloudLayer implements Serializable {
 
     public void setCloudType(CloudTypes cloudType) {
         this.cloudType = cloudType;
-    }
-
-    public CloudRenderModes getRenderMode() {
-        return renderMode;
-    }
-
-    public void setRenderMode(CloudRenderModes renderMode) {
-        this.renderMode = renderMode;
-    }
-
-    public float getCloudRenderDistance() {
-        return cloudRenderDistance;
-    }
-
-    public void setCloudRenderDistance(float cloudRenderDistance) {
-        this.cloudRenderDistance = cloudRenderDistance;
-    }
-
-    public CloudRenderModes getLodRenderMode() {
-        return lodRenderMode;
-    }
-
-    public void setLodRenderMode(CloudRenderModes lodRenderMode) {
-        this.lodRenderMode = lodRenderMode;
-    }
-
-    public float getLodRenderDistance() {
-        return lodRenderDistance;
-    }
-
-    public void setLodRenderDistance(float lodRenderDistance) {
-        this.lodRenderDistance = lodRenderDistance;
     }
 
     public boolean isUseSmoothLODs() {

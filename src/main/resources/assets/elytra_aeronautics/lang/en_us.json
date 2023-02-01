@@ -1,0 +1,27 @@
+{
+  "text.autoconfig.ean.category.default": "Elytra Flight Settings",
+
+  "text.autoconfig.ean.option.altitudeDeterminesSpeed.@PrefixText": "Flight speed settings",
+  "text.autoconfig.ean.option.altitudeDeterminesSpeed": "Altitude determines flight speed",
+  "text.autoconfig.ean.option.altitudeDeterminesSpeed.@Tooltip[0]": "Set to true if you want to elytra flight be faster at higher altitudes.",
+  "text.autoconfig.ean.option.altitudeDeterminesSpeed.@Tooltip[1]": "If set to false, your flight speed will be determined by the minimal speed.",
+  "text.autoconfig.ean.option.minSpeed": "Minimal flight speed (m/s)",
+  "text.autoconfig.ean.option.minSpeed.@Tooltip[0]": "Minimal flight speed achieved by travelling at a zero degree angle.",
+  "text.autoconfig.ean.option.minSpeed.@Tooltip[1]": "The default value is the vanilla value.",
+  "text.autoconfig.ean.option.maxSpeed": "Maximum flight speed (m/s)",
+  "text.autoconfig.ean.option.maxSpeed.@Tooltip": "Maximum flight speed achieved by travelling at a zero degree angle.",
+  "text.autoconfig.ean.option.minHeight": "Flight speed curve beginning",
+  "text.autoconfig.ean.option.minHeight.@Tooltip": "Altitude at which flight speed starts to increase.",
+  "text.autoconfig.ean.option.maxHeight": "Flight speed curve end",
+  "text.autoconfig.ean.option.maxHeight.@Tooltip": "Altitude at which flight speed stops to increase.",
+
+  "text.autoconfig.ean.option.sneakingRealignsPitch.@PrefixText": "Pitch realignment settings",
+
+  "text.autoconfig.ean.option.sneakingRealignsPitch": "Sneaking realigns pitch",
+  "text.autoconfig.ean.option.sneakingRealignsPitch.@Tooltip": "When true, sneaking mid-flight will realign your pitch.",
+  "text.autoconfig.ean.option.realignAngle": "Pitch realignment angle",
+  "text.autoconfig.ean.option.realignAngle.@Tooltip": "Pitch angle at which the player will align when sneaking mid-flight.",
+  "text.autoconfig.ean.option.realignRate": "Pitch realignment rate",
+  "text.autoconfig.ean.option.realignRate.@Tooltip[0]": "Amount of rotation at which the player will realign towards the pitch realignment angle.",
+  "text.autoconfig.ean.option.realignRate.@Tooltip[1]": "Measured in angles-per-tick."
+}

@@ -1,3 +1,4 @@
+/*
 package com.github.Soulphur0.config;
 
 import java.io.Serializable;
@@ -203,3 +204,4 @@ public class EanConfigFile implements Serializable {
         ConfigFileWriter.createConfigFile(new EanConfigFile());
     }
 }
+*/
