@@ -8,13 +8,13 @@ public class CloudLayer implements Serializable {
     private float altitude; // Altitude at which the cloud layer will render.
     private float displacement; // Amount of pixels the texture for clouds will be moved in this layer.
     private CloudTypes cloudType; // FAST, FANCY, LOD, more planned for the future.
-    private int renderDistance; // Number of layers to skip before rendering this layer
+    private float verticalRenderDistance; // Min distance to the layer at which it will render.
+    private int horizontalRenderDistance; // Number of chunks the cloud layer occupies.
+    private float lodRenderDistance; // Min distance to the layer at which it will render with high LOD.
     private boolean useSmoothLODs; // Fast clouds will puff-up gradually.
 
-    public CloudLayer(float altitude, CloudTypes cloudType, boolean useSmoothLODs) {
-        this.altitude = altitude;
-        this.cloudType = cloudType;
-        this.useSmoothLODs = useSmoothLODs;
+    public CloudLayer(){
+
     }
 
     // $ GETTERS & SETTERS
@@ -48,5 +48,37 @@ public class CloudLayer implements Serializable {
 
     public void setUseSmoothLODs(boolean useSmoothLODs) {
         this.useSmoothLODs = useSmoothLODs;
+    }
+
+    public float getDisplacement() {
+        return displacement;
+    }
+
+    public void setDisplacement(float displacement) {
+        this.displacement = displacement;
+    }
+
+    public float getVerticalRenderDistance() {
+        return verticalRenderDistance;
+    }
+
+    public void setVerticalRenderDistance(float verticalRenderDistance) {
+        this.verticalRenderDistance = verticalRenderDistance;
+    }
+
+    public int getHorizontalRenderDistance() {
+        return horizontalRenderDistance;
+    }
+
+    public void setHorizontalRenderDistance(int horizontalRenderDistance) {
+        this.horizontalRenderDistance = horizontalRenderDistance;
+    }
+
+    public float getLodRenderDistance() {
+        return lodRenderDistance;
+    }
+
+    public void setLodRenderDistance(float lodRenderDistance) {
+        this.lodRenderDistance = lodRenderDistance;
     }
 }
