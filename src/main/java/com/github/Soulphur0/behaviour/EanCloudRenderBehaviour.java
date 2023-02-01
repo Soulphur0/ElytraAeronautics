@@ -4,9 +4,10 @@ import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.CloudLayer;
 import com.github.Soulphur0.config.CloudRenderModes;
 import com.github.Soulphur0.config.CloudTypes;
-import com.github.Soulphur0.config.ConfigFileReader;
+import com.github.Soulphur0.config.EanConfig;
 import com.github.Soulphur0.utility.EanMath;
 import com.mojang.blaze3d.systems.RenderSystem;
+import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.VertexFormat;
@@ -31,7 +32,7 @@ public class EanCloudRenderBehaviour {
     private static BufferBuilder.BuiltBuffer ean_renderCloudsLoadConfig(BufferBuilder builder, double x, double renderCloudsY, double z, Vec3d color){
         // * Once per save action.
         if (ElytraAeronautics.readConfigFileCue_WorldRendererMixin){
-            EanConfigFile configFile = ConfigFileReader.getConfigFile();
+            EanConfig configFile = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
             cloudLayers = configFile.getCloudLayerList();
             ElytraAeronautics.readConfigFileCue_WorldRendererMixin = false;
         }

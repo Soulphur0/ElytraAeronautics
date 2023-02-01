@@ -1,35 +1,36 @@
 package com.github.Soulphur0.behaviour;
 
 import com.github.Soulphur0.ElytraAeronautics;
-import com.github.Soulphur0.config.ConfigFileReader;
-import com.github.Soulphur0.config.EanConfigFile;
+import com.github.Soulphur0.config.EanConfig;
 import com.github.Soulphur0.utility.EanMath;
+import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 public class EanFlightBehaviour {
 
-    static public Vec3d flightBehaviour(LivingEntity player){
-        return modifyVelocity(player);
+    // : Cloud rendering entry point for injection/modification.
+    static public Vec3d ean_flightBehaviour(LivingEntity player){
+        return ean_setupFlightCalc(player);
     }
 
-    // * Config file data
-    private static EanConfigFile configFile = ConfigFileReader.getConfigFile();
+    // : Calculations.
+    private static EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
 
-    private static Vec3d modifyVelocity(LivingEntity player){
+    private static Vec3d ean_setupFlightCalc(LivingEntity player){
         // ? Re-read config file if data has been modified.
         if (ElytraAeronautics.readConfigFileCue_LivingEntityMixin){
-            configFile = ConfigFileReader.getConfigFile();
+            config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
             ElytraAeronautics.readConfigFileCue_LivingEntityMixin = false;
         }
 
-        // ? Gradual pitch realignment
-        if(configFile.isSneakRealignsPitch() && player.isSneaking()){
+        // + Gradual pitch realignment
+        if(config.sneakingRealignsPitch && player.isSneaking()){
             float pitch = player.getPitch();
 
-            float alignmentAngle = configFile.getRealignmentAngle();
-            float alignementRate = configFile.getRealignmentRate();
+            float alignmentAngle = config.realignAngle;
+            float alignementRate = config.realignRate;
 
             if (Math.abs(pitch) <= alignementRate*2){
                 player.setPitch(alignmentAngle);
@@ -42,30 +43,30 @@ public class EanFlightBehaviour {
             }
         }
 
-        // ? Get player altitude
+        // + Get player altitude
         Vec3d positionVector = player.getPos();
         double playerAltitude = positionVector.y;
 
-        // ? Calculate player speed based on altitude and return
-        Vec3d movementVector;
-        movementVector = calcMovementVector(player, playerAltitude);
+        // % Calculate player speed based on altitude and return
+        Vec3d movementVector = ean_calcFlightMovementVector(player, playerAltitude);
+
         return movementVector.multiply(0.99f, 0.98f, 0.99f);
     }
 
-    static private Vec3d calcMovementVector(LivingEntity player, double playerAltitude){
+    private static Vec3d ean_calcFlightMovementVector(LivingEntity player, double playerAltitude){
         double speedConstant = 0.08;
         double aux;
         double aux2;
 
-        // * Calculate additional speed based on player altitude.
-        double minSpeed = configFile.getMinSpeed();
-        double maxSpeed = configFile.getMaxSpeed();
-        double curveStart = configFile.getCurveStart();
-        double curveEnd = configFile.getCurveEnd();
-        double modHSpeed;
+        // ? Read config file values
+        double minSpeed = config.minSpeed;
+        double maxSpeed = config.maxSpeed;
+        double curveStart = config.minHeight;
+        double curveEnd = config.maxHeight;
 
+        // + Calculate additional speed based on player altitude.
         // * Clamp the calculated modified speed to not be below or over the speed range.
-        modHSpeed = (configFile.isAltitudeDeterminesSpeed()) ? MathHelper.clamp(EanMath.getLinealValue(curveStart,minSpeed,curveEnd,maxSpeed,playerAltitude), minSpeed, maxSpeed) : minSpeed;
+        double modHSpeed = (config.altitudeDeterminesSpeed) ? MathHelper.clamp(EanMath.getLinealValue(curveStart,minSpeed,curveEnd,maxSpeed,playerAltitude), minSpeed, maxSpeed) : minSpeed;
 
         Vec3d movementVector = player.getVelocity();
         if (movementVector.y > -0.5) {
@@ -83,8 +84,8 @@ public class EanFlightBehaviour {
 
         movementVector = player.getVelocity().add(0.0, speedConstant * (-1.0 + (double)fallSpeedMultiplier * 0.75), 0.0); // ! Set Y=0.0 to turn off downwards speed.
 
-        // * Looking under the horizon
-        // Horizontal movement uses aux plus the (+1 m/s) constant multiplied by the speed set by the player minus default speed.
+        // + Looking under the horizon
+        // * Horizontal movement uses aux plus the (+1 m/s) constant multiplied by the speed set by the player minus default speed.
         if (movementVector.y < 0.0 && angleToTheGround > 0.0) {
             aux = movementVector.y * -0.1 * (double)fallSpeedMultiplier;
 
@@ -94,8 +95,8 @@ public class EanFlightBehaviour {
             movementVector = movementVector.add(rotationVector.x * aux2 / angleToTheGround, aux, rotationVector.z * aux2 / angleToTheGround); // ! Set Y=0.0 to turn off downwards speed.
         }
 
-        // * Looking over the horizon
-        // Vertical speed decreases with the player realtime speed.
+        // + Looking over the horizon
+        // * Vertical speed decreases with the player realtime speed.
         if (pitchInRadians < 0.0f && angleToTheGround > 0.0) {
             aux = speed * (double)(-MathHelper.sin(pitchInRadians)) * 0.04;
 

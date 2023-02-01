@@ -13,14 +13,12 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
 
-
-
     protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, World world){
         super(entityType,world);
     }
 
     @ModifyArg(method = "travel(Lnet/minecraft/util/math/Vec3d;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 6))
     private Vec3d modifyVelocity(Vec3d vector){
-        return EanFlightBehaviour.flightBehaviour(((LivingEntity)(Object)this));
+        return EanFlightBehaviour.ean_flightBehaviour(((LivingEntity)(Object)this));
     }
 }
