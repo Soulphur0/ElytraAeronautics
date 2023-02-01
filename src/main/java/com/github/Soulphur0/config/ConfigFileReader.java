@@ -1,3 +1,4 @@
+/*
 package com.github.Soulphur0.config;
 
 import java.io.FileInputStream;
@@ -27,3 +28,4 @@ public class ConfigFileReader {
         }
     }
 }
+*/

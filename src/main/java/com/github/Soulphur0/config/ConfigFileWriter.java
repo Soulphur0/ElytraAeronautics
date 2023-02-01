@@ -1,4 +1,6 @@
+/*
 package com.github.Soulphur0.config;
+
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,3 +36,4 @@ public class ConfigFileWriter {
         }
     }
 }
+*/
