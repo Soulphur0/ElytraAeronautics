@@ -1,7 +1,7 @@
 {
-  "text.autoconfig.ean.category.default": "Elytra Flight Settings",
+  "text.autoconfig.ean.category.elytra_flight_settings": "Elytra Flight Settings",
 
-  "text.autoconfig.ean.option.altitudeDeterminesSpeed.@PrefixText": "Flight speed settings",
+  "text.autoconfig.ean.option.altitudeDeterminesSpeed.@PrefixText": "--- Flight speed settings ---",
   "text.autoconfig.ean.option.altitudeDeterminesSpeed": "Altitude determines flight speed",
   "text.autoconfig.ean.option.altitudeDeterminesSpeed.@Tooltip[0]": "Set to true if you want to elytra flight be faster at higher altitudes.",
   "text.autoconfig.ean.option.altitudeDeterminesSpeed.@Tooltip[1]": "If set to false, your flight speed will be determined by the minimal speed.",
@@ -15,7 +15,7 @@
   "text.autoconfig.ean.option.maxHeight": "Flight speed curve end",
   "text.autoconfig.ean.option.maxHeight.@Tooltip": "Altitude at which flight speed stops to increase.",
 
-  "text.autoconfig.ean.option.sneakingRealignsPitch.@PrefixText": "Pitch realignment settings",
+  "text.autoconfig.ean.option.sneakingRealignsPitch.@PrefixText": "--- Pitch realignment settings ---",
 
   "text.autoconfig.ean.option.sneakingRealignsPitch": "Sneaking realigns pitch",
   "text.autoconfig.ean.option.sneakingRealignsPitch.@Tooltip": "When true, sneaking mid-flight will realign your pitch.",
@@ -23,5 +23,20 @@
   "text.autoconfig.ean.option.realignAngle.@Tooltip": "Pitch angle at which the player will align when sneaking mid-flight.",
   "text.autoconfig.ean.option.realignRate": "Pitch realignment rate",
   "text.autoconfig.ean.option.realignRate.@Tooltip[0]": "Amount of rotation at which the player will realign towards the pitch realignment angle.",
-  "text.autoconfig.ean.option.realignRate.@Tooltip[1]": "Measured in angles-per-tick."
+  "text.autoconfig.ean.option.realignRate.@Tooltip[1]": "Measured in angles-per-tick.",
+
+  "text.autoconfig.ean.category.cloud_settings": "Cloud Settings",
+
+  "text.autoconfig.ean.option.numberOfLayers.@PrefixText": "--- Cloud layer render settings ---",
+  "text.autoconfig.ean.option.numberOfLayers": "Cloud layer amount",
+  "text.autoconfig.ean.option.distanceBetweenLayers": "Distance between cloud layers",
+  "text.autoconfig.ean.option.firstLayerAltitude": "First layer altitude",
+  "text.autoconfig.ean.option.cloudType": "Cloud type",
+  "text.autoconfig.ean.option.verticalRenderDistance": "Vertical render distance",
+  "text.autoconfig.ean.option.horizontalRenderDistance": "Horizontal render distance",
+  "text.autoconfig.ean.option.lodRenderDistance": "LOD render distance",
+  "text.autoconfig.ean.option.useSmoothLods": "Smooth LODs",
+  "text.autoconfig.ean.option.cloudThickness.@PrefixText": "--- Cloud layer extra settings ---",
+  "text.autoconfig.ean.option.cloudThickness": "Cloud thickness",
+  "text.autoconfig.ean.option.cloudSpeed": "Cloud speed"
 }
