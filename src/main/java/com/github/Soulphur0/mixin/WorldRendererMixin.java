@@ -2,8 +2,7 @@ package com.github.Soulphur0.mixin;
 
 import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.SynchronousResourceReloader;
 import net.minecraft.util.math.Vec3d;
@@ -20,13 +19,11 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(WorldRenderer.class)
 public abstract class WorldRendererMixin implements SynchronousResourceReloader, AutoCloseable {
 
-    // $ Capture camera altitude of the World Renderer.
-    // * Before it calls the second phase of cloud rendering where it is modified to be the difference between the camera's altitude and the world's cloud layer height.
-    double cameraAltitude;
-
-    @Inject(method = "renderClouds(Lnet/minecraft/client/util/math/MatrixStack;Lorg/joml/Matrix4f;FDDD)V", at = @At(value = "TAIL"), locals = LocalCapture.CAPTURE_FAILHARD)
-    private void ean_captureCameraAltitude(MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double d, double e, double f, CallbackInfo ci){
-        cameraAltitude = e;
+    // $ Capture camera of the World Renderer.
+    Camera camera;
+    @Inject(method="render", at = @At(value = "HEAD"), locals = LocalCapture.CAPTURE_FAILHARD)
+    private void ean_captureCameraObject(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f positionMatrix, CallbackInfo ci){
+        this.camera = camera;
     }
 
     // $ Capture arguments of the original render call.
@@ -48,6 +45,6 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
     // $ Custom render clouds with captured arguments by default.
     @ModifyReturnValue(method = "renderClouds(Lnet/minecraft/client/render/BufferBuilder;DDDLnet/minecraft/util/math/Vec3d;)Lnet/minecraft/client/render/BufferBuilder$BuiltBuffer;", at = @At("RETURN"))
     private BufferBuilder.BuiltBuffer ean_renderClouds(BufferBuilder.BuiltBuffer original) {
-        return EanCloudRenderBehaviour.ean_renderCloudLayers(bufferBuilder, cameraAltitude, x, y, z, color);
+        return EanCloudRenderBehaviour.ean_renderCloudLayers(bufferBuilder, camera.getPos().getY(), x, y, z, color);
     }
 }
