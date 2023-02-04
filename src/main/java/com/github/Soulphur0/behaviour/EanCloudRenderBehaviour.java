@@ -5,107 +5,206 @@ import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.CloudLayer;
 import com.github.Soulphur0.config.CloudTypes;
 import com.github.Soulphur0.config.EanConfig;
+import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.github.Soulphur0.utility.EanMath;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.shedaniel.autoconfig.AutoConfig;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.gl.ShaderProgram;
+import net.minecraft.client.gl.VertexBuffer;
+import net.minecraft.client.option.CloudRenderMode;
+import net.minecraft.client.render.*;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Matrix4f;
 
 public class EanCloudRenderBehaviour {
 
-    static double x, y, z;
-    static Vec3d color;
+    // $ Variables
+    private static final Identifier CLOUDS = new Identifier("textures/environment/clouds.png");
 
-    // : Cloud rendering entry point for modification.
-    public static BufferBuilder.BuiltBuffer ean_renderCloudLayers(BufferBuilder builder, double camY, double capturedX, double capturedY, double capturedZ, Vec3d capturedColor){
-        x = capturedX;
-        y = capturedY;
-        z = capturedZ;
-        color = capturedColor;
+    // : Cloud rendering setup and execution
+    public static void ean_renderClouds(WorldRenderer instance, MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double camPosX, double camPosY, double camPosZ){
+        WorldRendererAccessors worldRenderer = ((WorldRendererAccessors)instance);
 
-        return ean_loadCloudRenderConfig(builder, camY);
-    }
+        float vanillaCloudHeight = worldRenderer.getWorld().getDimensionEffects().getCloudsHeight();
 
-    // : Setup for cloud rendering.
-    static EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
+        if (!Float.isNaN(vanillaCloudHeight)) {
+            // + Cloud rendering parameters.
+            RenderSystem.disableCull();
+            RenderSystem.enableBlend();
+            RenderSystem.enableDepthTest();
+            RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
+            RenderSystem.depthMask(true);
 
-    // ? Read config & retrieve result with said configs.
-    private static BufferBuilder.BuiltBuffer ean_loadCloudRenderConfig(BufferBuilder builder, double camY){
-        // * Read config. Once per save action.
-        if (ElytraAeronautics.readConfigFileCue_WorldRendererMixin){
-            config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-            ElytraAeronautics.readConfigFileCue_WorldRendererMixin = false;
+            // + Cloud rendering values.
+            float h = 12.0F;
+            float i = 4.0F;
+            double j = 2.0E-4D;
+            double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F);
+            double l = (camPosX + k) / 12.0D;
+
+            // double cloudRenderAltitude; //(double) (vanillaCloudHeight - (float) camPosY + 0.33F);
+
+            double n = camPosZ / 12.0D + 0.33000001311302185D;
+            l -= (double) (MathHelper.floor(l / 2048.0D) * 2048);
+            n -= (double) (MathHelper.floor(n / 2048.0D) * 2048);
+            float o = (float) (l - (double) MathHelper.floor(l));
+
+            // < This parameter is the value of the cloud render altitude divided by 4,
+            // < minus that same very value floored multiplied by 4.
+            // <
+            // < So it is 4 times between the cloud layer altitude minus the remaining altitude until it
+            // < reaches the closest whole number (downwards).
+            // float p; // (float) (cloudRenderAltitude / PARAMETER_DEBUG - (double) MathHelper.floor(cloudRenderAltitude / PARAMETER_DEBUG)) * PARAMETER_DEBUG;
+            float q = (float) (n - (double) MathHelper.floor(n));
+
+            // + Clear WorldRenderer's cloud buffer.
+            if (worldRenderer.getCloudsDirty()) {
+                worldRenderer.setCloudsDirty(false);
+                if (worldRenderer.getCloudsBuffer() != null) {
+                    worldRenderer.getCloudsBuffer().close();
+                }
+            }
+
+            // = Load config
+            EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
+
+            // = Create arrays to store info for each layer.
+            BufferBuilder.BuiltBuffer[] layerGeometries = new BufferBuilder.BuiltBuffer[config.numberOfLayers]; // This array stores the geometry for each cloud layer built.
+            float[] p = new float[config.numberOfLayers]; // This array stores the remainder of cloud render altitude measured in cloud thickness.
+
+            // + Build geometry for each cloud layer.
+            // * The geometry for each layer is built using its own parameters, and is stored in an array.
+            // * All values besides the geometry that are important for rendering are stored in an array too.
+            for (int layerNum = 0; layerNum < config.numberOfLayers; layerNum++) {
+                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+                Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
+
+                // - Get settings from the config file.
+                double cloudRenderAltitude = (double) ((config.firstLayerAltitude + config.distanceBetweenLayers * layerNum) - (float) camPosY + 0.33F);
+                float cloudThickness = config.cloudThickness;
+
+                // - Get the exact render altitude of the layer and store it in the altitudes array.
+                p[layerNum] = (float) (cloudRenderAltitude / cloudThickness - (double) MathHelper.floor(cloudRenderAltitude / cloudThickness)) * cloudThickness;
+
+                // - Build the geometry of the cloud layer and store it into the geometries array.
+                worldRenderer.setCloudsBuffer(new VertexBuffer());
+                BufferBuilder.BuiltBuffer builtBuffer = ean_renderCloudLayers(config, layerNum, bufferBuilder, l, cloudRenderAltitude, n, vec3d); // > Cloud rendering entry
+                layerGeometries[layerNum] = builtBuffer;
+
+                // TODO Find out what these parameters do...
+                int r = (int) Math.floor(l);
+                int s = (int) Math.floor(cloudRenderAltitude / cloudThickness);
+                int t = (int) Math.floor(n);
+
+                // ? Mark clouds as dirty
+                if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(vec3d) > 2.0E-4D) {
+                    worldRenderer.setLastCloudsBlockX(r);
+                    worldRenderer.setLastCloudsBlockY(s);
+                    worldRenderer.setLastCloudsBlockZ(t);
+                    worldRenderer.setLastCloudsColor(vec3d);
+                    worldRenderer.setLastCloudRenderMode(worldRenderer.getClient().options.getCloudRenderModeValue());
+                    worldRenderer.setCloudsDirty(true);
+                }
+            }
+
+            // + Render cloud geometry.
+            // * Using the previously generated arrays, clouds are rendered with their own settings.
+            for (int builderNum = 0; builderNum<layerGeometries.length; builderNum++) {
+
+                if (layerGeometries[builderNum] !=null){ // > Added
+                    worldRenderer.getCloudsBuffer().bind();
+                    worldRenderer.getCloudsBuffer().upload(layerGeometries[builderNum]);
+                    VertexBuffer.unbind();
+
+                    // * Get shader, texture and background to draw with cloud geometry.
+                    RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+                    RenderSystem.setShaderTexture(0, CLOUDS);
+                    BackgroundRenderer.setFogBlack();
+
+                    // * Scale cloud geometry to cloud size and translate it.
+                    matrices.push();
+                    matrices.scale(12.0F, 1.0F, 12.0F);
+
+                    matrices.translate(-o, p[builderNum], -q);
+
+                    // * Render clouds
+                    if (worldRenderer.getCloudsBuffer() != null) {
+                        worldRenderer.getCloudsBuffer().bind();
+                        int u = worldRenderer.getLastCloudRenderMode() == CloudRenderMode.FANCY ? 0 : 1;
+
+                        for (int v = u; v < 2; ++v) {
+                            if (v == 0) {
+                                RenderSystem.colorMask(false, false, false, false);
+                            } else {
+                                RenderSystem.colorMask(true, true, true, true);
+                            }
+
+                            ShaderProgram shaderProgram = RenderSystem.getShader();
+                            worldRenderer.getCloudsBuffer().draw(matrices.peek().getPositionMatrix(), projectionMatrix, shaderProgram);
+                        }
+
+                        VertexBuffer.unbind();
+                    }
+
+                    // * Finish cloud rendering.
+                    matrices.pop();
+                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                    RenderSystem.enableCull();
+                    RenderSystem.disableBlend();
+                }
+            }
         }
-
-        // * Return buffer with all cloud layers drawn as the config specifies.
-        return ean_setCloudRenderShader(builder, camY);
-    }
-
-    // : Cloud rendering.
-    // FIXME There are two current issues regarding this method:
-    //  Cloud configuration is not working as intended.
-    //  The bottom face of clouds doesn't render when looking at it from the lower half of the cloud inside the cloud.
-    //  When using smooth LODs, clouds sometimes pop-in at full size before returning flat and starting to puff up.
-    private static BufferBuilder.BuiltBuffer ean_setCloudRenderShader(BufferBuilder builder, double camY){
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
-        builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
-        //float camDistToLayer = (float)Math.floor(camDistY / 4.0D) * 4.0F; // = playerRelativeDistanceFromCloudLayer. Unmodified original variable. Measured in cloud thickness. Might not be necessary.
-
-        return ean_setCloudRenderValues(builder, camY);
     }
 
     // : Individual layer configuration for rendering.
-    private static BufferBuilder.BuiltBuffer ean_setCloudRenderValues(BufferBuilder builder, double camY) {
-        // + Set up values for each layer
-        for (int i = 1; i<=config.numberOfLayers; i++){
+    private static BufferBuilder.BuiltBuffer ean_renderCloudLayers(EanConfig config, int layerNum, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
+        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
-            // % Setup config values for the layer.
-            CloudLayer layer = new CloudLayer(); // Create layer
-            float layerAltitude = (i == 1) ? config.firstLayerAltitude : i * config.distanceBetweenLayers; // Place clouds vertically
-            layer.setAltitude(layerAltitude);
-            layer.setDisplacement(i * 100); // Displace clouds horizontally
-            layer.setCloudType(config.cloudType); // Set cloud type
-            layer.setVerticalRenderDistance(config.verticalRenderDistance); // Set vertical render distance
-            layer.setHorizontalRenderDistance(config.horizontalRenderDistance); // Set horizontal render distance
-            layer.setLodRenderDistance(config.lodRenderDistance); // Set vertical LOD render distance
-            layer.setUseSmoothLODs(config.useSmoothLods); // Set use smooth LODs
+        // + Setup config values for the layer.
+        CloudLayer layer = new CloudLayer(); // Create layer
+        layer.setName("Layer " + layerNum); // Give name to the layer
+        layer.setAltitude(config.firstLayerAltitude + config.distanceBetweenLayers * (layerNum-1)); // Place clouds vertically
+        layer.setDisplacement(layerNum * 100); // Displace clouds horizontally
+        layer.setCloudType(config.cloudType); // Set cloud type
+        layer.setVerticalRenderDistance(config.verticalRenderDistance); // Set vertical render distance
+        layer.setHorizontalRenderDistance(config.horizontalRenderDistance); // Set horizontal render distance
+        layer.setLodRenderDistance(config.lodRenderDistance); // Set vertical LOD render distance
+        layer.setUseSmoothLODs(config.useSmoothLods); // Set use smooth LODs
 
-            // % Calc parameters to render clouds.
-            boolean withinRenderDistance = layer.getVerticalRenderDistance() - camY <= 0;
-            boolean withinLodRenderDistance = layer.getLodRenderDistance() - camY <= 0;
+        // + Calc parameters on how to, or whether to render or not, the cloud layer.
+        boolean withinRenderDistance = layer.getVerticalRenderDistance() - camY <= 0;
+        boolean withinLodRenderDistance = layer.getLodRenderDistance() - camY <= 0;
 
-            // ? Puff-up clouds.
-            float cloudThickness = 4.0F;
-            if (config.cloudType.equals(CloudTypes.LOD)){
-                // + Sets puff-up start altitude.
-                float puffUpStartAltitude = layer.getLodRenderDistance();
+        // + Puff-up clouds.
+        float cloudThickness = 4.0F;
+        if (config.cloudType.equals(CloudTypes.LOD)){
+            // * Sets puff-up start altitude.
+            float puffUpStartAltitude = layer.getLodRenderDistance();
 
-                // + Puff-up clouds gradually or suddenly.
-                if (config.useSmoothLods)
-                    cloudThickness = Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0, layer.getAltitude(), 4, camY), 4.0F);
-                else
-                    cloudThickness =  (layer.getLodRenderDistance() - camY <= 0) ?  4.0F : 0.0F;
-            }
-
-            // ? Since the drawing of clouds is rendered relative to the camera;
-            double distanceToCam = (double) (layer.getAltitude() - (float)camY + 0.35F);
-
-            return ean_renderCloudLayer(builder, layer, withinRenderDistance, withinLodRenderDistance, distanceToCam, cloudThickness);
+            // * Puff-up clouds gradually or suddenly.
+            if (config.useSmoothLods)
+                cloudThickness = Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0, layer.getAltitude(), 4, camY), 4.0F);
+            else
+                cloudThickness =  (layer.getLodRenderDistance() - camY <= 0) ?  4.0F : 0.0F;
         }
 
-        // TODO: Find a proper way to handle empty cloud layer lists.
-        //  playerRelativeDistance to cloud layer is the captured Y value, but, that is the distance to the fixed vanilla layer, so I have to handle this for every custom layer.
-        return ean_renderCloudLayer(builder, new CloudLayer(), false, false, -7.0F, 0.0F);
+        // ? Since the drawing of clouds is rendered relative to the camera;
+        double distanceToCam = camY;// + layerNum * config.distanceBetweenLayers * 4.0;// + config.distanceBetweenLayers * (i-1);
+
+        // > Draw cloud layer into the buffer
+        ean_renderCloudLayer(bufferBuilder, camX, camY, camZ, color, layer, withinRenderDistance, withinLodRenderDistance, distanceToCam, cloudThickness);
+
+
+        // > Return built buffer
+        return bufferBuilder.end();
     }
 
-    private static BufferBuilder.BuiltBuffer ean_renderCloudLayer(BufferBuilder builder, CloudLayer layer, boolean withinRenderDistance, boolean withinLodRenderDistance, double distanceToCam, float cloudThickness){
-        float f = 4.0F;
-        float g = 0.00390625F;
-        float h = 9.765625E-4F;
+    private static void ean_renderCloudLayer(BufferBuilder builder, double x, double y, double z, Vec3d color, CloudLayer layer, boolean withinRenderDistance, boolean withinLodRenderDistance, double distanceToCam, float cloudThickness){
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
         float m = (float)color.x;
@@ -121,7 +220,9 @@ public class EanCloudRenderBehaviour {
         float w = n * 0.8F;
         float aa = o * 0.8F;
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
-        float ab = (float)Math.floor(distanceToCam / 4.0D) * 4.0F; // (float)Math.floor(y / 4.0D) * 4.0F;
+
+        float ab = (float)Math.floor(distanceToCam / cloudThickness) * cloudThickness; // (float)Math.floor(y / 4.0D) * 4.0F;
+
         if (layer.getCloudType().equals(CloudTypes.FANCY)) {
             // + The following loop determines cloud render distance.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
@@ -169,12 +270,12 @@ public class EanCloudRenderBehaviour {
                         builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
                     }
 
-                    // ? This renders the north face of clouds.
+                    // ? This renders the top face of clouds.
                     if (ab <= 5.0F) {
-                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + 4.0F - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + 4.0F - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + 4.0F - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + 4.0F - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
                     }
 
                     // ? This renders the west face of clouds.
@@ -184,8 +285,8 @@ public class EanCloudRenderBehaviour {
                     if (westToEastSpan > -1 - displacementInQuadrants) {
                         for(ag = 0; ag < 8; ++ag) {
                             builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + 4.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + 4.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
                             builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
                         }
                     }
@@ -194,8 +295,8 @@ public class EanCloudRenderBehaviour {
                     if (westToEastSpan <= 1) {
                         for(ag = 0; ag < 8; ++ag) {
                             builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + 4.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + 4.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
                             builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
                         }
                     }
@@ -203,8 +304,8 @@ public class EanCloudRenderBehaviour {
                     // ? This renders the north face of clouds.
                     if (northToSouthSpan > -1) {
                         for(ag = 0; ag < 8; ++ag) {
-                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + 4.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + 4.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
                             builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
                             builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
                         }
@@ -213,8 +314,8 @@ public class EanCloudRenderBehaviour {
                     // ? This renders the south face of clouds.
                     if (northToSouthSpan <= 1) {
                         for(ag = 0; ag < 8; ++ag) {
-                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + 4.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + 4.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
                             builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
                             builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
                         }
@@ -232,8 +333,7 @@ public class EanCloudRenderBehaviour {
             }
         }
 
-        return builder.end();
-//        float k = (float)MathHelper.floor(x) * 0.00390625F;
+        //        float k = (float)MathHelper.floor(x) * 0.00390625F;
 //        float l = (float)MathHelper.floor(z) * 0.00390625F;
 //        float m = (float)color.x;
 //        float n = (float)color.y;
