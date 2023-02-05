@@ -1,7 +1,6 @@
 
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.CloudLayer;
 import com.github.Soulphur0.config.CloudTypes;
 import com.github.Soulphur0.config.EanConfig;
@@ -43,25 +42,22 @@ public class EanCloudRenderBehaviour {
             float h = 12.0F;
             float i = 4.0F;
             double j = 2.0E-4D;
-            double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F);
-            double l = (camPosX + k) / 12.0D;
 
-            // double cloudRenderAltitude; //(double) (vanillaCloudHeight - (float) camPosY + 0.33F);
+            double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F); // = This determines the speed of clouds; default => 0.03F
 
-            double n = camPosZ / 12.0D + 0.33000001311302185D;
-            l -= (double) (MathHelper.floor(l / 2048.0D) * 2048);
-            n -= (double) (MathHelper.floor(n / 2048.0D) * 2048);
-            float o = (float) (l - (double) MathHelper.floor(l));
+            double l = (camPosX + k) / 12.0D;  // % Position x?
+            double n = camPosZ / 12.0D + 0.33000001311302185D; // % Position z?
 
-            // < This parameter is the value of the cloud render altitude divided by 4,
-            // < minus that same very value floored multiplied by 4.
-            // <
-            // < So it is 4 times between the cloud layer altitude minus the remaining altitude until it
-            // < reaches the closest whole number (downwards).
-            // float p; // (float) (cloudRenderAltitude / PARAMETER_DEBUG - (double) MathHelper.floor(cloudRenderAltitude / PARAMETER_DEBUG)) * PARAMETER_DEBUG;
-            float q = (float) (n - (double) MathHelper.floor(n));
+            l -= (double) (MathHelper.floor(l / 2048.0D) * 2048); // % Distance to move in x?
+            n -= (double) (MathHelper.floor(n / 2048.0D) * 2048); // % Distance to move in z?
+
+            float o = (float) (l - (double) MathHelper.floor(l)); // % Distance to translate in x
+            float q = (float) (n - (double) MathHelper.floor(n)); // % Distance to translate in z
 
             // + Clear WorldRenderer's cloud buffer.
+            // FIXME clouds won't be marked as dirty if the player stays still.
+            //  I have to find a way to clear the buffer otherwise the memory leak present
+            //  eventually floods the memory if the player stays still.
             if (worldRenderer.getCloudsDirty()) {
                 worldRenderer.setCloudsDirty(false);
                 if (worldRenderer.getCloudsBuffer() != null) {
@@ -115,7 +111,10 @@ public class EanCloudRenderBehaviour {
             // * Using the previously generated arrays, clouds are rendered with their own settings.
             for (int builderNum = 0; builderNum<layerGeometries.length; builderNum++) {
 
-                if (layerGeometries[builderNum] !=null){ // > Added
+                // > Added this conditional clause.
+                // < Since geometries are set to null after they are drawn a couple of times.
+                // < Most likely because they are cleared off by the garbage collector.
+                if (layerGeometries[builderNum] !=null){
                     worldRenderer.getCloudsBuffer().bind();
                     worldRenderer.getCloudsBuffer().upload(layerGeometries[builderNum]);
                     VertexBuffer.unbind();
@@ -128,7 +127,6 @@ public class EanCloudRenderBehaviour {
                     // * Scale cloud geometry to cloud size and translate it.
                     matrices.push();
                     matrices.scale(12.0F, 1.0F, 12.0F);
-
                     matrices.translate(-o, p[builderNum], -q);
 
                     // * Render clouds
@@ -332,103 +330,5 @@ public class EanCloudRenderBehaviour {
                 }
             }
         }
-
-        //        float k = (float)MathHelper.floor(x) * 0.00390625F;
-//        float l = (float)MathHelper.floor(z) * 0.00390625F;
-//        float m = (float)color.x;
-//        float n = (float)color.y;
-//        float o = (float)color.z;
-//        float p = m * 0.9F;
-//        float q = n * 0.9F;
-//        float r = o * 0.9F;
-//        float s = m * 0.7F;
-//        float t = n * 0.7F;
-//        float u = o * 0.7F;
-//        float v = m * 0.8F;
-//        float w = n * 0.8F;
-//        float aa = o * 0.8F;
-//        distanceToCam = (float)Math.floor(distanceToCam / 4.0D) * 4.0F;
-//
-//        // _ Render layers
-//        // * RENDER FANCY clouds either if (fancy clouds are enabled and withing render range) or (within high LOD altitude range and maximum LOD render distance).
-//        if (layer.getCloudType().equals(CloudTypes.FANCY) && withinRenderDistance || layer.getCloudType().equals(CloudTypes.LOD) && withinLodRenderDistance){
-//            for(int ac = MathHelper.floor(-0.125*layer.getDisplacement()-3); ac <= MathHelper.floor(-0.125*layer.getDisplacement()+4); ++ac) {
-//                for(int ad = -3; ad <= 4; ++ad) {
-//                    float ae = (float)(ac * 8);
-//                    float af = (float)(ad * 8);
-//
-//                    // This renders the bottom face of clouds.
-//                    if (distanceToCam > -6.0F) {
-//                        builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 8.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                        builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 8.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                        builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                        builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                    }
-//
-//                    // This renders the top face of clouds.
-//                    if (distanceToCam <= 5.0F) {
-//                        builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + cloudThickness - 9.765625E-4F, af + 8.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-//                        builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + cloudThickness - 9.765625E-4F, af + 8.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-//                        builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + cloudThickness - 9.765625E-4F, af + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-//                        builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + cloudThickness - 9.765625E-4F, af + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-//                    }
-//
-//                    int aj;
-//                    // This renders the left face of clouds.
-//                    // Horizontal displacement is added to the if statement to properly cull the west face of clouds.
-//                    if (ac > -1 - layer.getDisplacement()) {
-//                        for(aj = 0; aj < 8; ++aj) {
-//                            builder.vertex(ae + (float)aj + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-//                            builder.vertex(ae + (float)aj + 0.0F + layer.getDisplacement(), distanceToCam + cloudThickness, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-//                            builder.vertex(ae + (float)aj + 0.0F + layer.getDisplacement(), distanceToCam + cloudThickness, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-//                            builder.vertex(ae + (float)aj + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-//                        }
-//                    }
-//
-//                    if (ac <= 1) {
-//                        // This renders the right face of clouds.
-//                        for(aj = 0; aj < 8; ++aj) {
-//                            builder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + layer.getDisplacement(), distanceToCam + 0.0F, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-//                            builder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + layer.getDisplacement(), distanceToCam + cloudThickness, af + 8.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-//                            builder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + layer.getDisplacement(), distanceToCam + cloudThickness, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-//                            builder.vertex(ae + (float)aj + 1.0F - 9.765625E-4F + layer.getDisplacement(), distanceToCam + 0.0F, af + 0.0F).texture((ae + (float)aj + 0.5F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-//                        }
-//                    }
-//                    // This renders the front(north) face of clouds.
-//                    if (ad > -1) {
-//                        for(aj = 0; aj < 8; ++aj) {
-//                            builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + cloudThickness, af + (float)aj + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-//                            builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + cloudThickness, af + (float)aj + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-//                            builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + (float)aj + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-//                            builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + (float)aj + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-//                        }
-//                    }
-//                    // This renders the back(south) face of clouds.
-//                    if (ad <= 1) {
-//                        for(aj = 0; aj < 8; ++aj) {
-//                            builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + cloudThickness, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-//                            builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + cloudThickness, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-//                            builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 8.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-//                            builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + (float)aj + 1.0F - 9.765625E-4F).texture((ae + 0.0F) * 0.00390625F + k, (af + (float)aj + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        // * RENDER FAST clouds either if (fast clouds are enabled and withing render range) or (within maximum LOD render distance).
-//        else if (layer.getCloudType().equals(CloudTypes.FAST) && withinRenderDistance || layer.getCloudType().equals(CloudTypes.LOD) && withinRenderDistance) {
-//            for(int ac = MathHelper.floor(-0.125*layer.getDisplacement()-3); ac <= MathHelper.floor(-0.125*layer.getDisplacement()+4); ++ac) {
-//                for(int ad = -3; ad <= 4; ++ad) {
-//                    float ae = (float) (ac * 8);
-//                    float af = (float) (ad * 8);
-//                    builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 8.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                    builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 8.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                    builder.vertex(ae + 8.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 0.0F).texture((ae + 8.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                    builder.vertex(ae + 0.0F + layer.getDisplacement(), distanceToCam + 0.0F, af + 0.0F).texture((ae + 0.0F) * 0.00390625F + k, (af + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-//                }
-//            }
-//        }
-//
-//        return builder.end();
     }
 }
