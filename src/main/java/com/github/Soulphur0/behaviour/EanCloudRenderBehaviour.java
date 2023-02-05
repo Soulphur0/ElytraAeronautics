@@ -24,7 +24,6 @@ public class EanCloudRenderBehaviour {
     // $ Variables
     private static final Identifier CLOUDS = new Identifier("textures/environment/clouds.png");
 
-    // : Cloud rendering setup and execution
     public static void ean_renderClouds(WorldRenderer instance, MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double camPosX, double camPosY, double camPosZ){
         WorldRendererAccessors worldRenderer = ((WorldRendererAccessors)instance);
 
@@ -65,12 +64,9 @@ public class EanCloudRenderBehaviour {
                 }
             }
 
-            // = Load config
+            // = Load config & create layer array.
             EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-
-            // = Create arrays to store info for each layer.
-            BufferBuilder.BuiltBuffer[] layerGeometries = new BufferBuilder.BuiltBuffer[config.numberOfLayers]; // This array stores the geometry for each cloud layer built.
-            float[] p = new float[config.numberOfLayers]; // This array stores the remainder of cloud render altitude measured in cloud thickness.
+            CloudLayer[] layers = new CloudLayer[config.numberOfLayers];
 
             // + Build geometry for each cloud layer.
             // * The geometry for each layer is built using its own parameters, and is stored in an array.
@@ -79,21 +75,42 @@ public class EanCloudRenderBehaviour {
                 BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
                 Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
 
-                // - Get settings from the config file.
+                // - Get cloud relative Y distance to the camera.
                 double cloudRenderAltitude = (double) ((config.firstLayerAltitude + config.distanceBetweenLayers * layerNum) - (float) camPosY + 0.33F);
-                float cloudThickness = config.cloudThickness;
 
-                // - Get the exact render altitude of the layer and store it in the altitudes array.
-                p[layerNum] = (float) (cloudRenderAltitude / cloudThickness - (double) MathHelper.floor(cloudRenderAltitude / cloudThickness)) * cloudThickness;
+                // - Create and set values for the layer.
+                // = Parameters that the player will be able to tweak in the config.
+                CloudLayer layer = new CloudLayer();
+                layer.setName("Layer " + layerNum);
+                layer.setAltitude((config.firstLayerAltitude + config.distanceBetweenLayers * layerNum));
+                layer.setCloudType(config.cloudType);
+                layer.setVerticalRenderDistance(config.verticalRenderDistance);
+                layer.setHorizontalRenderDistance(config.horizontalRenderDistance);
+                layer.setLodRenderDistance(config.lodRenderDistance);
+                layer.setUseSmoothLODs(config.useSmoothLods);
+                layer.setCloudThickness(config.cloudThickness);
 
-                // - Build the geometry of the cloud layer and store it into the geometries array.
+                // = Rendering context parameters.
+                // ; The layer's texture displacement towards the right.
+                layer.setDisplacement(layerNum * 64);
+
+                // ; Exact render altitude of the layer and store it in the altitudes array.
+                layer.setRenderAltitude((float) (cloudRenderAltitude / layer.getCloudThickness() - (double) MathHelper.floor(cloudRenderAltitude / layer.getCloudThickness())) * layer.getCloudThickness());
+
+                // ; Whether the layer is within a certain render distance.
+                layer.setWithinRenderDistance(layer.getVerticalRenderDistance() - camPosY <= 0);
+                layer.setWithinLodRenderDistance(layer.getLodRenderDistance() - camPosY <= 0);
+
+                // ; The geometry of the cloud layer.
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
-                BufferBuilder.BuiltBuffer builtBuffer = ean_renderCloudLayers(config, layerNum, bufferBuilder, l, cloudRenderAltitude, n, vec3d); // > Cloud rendering entry
-                layerGeometries[layerNum] = builtBuffer;
+                layer.setVertexGeometry(ean_renderCloudLayers(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
+
+                // = Store later object in the layers array to later render.
+                layers[layerNum] = layer;
 
                 // TODO Find out what these parameters do...
                 int r = (int) Math.floor(l);
-                int s = (int) Math.floor(cloudRenderAltitude / cloudThickness);
+                int s = (int) Math.floor(cloudRenderAltitude / config.cloudThickness);
                 int t = (int) Math.floor(n);
 
                 // ? Mark clouds as dirty
@@ -108,15 +125,15 @@ public class EanCloudRenderBehaviour {
             }
 
             // + Render cloud geometry.
-            // * Using the previously generated arrays, clouds are rendered with their own settings.
-            for (int builderNum = 0; builderNum<layerGeometries.length; builderNum++) {
+            // * Using the previously generated array, clouds are rendered with their own settings.
+            for (CloudLayer layer : layers) {
 
                 // > Added this conditional clause.
                 // < Since geometries are set to null after they are drawn a couple of times.
                 // < Most likely because they are cleared off by the garbage collector.
-                if (layerGeometries[builderNum] !=null){
+                if (layer.getVertexGeometry() != null) {
                     worldRenderer.getCloudsBuffer().bind();
-                    worldRenderer.getCloudsBuffer().upload(layerGeometries[builderNum]);
+                    worldRenderer.getCloudsBuffer().upload(layer.getVertexGeometry());
                     VertexBuffer.unbind();
 
                     // * Get shader, texture and background to draw with cloud geometry.
@@ -127,7 +144,7 @@ public class EanCloudRenderBehaviour {
                     // * Scale cloud geometry to cloud size and translate it.
                     matrices.push();
                     matrices.scale(12.0F, 1.0F, 12.0F);
-                    matrices.translate(-o, p[builderNum], -q);
+                    matrices.translate(-o, layer.getRenderAltitude(), -q);
 
                     // * Render clouds
                     if (worldRenderer.getCloudsBuffer() != null) {
@@ -158,51 +175,30 @@ public class EanCloudRenderBehaviour {
         }
     }
 
-    // : Individual layer configuration for rendering.
-    private static BufferBuilder.BuiltBuffer ean_renderCloudLayers(EanConfig config, int layerNum, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
+    private static BufferBuilder.BuiltBuffer ean_renderCloudLayers(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
-        // + Setup config values for the layer.
-        CloudLayer layer = new CloudLayer(); // Create layer
-        layer.setName("Layer " + layerNum); // Give name to the layer
-        layer.setAltitude(config.firstLayerAltitude + config.distanceBetweenLayers * (layerNum-1)); // Place clouds vertically
-        layer.setDisplacement(layerNum * 100); // Displace clouds horizontally
-        layer.setCloudType(config.cloudType); // Set cloud type
-        layer.setVerticalRenderDistance(config.verticalRenderDistance); // Set vertical render distance
-        layer.setHorizontalRenderDistance(config.horizontalRenderDistance); // Set horizontal render distance
-        layer.setLodRenderDistance(config.lodRenderDistance); // Set vertical LOD render distance
-        layer.setUseSmoothLODs(config.useSmoothLods); // Set use smooth LODs
-
-        // + Calc parameters on how to, or whether to render or not, the cloud layer.
-        boolean withinRenderDistance = layer.getVerticalRenderDistance() - camY <= 0;
-        boolean withinLodRenderDistance = layer.getLodRenderDistance() - camY <= 0;
-
         // + Puff-up clouds.
-        float cloudThickness = 4.0F;
-        if (config.cloudType.equals(CloudTypes.LOD)){
+        if (layer.getCloudType().equals(CloudTypes.LOD)){
             // * Sets puff-up start altitude.
             float puffUpStartAltitude = layer.getLodRenderDistance();
 
             // * Puff-up clouds gradually or suddenly.
-            if (config.useSmoothLods)
-                cloudThickness = Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0, layer.getAltitude(), 4, camY), 4.0F);
+            if (layer.isUseSmoothLODs())
+                layer.setCloudThickness(Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0, layer.getAltitude(), 4, camY), 4.0F));
             else
-                cloudThickness =  (layer.getLodRenderDistance() - camY <= 0) ?  4.0F : 0.0F;
+                layer.setCloudThickness((layer.getLodRenderDistance() - camY <= 0) ?  4.0F : 0.0F);
         }
 
-        // ? Since the drawing of clouds is rendered relative to the camera;
-        double distanceToCam = camY;// + layerNum * config.distanceBetweenLayers * 4.0;// + config.distanceBetweenLayers * (i-1);
+        // + Draw cloud layer into the buffer.
+        ean_renderCloudLayer(layer, bufferBuilder, camX, camY, camZ, color);
 
-        // > Draw cloud layer into the buffer
-        ean_renderCloudLayer(bufferBuilder, camX, camY, camZ, color, layer, withinRenderDistance, withinLodRenderDistance, distanceToCam, cloudThickness);
-
-
-        // > Return built buffer
+        // + Return built buffer
         return bufferBuilder.end();
     }
 
-    private static void ean_renderCloudLayer(BufferBuilder builder, double x, double y, double z, Vec3d color, CloudLayer layer, boolean withinRenderDistance, boolean withinLodRenderDistance, double distanceToCam, float cloudThickness){
+    private static void ean_renderCloudLayer(CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
         float m = (float)color.x;
@@ -219,28 +215,28 @@ public class EanCloudRenderBehaviour {
         float aa = o * 0.8F;
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
 
-        float ab = (float)Math.floor(distanceToCam / cloudThickness) * cloudThickness; // (float)Math.floor(y / 4.0D) * 4.0F;
+        float cloudThickness = layer.getCloudThickness();
+        float ab = (float)Math.floor(y / cloudThickness) * cloudThickness;
 
         if (layer.getCloudType().equals(CloudTypes.FANCY)) {
-            // + The following loop determines cloud render distance.
+            // + The following 'for' loop counters determine cloud render distance.
+            // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
             // * A flat block is in reality a single pixel of the clouds texture inflated into a cloud.
 
-            // - The value of these variables determine the span in quadrants of cloud rendering in cardinal directions.
+            // - The value of these counters determine the span in quadrants of cloud rendering in cardinal directions.
             // / They also determine (in quadrants) the region of the clouds texture to render.
             int westToEastSpan; // Lower negative values => greater West render. Higher positive values => greater East render.
             int northToSouthSpan; // Lower negative values => greater North render. Higher positive values => greater South render.
 
-            // ! DEBUG
-            float debugDisplacement = 8.0F; // % Adding to the displacement adds towards the EAST
-            int displacementInQuadrants = (int)Math.floor(debugDisplacement/8.0F);
-            // ! -----
+            // > A texture displacement in pixels has to be added in order to not render the same part of the clouds texture on consecutive layers.
+            // < It is best to displace the texture in a single direction; I arbitrarily chose the EAST.
+            float textureDisplacement = layer.getDisplacement(); // Adding to the displacement adds towards the EAST
+            int displacementInQuadrants = (int)Math.floor(textureDisplacement/8.0F);
 
-            // > A texture displacement in pixels should be added in order to not render the same part of the clouds texture on consecutive layers.
-            // < Pixel displacement should be done in multiples of 8 (explained below).
-            // < It is best to displace the texture in a single direction; the easiest way is towards the EAST.
-            // < This is because the displacement value would be added to the drawing position of each vertex.
-            // < and for each 8 pixels displace 1 quadrant would be subtracted from the westToEast variable, which determines the square region of the texture to draw (or pick pixels from).
+            // > Pixel displacement should be done in multiples of 8.
+            // < The displacement value is added to the drawing position of each vertex, for every 8 pixels of displace,
+            // < 1 quadrant is subtracted from the westToEast variable, which determines the square region of the texture to draw.
             for(westToEastSpan = -3 - displacementInQuadrants; westToEastSpan <= 4 - displacementInQuadrants; ++westToEastSpan) {
                 for(northToSouthSpan = -3; northToSouthSpan <= 4; ++northToSouthSpan) {
 
@@ -262,18 +258,18 @@ public class EanCloudRenderBehaviour {
                     // ? This renders the bottom face of clouds.
                     if (ab > -5.0F) {
                         // The added values to each vertex should be modified all at once and by the same amount; changing a single value makes it draw in the specified way only when looking at the direction of that vertex.
-                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
                     }
 
                     // ? This renders the top face of clouds.
                     if (ab <= 5.0F) {
-                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 8.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
-                        builder.vertex((double)(westToEastDrawPos + 0.0F + debugDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
+                        builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + cloudThickness - 9.765625E-4F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, 1.0F, 0.0F).next();
                     }
 
                     // ? This renders the west face of clouds.
@@ -282,40 +278,40 @@ public class EanCloudRenderBehaviour {
                     int ag;
                     if (westToEastSpan > -1 - displacementInQuadrants) {
                         for(ag = 0; ag < 8; ++ag) {
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + debugDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + textureDisplacement), (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + textureDisplacement), (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(-1.0F, 0.0F, 0.0F).next();
                         }
                     }
 
                     // ? This renders the east face of clouds.
                     if (westToEastSpan <= 1) {
                         for(ag = 0; ag < 8; ++ag) {
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + textureDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + textureDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + textureDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + (float)ag + 1.0F - 9.765625E-4F) + textureDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((westToEastDrawPos + (float)ag + 0.5F) * 0.00390625F + k, (northToSouthDrawPos + 0.0F) * 0.00390625F + l).color(p, q, r, 0.8F).normal(1.0F, 0.0F, 0.0F).next();
                         }
                     }
 
                     // ? This renders the north face of clouds.
                     if (northToSouthSpan > -1) {
                         for(ag = 0; ag < 8; ++ag) {
-                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 0.0F) + textureDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 8.0F) + textureDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 8.0F) + textureDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 0.0F) + textureDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 0.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, -1.0F).next();
                         }
                     }
 
                     // ? This renders the south face of clouds.
                     if (northToSouthSpan <= 1) {
                         for(ag = 0; ag < 8; ++ag) {
-                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 8.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
-                            builder.vertex((double)(westToEastDrawPos + 0.0F) + debugDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 0.0F) + textureDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 8.0F) + textureDisplacement, (double)(ab + cloudThickness), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 8.0F) + textureDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
+                            builder.vertex((double)(westToEastDrawPos + 0.0F) + textureDisplacement, (double)(ab + 0.0F), (double)(northToSouthDrawPos + (float)ag + 1.0F - 9.765625E-4F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + (float)ag + 0.5F) * 0.00390625F + l).color(v, w, aa, 0.8F).normal(0.0F, 0.0F, 1.0F).next();
                         }
                     }
                 }
