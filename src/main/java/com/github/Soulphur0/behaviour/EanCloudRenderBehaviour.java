@@ -98,8 +98,8 @@ public class EanCloudRenderBehaviour {
                 layer.setRenderAltitude((float) (cloudRenderAltitude / layer.getCloudThickness() - (double) MathHelper.floor(cloudRenderAltitude / layer.getCloudThickness())) * layer.getCloudThickness());
 
                 // ; Whether the layer is within a certain render distance.
-                layer.setWithinRenderDistance(layer.getVerticalRenderDistance() - camPosY <= 0);
-                layer.setWithinLodRenderDistance(layer.getLodRenderDistance() - camPosY <= 0);
+                layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= config.verticalRenderDistance);
+                layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= config.verticalRenderDistance);
 
                 // ; The geometry of the cloud layer.
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
@@ -167,11 +167,12 @@ public class EanCloudRenderBehaviour {
 
                     // * Finish cloud rendering.
                     matrices.pop();
-                    RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                    RenderSystem.enableCull();
-                    RenderSystem.disableBlend();
+
                 }
             }
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderSystem.enableCull();
+            RenderSystem.disableBlend();
         }
     }
 
@@ -218,7 +219,7 @@ public class EanCloudRenderBehaviour {
         float cloudThickness = layer.getCloudThickness();
         float ab = (float)Math.floor(y / cloudThickness) * cloudThickness;
 
-        if (layer.getCloudType().equals(CloudTypes.FANCY)) {
+        if (layer.getCloudType().equals(CloudTypes.FANCY) && layer.isWithinRenderDistance()) {
             // + The following 'for' loop counters determine cloud render distance.
             // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
@@ -256,7 +257,7 @@ public class EanCloudRenderBehaviour {
                     // _ So, in order to displace by 1 (quadrant) the cloud layer, horizontal displacement should be = 8 and westToEastSpan should be -= 1 for both of its ends.
 
                     // ? This renders the bottom face of clouds.
-                    if (ab > -5.0F) {
+                    if (ab > -8.0F) {
                         // The added values to each vertex should be modified all at once and by the same amount; changing a single value makes it draw in the specified way only when looking at the direction of that vertex.
                         builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 0.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
                         builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((westToEastDrawPos + 8.0F) * 0.00390625F + k, (northToSouthDrawPos + 8.0F) * 0.00390625F + l).color(s, t, u, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
@@ -316,7 +317,7 @@ public class EanCloudRenderBehaviour {
                     }
                 }
             }
-        } else {
+        } else if (false) {
             for(int ah = -32; ah < 32; ah += 32) {
                 for(int ai = -32; ai < 32; ai += 32) {
                     builder.vertex((double)(ah + 0), (double)ab, (double)(ai + 32)).texture((float)(ah + 0) * 0.00390625F + k, (float)(ai + 32) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
