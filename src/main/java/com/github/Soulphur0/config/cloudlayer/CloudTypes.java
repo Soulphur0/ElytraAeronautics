@@ -1,4 +1,4 @@
-package com.github.Soulphur0.config;
+package com.github.Soulphur0.config.cloudlayer;
 
 public enum CloudTypes {
     LOD,

@@ -1,4 +1,4 @@
-package com.github.Soulphur0.config;
+package com.github.Soulphur0.config.cloudlayer;
 
 import net.minecraft.client.render.BufferBuilder;
 
@@ -22,6 +22,9 @@ public class CloudLayer implements Serializable {
     BufferBuilder.BuiltBuffer vertexGeometry; // The geometry of the processed cloud layer to later render.
     boolean withinRenderDistance;
     boolean withinLodRenderDistance;
+
+    // = Cloud layers
+    public static CloudLayer[] cloudLayers;
 
     public CloudLayer(){
 

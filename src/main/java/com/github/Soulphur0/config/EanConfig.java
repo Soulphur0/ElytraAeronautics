@@ -1,5 +1,6 @@
 package com.github.Soulphur0.config;
 
+import com.github.Soulphur0.config.cloudlayer.CloudTypes;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;

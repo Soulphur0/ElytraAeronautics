@@ -1,9 +1,9 @@
 
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.config.CloudLayer;
-import com.github.Soulphur0.config.CloudTypes;
 import com.github.Soulphur0.config.EanConfig;
+import com.github.Soulphur0.config.cloudlayer.CloudLayer;
+import com.github.Soulphur0.config.cloudlayer.CloudTypes;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.github.Soulphur0.utility.EanMath;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -64,9 +64,9 @@ public class EanCloudRenderBehaviour {
                 }
             }
 
-            // = Load config & create layer array.
+            // = Load config & create layer array stored in the CloudLayer class.
             EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-            CloudLayer[] layers = new CloudLayer[config.numberOfLayers];
+            CloudLayer.cloudLayers = new CloudLayer[config.numberOfLayers];
 
             // + Build geometry for each cloud layer.
             // * The geometry for each layer is built using its own parameters, and is stored in an array.
@@ -106,7 +106,7 @@ public class EanCloudRenderBehaviour {
                 layer.setVertexGeometry(ean_renderCloudLayers(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
 
                 // = Store later object in the layers array to later render.
-                layers[layerNum] = layer;
+                CloudLayer.cloudLayers[layerNum] = layer;
 
                 // TODO Find out what these parameters do...
                 int r = (int) Math.floor(l);
@@ -126,11 +126,11 @@ public class EanCloudRenderBehaviour {
 
             // + Render cloud geometry.
             // * Using the previously generated array, clouds are rendered with their own settings.
-            for (CloudLayer layer : layers) {
+            for (CloudLayer layer : CloudLayer.cloudLayers) {
 
                 // > Added this conditional clause.
                 // < Since geometries are set to null after they are drawn a couple of times.
-                // < Most likely because they are cleared off by the garbage collector.
+                // < Most likely because they are cleared off by the garbage collector, but I don't know that much about OpenGL ATM.
                 if (layer.getVertexGeometry() != null) {
                     worldRenderer.getCloudsBuffer().bind();
                     worldRenderer.getCloudsBuffer().upload(layer.getVertexGeometry());
