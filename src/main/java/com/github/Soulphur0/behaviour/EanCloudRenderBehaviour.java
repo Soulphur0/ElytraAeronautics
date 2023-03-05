@@ -22,6 +22,8 @@ import org.joml.Matrix4f;
 public class EanCloudRenderBehaviour {
 
     // $ Variables
+    public static boolean configUpdated = false;
+
     private static final Identifier CLOUDS = new Identifier("textures/environment/clouds.png");
 
     public static void ean_renderClouds(WorldRenderer instance, MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double camPosX, double camPosY, double camPosZ){

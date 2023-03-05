@@ -1,8 +1,16 @@
 package com.github.Soulphur0.config.cloudlayer;
 
+import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
+import com.github.Soulphur0.config.EanConfig;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import net.minecraft.client.render.BufferBuilder;
 
-import java.io.Serializable;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Scanner;
 
 public class CloudLayer implements Serializable {
 
@@ -28,6 +36,66 @@ public class CloudLayer implements Serializable {
 
     public CloudLayer(){
 
+    }
+
+    // $ CLASS METHODS
+    // € Used to generate cloud layers and save/load them into storage.
+
+    // ? Method used to set up all cloud layers at once and store them.
+    // ¿ Called when saving the config screen menu.
+    public static void writeCloudLayers(EanConfig config){
+        cloudLayers = new CloudLayer[config.numberOfLayers];
+
+        for (int i = 0; i < config.numberOfLayers; i++) {
+            CloudLayer layer = new CloudLayer();
+            layer.setName("Layer " + i);
+            layer.setAltitude((config.firstLayerAltitude + config.distanceBetweenLayers * i));
+            layer.setCloudType(config.cloudType);
+            layer.setVerticalRenderDistance(config.verticalRenderDistance);
+            layer.setHorizontalRenderDistance(config.horizontalRenderDistance);
+            layer.setLodRenderDistance(config.lodRenderDistance);
+            layer.setUseSmoothLODs(config.useSmoothLods);
+            layer.setCloudThickness(config.cloudThickness);
+
+            cloudLayers[i] = layer;
+        }
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(cloudLayers);
+
+        try {
+            FileWriter writer = new FileWriter("eanCloudLayers.json");
+            writer.write(json);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        config.generateDefaultPreset = false;
+        EanCloudRenderBehaviour.configUpdated = false;
+    }
+
+    // ? Method used to get the saved cloud layers.
+    public static void readCloudLayers(){
+        StringBuilder json = new StringBuilder();
+
+        try {
+            File file = new File("eanCloudLayers.json");
+            Scanner reader = new Scanner(file);
+
+            while(reader.hasNextLine()){
+                json.append(reader.nextLine());
+            }
+            reader.close();
+
+        } catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
+
+        Gson gson = new Gson();
+
+        Type type = new TypeToken<List<CloudLayer>>(){}.getType();
+        List<CloudLayer> cloudLayers = gson.fromJson(String.valueOf(json), type);
     }
 
     // $ GETTERS & SETTERS

@@ -8,6 +8,11 @@ import me.shedaniel.autoconfig.annotation.ConfigEntry;
 @Config(name = "ean")
 public class EanConfig implements ConfigData {
 
+    // : Metadata
+    @ConfigEntry.Category(value ="elytra_flight_settings")
+    @ConfigEntry.Gui.Excluded
+    public boolean generateDefaultPreset = true;
+
     // : Elytra flight fields
     @ConfigEntry.Category(value ="elytra_flight_settings")
     @ConfigEntry.Gui.PrefixText
