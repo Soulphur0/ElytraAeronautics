@@ -66,9 +66,11 @@ public class EanCloudRenderBehaviour {
                 }
             }
 
-            // = Load config & create layer array stored in the CloudLayer class.
+            // = Load config.
             EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-            CloudLayer.cloudLayers = new CloudLayer[config.numberOfLayers];
+
+            // = Create layer array if the config was updated or first ever loaded.
+            CloudLayer.writeCloudLayers(config);
 
             // + Build geometry for each cloud layer.
             // * The geometry for each layer is built using its own parameters, and is stored in an array.
