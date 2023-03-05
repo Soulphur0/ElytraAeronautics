@@ -78,6 +78,7 @@ public class EanCloudRenderBehaviour {
                 // - Get cloud relative Y distance to the camera.
                 double cloudRenderAltitude = (double) ((config.firstLayerAltitude + config.distanceBetweenLayers * layerNum) - (float) camPosY + 0.33F);
 
+                // TODO branch 05/03/23
                 // - Create and set values for the layer.
                 // = Parameters that the player will be able to tweak in the config.
                 CloudLayer layer = new CloudLayer();
