@@ -48,14 +48,17 @@ public class EanCloudRenderBehaviour {
 
             double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F); // = This determines the speed of clouds; default => 0.03F
 
-            double l = (camPosX + k) / 12.0D;  // % Position x?
-            double n = camPosZ / 12.0D + 0.33000001311302185D; // % Position z?
+            // _ Maybe used to position  the pivot of the clouds within a relative position to the player's camera.
+            double l = (camPosX + k) / 12.0D;
+            double n = camPosZ / 12.0D + 0.33000001311302185D;
 
-            l -= (double) (MathHelper.floor(l / 2048.0D) * 2048); // % Distance to move in x?
-            n -= (double) (MathHelper.floor(n / 2048.0D) * 2048); // % Distance to move in z?
+            // _ Used to precisely position the pivot
+            l -= (double) (MathHelper.floor(l / 2048.0D) * 2048);
+            n -= (double) (MathHelper.floor(n / 2048.0D) * 2048);
 
-            float o = (float) (l - (double) MathHelper.floor(l)); // % Distance to translate in x
-            float q = (float) (n - (double) MathHelper.floor(n)); // % Distance to translate in z
+            // _ Used to translate the clouds little by little, a fraction of their position at a time.
+            float o = (float) (l - (double) MathHelper.floor(l));
+            float q = (float) (n - (double) MathHelper.floor(n));
 
             // + Clear WorldRenderer's cloud buffer.
             // FIXME clouds won't be marked as dirty if the player stays still.
@@ -104,14 +107,14 @@ public class EanCloudRenderBehaviour {
                 layer.setRenderAltitude((float) (cloudRenderAltitude / layer.getCloudThickness() - (double) MathHelper.floor(cloudRenderAltitude / layer.getCloudThickness())) * layer.getCloudThickness());
 
                 // ; Whether the layer is within a certain render distance.
-                layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= config.verticalRenderDistance);
-                layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= config.verticalRenderDistance);
+                layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
+                layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
 
                 // ; The geometry of the cloud layer.
                 BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
                 Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
-                layer.setVertexGeometry(ean_renderCloudLayers(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
+                layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
 
                 // = Store later object in the layers array to later render.
                 CloudLayer.cloudLayers[layerNum] = layer;
@@ -184,7 +187,7 @@ public class EanCloudRenderBehaviour {
         }
     }
 
-    private static BufferBuilder.BuiltBuffer ean_renderCloudLayers(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
+    private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
@@ -201,13 +204,13 @@ public class EanCloudRenderBehaviour {
         }
 
         // + Draw cloud layer into the buffer.
-        ean_renderCloudLayer(layer, bufferBuilder, camX, camY, camZ, color);
+        ean_buildCloudLayerGeometry(layer, bufferBuilder, camX, camY, camZ, color);
 
         // + Return built buffer
         return bufferBuilder.end();
     }
 
-    private static void ean_renderCloudLayer(CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
+    private static void ean_buildCloudLayerGeometry(CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
         float m = (float)color.x;
@@ -233,10 +236,12 @@ public class EanCloudRenderBehaviour {
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
             // * A flat block is in reality a single pixel of the clouds texture inflated into a cloud.
 
-            // - The value of these counters determine the span in quadrants of cloud rendering in cardinal directions.
+            // - The value of these counters used in the 'for' loop below determine the span in quadrants of cloud rendering in cardinal directions.
             // / They also determine (in quadrants) the region of the clouds texture to render.
-            int westToEastSpan; // Lower negative values => greater West render. Higher positive values => greater East render.
-            int northToSouthSpan; // Lower negative values => greater North render. Higher positive values => greater South render.
+            // / The minimal limits are -1 0, which centers the clouds above the player with a render distance of exactly 4 chunks.
+            // / To properly center clouds, both limits must increment by 1, so render distance can only increase by 2 chunks at a time at minimum.
+            int westToEastSpan; // Lower negative limit => greater West render. Higher positive limit => greater East render.
+            int northToSouthSpan; // Lower negative limit => greater North render. Higher positive limit => greater South render.
 
             // > A texture displacement in pixels has to be added in order to not render the same part of the clouds texture on consecutive layers.
             // < It is best to displace the texture in a single direction; I arbitrarily chose the EAST.
@@ -246,8 +251,8 @@ public class EanCloudRenderBehaviour {
             // > Pixel displacement should be done in multiples of 8.
             // < The displacement value is added to the drawing position of each vertex, for every 8 pixels of displace,
             // < 1 quadrant is subtracted from the westToEast variable, which determines the square region of the texture to draw.
-            for(westToEastSpan = -3 - displacementInQuadrants; westToEastSpan <= 4 - displacementInQuadrants; ++westToEastSpan) {
-                for(northToSouthSpan = -3; northToSouthSpan <= 4; ++northToSouthSpan) {
+            for(westToEastSpan = -3 - displacementInQuadrants; westToEastSpan <= 2 - displacementInQuadrants; ++westToEastSpan) {
+                for(northToSouthSpan = -3; northToSouthSpan <= 2; ++northToSouthSpan) {
 
                     // - The value of these variables determine where to draw clouds in the previously set render distance.
                     // / Lower values make clouds render twice in the same place.
