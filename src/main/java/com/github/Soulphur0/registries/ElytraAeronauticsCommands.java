@@ -70,6 +70,7 @@ public class ElytraAeronauticsCommands {
         try{
             double altitude = Double.parseDouble(value);
             CloudLayer.cloudLayers[layerNumber].setAltitude(altitude);
+            CloudLayer.writeCloudLayers();
             return "Set altitude of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getAltitude();
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();

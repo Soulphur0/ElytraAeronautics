@@ -21,7 +21,7 @@ public class ElytraAeronautics implements ModInitializer {
 	public void onInitialize() {
 		AutoConfig.register(EanConfig.class, GsonConfigSerializer::new);
 		AutoConfig.getConfigHolder(EanConfig.class).registerSaveListener((configHolder, eanConfig)->{
-			CloudLayer.writeCloudLayers(eanConfig);
+			CloudLayer.generateCloudLayers(eanConfig);
 			EanCloudRenderBehaviour.configUpdated = true;
 			return ActionResult.PASS;
 		});
