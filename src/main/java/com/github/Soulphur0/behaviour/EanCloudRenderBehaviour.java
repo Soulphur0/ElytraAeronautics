@@ -22,7 +22,9 @@ import org.joml.Matrix4f;
 public class EanCloudRenderBehaviour {
 
     // $ Variables
+    private static boolean layersToBeLoaded = true;
     public static boolean configUpdated = false;
+    public static boolean layersUpdated = false;
 
     private static final Identifier CLOUDS = new Identifier("textures/environment/clouds.png");
 
@@ -70,32 +72,31 @@ public class EanCloudRenderBehaviour {
             EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
 
             // = Create layer array if the config was updated or first ever loaded.
-            CloudLayer.writeCloudLayers(config);
+            if (config.generateDefaultPreset || configUpdated){
+                CloudLayer.generateCloudLayers(config);
+                config.generateDefaultPreset = false;
+                configUpdated = false;
+                layersUpdated = true;
+            }
+
+            // = Load stored cloud layers into memory.
+            if (layersToBeLoaded || layersUpdated) {
+                CloudLayer.readCloudLayers();
+                layersToBeLoaded = false;
+                layersUpdated = false;
+            }
 
             // + Build geometry for each cloud layer.
             // * The geometry for each layer is built using its own parameters, and is stored in an array.
             // * All values besides the geometry that are important for rendering are stored in an array too.
             for (int layerNum = 0; layerNum < config.numberOfLayers; layerNum++) {
-                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-                Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
-
-                // - Get cloud relative Y distance to the camera.
-                double cloudRenderAltitude = (double) ((config.firstLayerAltitude + config.distanceBetweenLayers * layerNum) - (float) camPosY + 0.33F);
-
-                // TODO branch 05/03/23
-                // - Create and set values for the layer.
-                // = Parameters that the player will be able to tweak in the config.
-                CloudLayer layer = new CloudLayer();
-                layer.setName("Layer " + layerNum);
-                layer.setAltitude((config.firstLayerAltitude + config.distanceBetweenLayers * layerNum));
-                layer.setCloudType(config.cloudType);
-                layer.setVerticalRenderDistance(config.verticalRenderDistance);
-                layer.setHorizontalRenderDistance(config.horizontalRenderDistance);
-                layer.setLodRenderDistance(config.lodRenderDistance);
-                layer.setUseSmoothLODs(config.useSmoothLods);
-                layer.setCloudThickness(config.cloudThickness);
+                // ? Load configured cloud layer.
+                CloudLayer layer = CloudLayer.cloudLayers[layerNum];
 
                 // = Rendering context parameters.
+                // ; Get cloud relative Y distance to the camera.
+                double cloudRenderAltitude = (double) (layer.getAltitude() - (float) camPosY + 0.33F);
+
                 // ; The layer's texture displacement towards the right.
                 layer.setDisplacement(layerNum * 64);
 
@@ -107,6 +108,8 @@ public class EanCloudRenderBehaviour {
                 layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= config.verticalRenderDistance);
 
                 // ; The geometry of the cloud layer.
+                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+                Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
                 layer.setVertexGeometry(ean_renderCloudLayers(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
 
