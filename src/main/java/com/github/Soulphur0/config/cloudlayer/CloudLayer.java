@@ -1,10 +1,10 @@
 package com.github.Soulphur0.config.cloudlayer;
 
-import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
 import com.github.Soulphur0.config.EanConfig;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
 import net.minecraft.client.render.BufferBuilder;
 
 import java.io.*;
@@ -15,13 +15,21 @@ import java.util.Scanner;
 public class CloudLayer implements Serializable {
 
     // = Properties of the layer
+    @Expose
     private String name; // Cloud layer name given by the system to sort it (Layer 1,  Layer2, ...)
+    @Expose
     private double altitude; // Altitude at which the cloud layer will render.
+    @Expose
     private CloudTypes cloudType; // FAST, FANCY, LOD, more planned for the future.
+    @Expose
     private float verticalRenderDistance; // Min distance to the layer at which it will render.
+    @Expose
     private int horizontalRenderDistance; // Number of chunks the cloud layer occupies.
+    @Expose
     private float lodRenderDistance; // Min distance to the layer at which it will render with high LOD.
+    @Expose
     private boolean useSmoothLODs; // Fast clouds will puff-up gradually.
+    @Expose
     float cloudThickness;
 
     // = Contextual attributes for rendering
@@ -39,12 +47,9 @@ public class CloudLayer implements Serializable {
     }
 
     // $ CLASS METHODS
-    // € Used to generate cloud layers and save/load them into storage.
-
-    // ? Method used to set up all cloud layers at once and store them.
-    // ¿ Called when saving the config screen menu.
-    public static void writeCloudLayers(EanConfig config){
-        cloudLayers = new CloudLayer[config.numberOfLayers];
+    // ? Method used to set up all cloud layers at once.
+    public static void generateCloudLayers(EanConfig config){
+        CloudLayer[] cloudLayers = new CloudLayer[config.numberOfLayers];
 
         for (int i = 0; i < config.numberOfLayers; i++) {
             CloudLayer layer = new CloudLayer();
@@ -60,27 +65,43 @@ public class CloudLayer implements Serializable {
             cloudLayers[i] = layer;
         }
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        writeCloudLayers(cloudLayers);
+    }
+
+    // ? Method used to store all cloud layers.
+    public static void writeCloudLayers(){
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
         String json = gson.toJson(cloudLayers);
 
         try {
-            FileWriter writer = new FileWriter("eanCloudLayers.json");
+            FileWriter writer = new FileWriter("config/eanCloudLayers.json");
             writer.write(json);
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        config.generateDefaultPreset = false;
-        EanCloudRenderBehaviour.configUpdated = false;
     }
 
-    // ? Method used to get the saved cloud layers.
+    public static void writeCloudLayers(CloudLayer[] cloudLayers){
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+        String json = gson.toJson(cloudLayers);
+
+        try {
+            FileWriter writer = new FileWriter("config/eanCloudLayers.json");
+            writer.write(json);
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ? Method used to get the stored cloud layers and load them into memory.
     public static void readCloudLayers(){
+        // ¿ Read cloud layers from file
         StringBuilder json = new StringBuilder();
 
         try {
-            File file = new File("eanCloudLayers.json");
+            File file = new File("config/eanCloudLayers.json");
             Scanner reader = new Scanner(file);
 
             while(reader.hasNextLine()){
@@ -92,10 +113,18 @@ public class CloudLayer implements Serializable {
             e.printStackTrace();
         }
 
+        // ¿ Convert extracted string into list then into array.
         Gson gson = new Gson();
-
         Type type = new TypeToken<List<CloudLayer>>(){}.getType();
         List<CloudLayer> cloudLayers = gson.fromJson(String.valueOf(json), type);
+
+        CloudLayer[] cloudLayersArray = new CloudLayer[cloudLayers.size()];
+        for(int i = 0; i< cloudLayers.size(); i++){
+            cloudLayersArray[i] = cloudLayers.get(i);
+        }
+
+        // ¿ Load cloud layers into memory.
+        CloudLayer.cloudLayers  = cloudLayersArray;
     }
 
     // $ GETTERS & SETTERS
