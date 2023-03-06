@@ -49,6 +49,9 @@ public class ElytraAeronauticsCommands {
                                                             break;
                                                         case "cloudType":
                                                             break;
+                                                        case "verticalRenderDistance":
+                                                            message = setLayerRenderDistance(layerNumber, value);
+                                                            break;
                                                         default:
                                                             break;
                                                     }
@@ -77,5 +80,15 @@ public class ElytraAeronauticsCommands {
         }
     }
 
+    private static String setLayerRenderDistance(int layerNumber, String value) throws CommandSyntaxException {
+        try{
+            float verticalRenderDistance = Float.parseFloat(value);
+            CloudLayer.cloudLayers[layerNumber].setVerticalRenderDistance(verticalRenderDistance);
+            CloudLayer.writeCloudLayers();
+            return "Set vertical render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getVerticalRenderDistance();
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
 
 }
