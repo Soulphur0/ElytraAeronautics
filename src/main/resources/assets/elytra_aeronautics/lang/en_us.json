@@ -23,7 +23,7 @@
   "text.autoconfig.ean.option.realignAngle.@Tooltip": "Pitch angle at which the player will align when sneaking mid-flight.",
   "text.autoconfig.ean.option.realignRate": "Pitch realignment rate",
   "text.autoconfig.ean.option.realignRate.@Tooltip[0]": "Amount of rotation at which the player will realign towards the pitch realignment angle.",
-  "text.autoconfig.ean.option.realignRate.@Tooltip[1]": "Measured in angles-per-tick.",
+  "text.autoconfig.ean.option.realignRate.@Tooltip[1]": "Measured in angle-degrees-per-tick.",
 
   "text.autoconfig.ean.category.cloud_settings": "Cloud Settings",
 
