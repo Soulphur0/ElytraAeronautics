@@ -2,6 +2,7 @@ package com.github.Soulphur0.registries;
 
 import com.github.Soulphur0.config.cloudlayer.CloudLayer;
 import com.github.Soulphur0.config.cloudlayer.CloudLayerAttributes;
+import com.github.Soulphur0.config.cloudlayer.CloudTypes;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -35,7 +36,7 @@ public class ElytraAeronauticsCommands {
                                             }
                                             return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                                         }))
-                                        // * Layer attribute value argument
+                                        // + Layer attribute value argument
                                         .then(argument("value", string())
                                                 .executes(context -> {
                                                     int layerNumber = IntegerArgumentType.getInteger(context, "layerNumber");
@@ -43,21 +44,14 @@ public class ElytraAeronauticsCommands {
                                                     String value = StringArgumentType.getString(context, "value");
                                                     String message = "";
 
-                                                    switch (layerAttribute){
-                                                        case "altitude":
-                                                            message = setLayerAltitude(layerNumber, value);
-                                                            break;
-                                                        case "cloudType":
-                                                            break;
-                                                        case "verticalRenderDistance":
-                                                            message = setLayerRenderDistance(layerNumber, value);
-                                                            break;
-                                                        default:
-                                                            break;
+                                                    switch (layerAttribute) {
+                                                        case "altitude" -> message = setLayerAltitude(layerNumber, value);
+                                                        case "cloudType" -> message = setLayerCloudType(layerNumber, value);
+                                                        case "verticalRenderDistance" -> message = setLayerVerticalRenderDistance(layerNumber, value);
+                                                        case "horizontalRenderDistance" -> message = setLayerHorizontalRenderDistance(layerNumber, value);
+                                                        default -> {
+                                                        }
                                                     }
-
-
-
 
                                                     context.getSource().sendFeedback(Text.of(message));
                                                     return 1;
@@ -80,12 +74,34 @@ public class ElytraAeronauticsCommands {
         }
     }
 
-    private static String setLayerRenderDistance(int layerNumber, String value) throws CommandSyntaxException {
+    private static String setLayerCloudType(int layerNumber, String value) throws CommandSyntaxException {
+        try{
+            CloudTypes cloudType = CloudTypes.valueOf(value.toUpperCase());
+            CloudLayer.cloudLayers[layerNumber].setCloudType(cloudType);
+            CloudLayer.writeCloudLayers();
+            return "Set cloud type of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getCloudType();
+        } catch (IllegalArgumentException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setLayerVerticalRenderDistance(int layerNumber, String value) throws CommandSyntaxException {
         try{
             float verticalRenderDistance = Float.parseFloat(value);
             CloudLayer.cloudLayers[layerNumber].setVerticalRenderDistance(verticalRenderDistance);
             CloudLayer.writeCloudLayers();
-            return "Set vertical render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getVerticalRenderDistance();
+            return "Set vertical render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getVerticalRenderDistance() + " blocks.";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setLayerHorizontalRenderDistance(int layerNumber, String value) throws CommandSyntaxException {
+        try{
+            int horizontalRenderDistance = Integer.parseInt(value);
+            CloudLayer.cloudLayers[layerNumber].setHorizontalRenderDistance(horizontalRenderDistance);
+            CloudLayer.writeCloudLayers();
+            return "Set horizontal render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getHorizontalRenderDistance() + " chunks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         }

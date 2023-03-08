@@ -57,7 +57,7 @@ public class EanConfig implements ConfigData {
     public float verticalRenderDistance = 1000;
     @ConfigEntry.Category(value ="cloud_settings")
     @ConfigEntry.BoundedDiscrete(min = 2, max = 128)
-    public int horizontalRenderDistance = 16;
+    public int horizontalRenderDistance = 20;
     @ConfigEntry.Category(value ="cloud_settings")
     public float lodRenderDistance = 50.0F;
     @ConfigEntry.Category(value ="cloud_settings")

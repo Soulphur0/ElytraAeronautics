@@ -108,13 +108,14 @@ public class EanCloudRenderBehaviour {
 
                 // ; Whether the layer is within a certain render distance.
                 layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
-                layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
+                layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
 
                 // ; The geometry of the cloud layer.
                 BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
                 Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
                 layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
+                // ! COLOR: new Vec3d(52.0D, 61.0D, 235.0D)
 
                 // = Store later object in the layers array to later render.
                 CloudLayer.cloudLayers[layerNum] = layer;
@@ -198,7 +199,7 @@ public class EanCloudRenderBehaviour {
 
             // * Puff-up clouds gradually or suddenly.
             if (layer.isUseSmoothLODs())
-                layer.setCloudThickness(Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0, layer.getAltitude(), 4, camY), 4.0F));
+                layer.setCloudThickness(Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0.1, layer.getAltitude(), 4, Math.abs(camY)), 4.0F));
             else
                 layer.setCloudThickness((layer.getLodRenderDistance() - camY <= 0) ?  4.0F : 0.0F);
         }
@@ -213,46 +214,54 @@ public class EanCloudRenderBehaviour {
     private static void ean_buildCloudLayerGeometry(CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
+
         float m = (float)color.x;
-        float n = (float)color.y;
-        float o = (float)color.z;
         float p = m * 0.9F;
-        float q = n * 0.9F;
-        float r = o * 0.9F;
         float s = m * 0.7F;
-        float t = n * 0.7F;
-        float u = o * 0.7F;
         float v = m * 0.8F;
+
+        float n = (float)color.y;
+        float q = n * 0.9F;
+        float t = n * 0.7F;
         float w = n * 0.8F;
+
+        float o = (float)color.z;
+        float r = o * 0.9F;
+        float u = o * 0.7F;
         float aa = o * 0.8F;
+
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
 
         float cloudThickness = layer.getCloudThickness();
         float ab = (float)Math.floor(y / cloudThickness) * cloudThickness;
 
-        if (layer.getCloudType().equals(CloudTypes.FANCY) && layer.isWithinRenderDistance()) {
+        // > A texture displacement in pixels has to be added in order to not render the same part of the clouds texture on consecutive layers.
+        // < It is best to displace the texture in a single direction; I arbitrarily chose the EAST.
+        float textureDisplacement = layer.getDisplacement(); // Adding to the displacement adds towards the EAST
+        int displacementInQuadrants = (int)Math.floor(textureDisplacement/8.0F);
+
+        // - The value of these counters used in the 'for' loop below determine the span in quadrants of cloud rendering in cardinal directions.
+        // / They also determine (in quadrants) the region of the clouds texture to render.
+        // / The minimal limits are -1 0, which centers the clouds above the player with a render distance of exactly 4 chunks.
+        // / To properly center clouds, both limits must increment by 1, so render distance can only increase by 2 chunks at a time at minimum.
+        int westToEastSpan; // Lower negative limit => greater West render. Higher positive limit => greater East render.
+        int northToSouthSpan; // Lower negative limit => greater North render. Higher positive limit => greater South render.
+
+        // > Added to calculate horizontal render distance.
+        int northwestSpan = (int)Math.round((-layer.getHorizontalRenderDistance() / 4.0F));
+        int southeastSpan = (int)Math.round((layer.getHorizontalRenderDistance() / 4.0F) - 1);
+
+        if ((layer.getCloudType().equals(CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
             // + The following 'for' loop counters determine cloud render distance.
             // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
             // * A flat block is in reality a single pixel of the clouds texture inflated into a cloud.
 
-            // - The value of these counters used in the 'for' loop below determine the span in quadrants of cloud rendering in cardinal directions.
-            // / They also determine (in quadrants) the region of the clouds texture to render.
-            // / The minimal limits are -1 0, which centers the clouds above the player with a render distance of exactly 4 chunks.
-            // / To properly center clouds, both limits must increment by 1, so render distance can only increase by 2 chunks at a time at minimum.
-            int westToEastSpan; // Lower negative limit => greater West render. Higher positive limit => greater East render.
-            int northToSouthSpan; // Lower negative limit => greater North render. Higher positive limit => greater South render.
-
-            // > A texture displacement in pixels has to be added in order to not render the same part of the clouds texture on consecutive layers.
-            // < It is best to displace the texture in a single direction; I arbitrarily chose the EAST.
-            float textureDisplacement = layer.getDisplacement(); // Adding to the displacement adds towards the EAST
-            int displacementInQuadrants = (int)Math.floor(textureDisplacement/8.0F);
-
-            // > Pixel displacement should be done in multiples of 8.
-            // < The displacement value is added to the drawing position of each vertex, for every 8 pixels of displace,
-            // < 1 quadrant is subtracted from the westToEast variable, which determines the square region of the texture to draw.
-            for(westToEastSpan = -3 - displacementInQuadrants; westToEastSpan <= 2 - displacementInQuadrants; ++westToEastSpan) {
-                for(northToSouthSpan = -3; northToSouthSpan <= 2; ++northToSouthSpan) {
+            // + Pixel displacement should be done in multiples of 8.
+            // * The displacement value is added to the drawing position of each vertex, for every 8 pixels of displace,
+            // * 1 quadrant is subtracted from the westToEast variable, which determines the square region of the texture to draw.
+            for(westToEastSpan = northwestSpan - displacementInQuadrants; westToEastSpan <= southeastSpan - displacementInQuadrants; ++westToEastSpan) {
+                for(northToSouthSpan = northwestSpan; northToSouthSpan <= southeastSpan; ++northToSouthSpan) {
 
                     // - The value of these variables determine where to draw clouds in the previously set render distance.
                     // / Lower values make clouds render twice in the same place.
@@ -264,10 +273,10 @@ public class EanCloudRenderBehaviour {
                     // * The float values added to the drawing positions of the vertex determine the pixel of the clouds.png texture positions to be drawn.
                     // * Clouds are drawn in square groups of 8x8 pixels that I called "quadrants" (they are cloud-chunks in a way) [(0,8);(8,8);(8,0);(0,0)].
                     // * Higher or lower values make clouds split or overlap. The size of quadrants are determined by the previous variables.
-                    // > If we want to add a displacement to the cloud layer; we first need for the loop variables to be located in that part of the texture before we try to draw said part of the texture.
-                    // < Since here we are drawing quadrants, 1 unit up there in the loop is equal to 8 pixels.
-                    // < For a displacement of 100 pixels, we would need 100/8 quadrants; that's why displacement should be set in multiples of 8.
-                    // _ So, in order to displace by 1 (quadrant) the cloud layer, horizontal displacement should be = 8 and westToEastSpan should be -= 1 for both of its ends.
+                    // - If we want to add a displacement to the cloud layer; we first need for the loop variables to be located in that part of the texture before we try to draw said part of the texture.
+                    // / Since here we are drawing quadrants, 1 unit up there in the loop is equal to 8 pixels.
+                    // / For a displacement of 100 pixels, we would need 100/8 quadrants; that's why displacement should be set in multiples of 8.
+                    // = So, in order to displace by 1 (quadrant) the cloud layer, horizontal displacement should be = 8 and westToEastSpan should be -= 1 for both of its ends.
 
                     // ? This renders the bottom face of clouds.
                     if (ab > -8.0F) {
@@ -330,13 +339,16 @@ public class EanCloudRenderBehaviour {
                     }
                 }
             }
-        } else if (false) {
-            for(int ah = -32; ah < 32; ah += 32) {
-                for(int ai = -32; ai < 32; ai += 32) {
-                    builder.vertex((double)(ah + 0), (double)ab, (double)(ai + 32)).texture((float)(ah + 0) * 0.00390625F + k, (float)(ai + 32) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                    builder.vertex((double)(ah + 32), (double)ab, (double)(ai + 32)).texture((float)(ah + 32) * 0.00390625F + k, (float)(ai + 32) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                    builder.vertex((double)(ah + 32), (double)ab, (double)(ai + 0)).texture((float)(ah + 32) * 0.00390625F + k, (float)(ai + 0) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
-                    builder.vertex((double)(ah + 0), (double)ab, (double)(ai + 0)).texture((float)(ah + 0) * 0.00390625F + k, (float)(ai + 0) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+        } else if ((layer.getCloudType().equals(CloudTypes.FAST) || layer.getCloudType().equals(CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
+            for(westToEastSpan = northwestSpan - displacementInQuadrants; westToEastSpan <= southeastSpan - displacementInQuadrants; ++westToEastSpan) {
+                for(northToSouthSpan = northwestSpan; northToSouthSpan <= southeastSpan; ++northToSouthSpan) {
+                    float westToEastDrawPos = (float)(westToEastSpan * 8);
+                    float northToSouthDrawPos = (float)(northToSouthSpan * 8);
+
+                    builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((float)(westToEastDrawPos + 0) * 0.00390625F + k, (float)(northToSouthDrawPos + 8) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 8.0F)).texture((float)(westToEastDrawPos + 8) * 0.00390625F + k, (float)(northToSouthDrawPos + 8) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    builder.vertex((double)(westToEastDrawPos + 8.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((float)(westToEastDrawPos + 8) * 0.00390625F + k, (float)(northToSouthDrawPos + 0) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
+                    builder.vertex((double)(westToEastDrawPos + 0.0F + textureDisplacement), (double)(ab + 0.0F), (double)(northToSouthDrawPos + 0.0F)).texture((float)(westToEastDrawPos + 0) * 0.00390625F + k, (float)(northToSouthDrawPos + 0) * 0.00390625F + l).color(m, n, o, 0.8F).normal(0.0F, -1.0F, 0.0F).next();
                 }
             }
         }
