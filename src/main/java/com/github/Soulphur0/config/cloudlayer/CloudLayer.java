@@ -59,7 +59,6 @@ public class CloudLayer implements Serializable {
             layer.setVerticalRenderDistance(config.verticalRenderDistance);
             layer.setHorizontalRenderDistance(config.horizontalRenderDistance);
             layer.setLodRenderDistance(config.lodRenderDistance);
-            layer.setUseSmoothLODs(config.useSmoothLods);
             layer.setCloudThickness(config.cloudThickness);
 
             cloudLayers[i] = layer;

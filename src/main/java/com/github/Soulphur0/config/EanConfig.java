@@ -61,8 +61,6 @@ public class EanConfig implements ConfigData {
     @ConfigEntry.Category(value ="cloud_settings")
     public float lodRenderDistance = 50.0F;
     @ConfigEntry.Category(value ="cloud_settings")
-    public boolean useSmoothLods = true;
-    @ConfigEntry.Category(value ="cloud_settings")
     @ConfigEntry.Gui.PrefixText
     public float cloudThickness =  4.0F;
     @ConfigEntry.Category(value ="cloud_settings")

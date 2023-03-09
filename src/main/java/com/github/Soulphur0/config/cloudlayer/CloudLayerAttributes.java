@@ -6,6 +6,5 @@ public enum CloudLayerAttributes {
     verticalRenderDistance,
     horizontalRenderDistance,
     lodRenderDistance,
-    useSmoothLODs,
     cloudThickness
 }

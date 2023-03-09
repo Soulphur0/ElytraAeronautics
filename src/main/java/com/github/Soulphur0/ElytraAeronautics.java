@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 public class ElytraAeronautics implements ModInitializer {
 
 	public static final Logger LOGGER = LogManager.getLogger("ElytraAeronautics");
-	public static boolean readConfigFileCue_WorldRendererMixin = true;
 	public static boolean readConfigFileCue_LivingEntityMixin = true;
 
 	@Override

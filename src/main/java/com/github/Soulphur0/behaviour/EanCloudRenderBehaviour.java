@@ -5,7 +5,6 @@ import com.github.Soulphur0.config.EanConfig;
 import com.github.Soulphur0.config.cloudlayer.CloudLayer;
 import com.github.Soulphur0.config.cloudlayer.CloudTypes;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
-import com.github.Soulphur0.utility.EanMath;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.shedaniel.autoconfig.AutoConfig;
@@ -192,17 +191,17 @@ public class EanCloudRenderBehaviour {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
-        // + Puff-up clouds.
-        if (layer.getCloudType().equals(CloudTypes.LOD)){
-            // * Sets puff-up start altitude.
-            float puffUpStartAltitude = layer.getLodRenderDistance();
-
-            // * Puff-up clouds gradually or suddenly.
-            if (layer.isUseSmoothLODs())
-                layer.setCloudThickness(Math.min((float) EanMath.getLinealValue(puffUpStartAltitude, 0.1, layer.getAltitude(), 4, Math.abs(camY)), 4.0F));
-            else
-                layer.setCloudThickness((layer.getLodRenderDistance() - camY <= 0) ?  4.0F : 0.0F);
-        }
+        // ! Puff-up clouds. (Fully re-implement in the future)
+//        if (layer.getCloudType().equals(CloudTypes.LOD)){
+//            // * Sets puff-up start altitude.
+//            float puffUpStartAltitude = layer.getLodRenderDistance();
+//
+//            // * Puff-up clouds gradually or suddenly.
+//            if (layer.isUseSmoothLODs()){
+//                float valueX = (float) EanMath.getLinealValue(puffUpStartAltitude, 0.1, layer.getAltitude(), 4.0, Math.abs(camY));//Math.round();
+//                layer.setCloudThickness((float) Math.max(0.1, Math.min(4.0, valueX)));
+//            }
+//        }
 
         // + Draw cloud layer into the buffer.
         ean_buildCloudLayerGeometry(layer, bufferBuilder, camX, camY, camZ, color);
