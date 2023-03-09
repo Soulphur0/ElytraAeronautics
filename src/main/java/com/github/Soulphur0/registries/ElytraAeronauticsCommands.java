@@ -49,6 +49,7 @@ public class ElytraAeronauticsCommands {
                                                         case "cloudType" -> message = setLayerCloudType(layerNumber, value);
                                                         case "verticalRenderDistance" -> message = setLayerVerticalRenderDistance(layerNumber, value);
                                                         case "horizontalRenderDistance" -> message = setLayerHorizontalRenderDistance(layerNumber, value);
+                                                        case "cloudThickness" -> message = setLayerCloudThickness(layerNumber, value);
                                                         default -> {
                                                         }
                                                     }
@@ -102,6 +103,17 @@ public class ElytraAeronauticsCommands {
             CloudLayer.cloudLayers[layerNumber].setHorizontalRenderDistance(horizontalRenderDistance);
             CloudLayer.writeCloudLayers();
             return "Set horizontal render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getHorizontalRenderDistance() + " chunks.";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setLayerCloudThickness(int layerNumber, String value) throws CommandSyntaxException {
+        try{
+            float cloudThickness = Float.parseFloat(value);
+            CloudLayer.cloudLayers[layerNumber].setCloudThickness(cloudThickness);
+            CloudLayer.writeCloudLayers();
+            return "Set cloud thickness of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber].getCloudThickness() + " blocks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         }
