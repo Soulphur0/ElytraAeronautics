@@ -39,5 +39,6 @@
   "text.autoconfig.ean.option.cloudThickness.@PrefixText": "--- Cloud layer extra settings ---",
   "text.autoconfig.ean.option.cloudThickness": "Cloud thickness",
   "text.autoconfig.ean.option.cloudSpeed": "Cloud speed",
-  "command.error.value" : "Invalid value for the selected attribute."
+  "command.error.value" : "Invalid value for the selected attribute.",
+  "command.error.layerNumber": "The layer specified doesn't exist."
 }
