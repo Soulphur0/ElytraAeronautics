@@ -110,13 +110,14 @@ public class EanCloudRenderBehaviour {
                 layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
                 layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
 
-                // ; The geometry of the cloud layer.
-                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+                // ; Color of the cloud layer
                 Color cloudColor = Color.ofTransparent(layer.getCloudColor());
-                Vec3d vec3d = new Vec3d(cloudColor.getRed(), cloudColor.getGreen(), cloudColor.getBlue());
+                Vec3d vec3d = new Vec3d(cloudColor.getRed() / 255.0, cloudColor.getGreen() / 255.0, cloudColor.getBlue() / 255.0);
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
+
+                // ; Geometry of the cloud layer.
+                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
                 layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
-                // ! COLOR: new Vec3d(52.0D, 61.0D, 235.0D)
 
                 // = Store later object in the layers array to later render.
                 CloudLayer.cloudLayers[layerNum] = layer;

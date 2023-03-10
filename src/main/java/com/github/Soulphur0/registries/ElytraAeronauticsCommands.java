@@ -51,8 +51,8 @@ public class ElytraAeronauticsCommands {
                                                         case "verticalRenderDistance" -> message = setLayerVerticalRenderDistance(layerNumber, value);
                                                         case "horizontalRenderDistance" -> message = setLayerHorizontalRenderDistance(layerNumber, value);
                                                         case "lodRenderDistance" -> message = setLodRenderDistance(layerNumber, value);
-                                                        case "cloudThickness" -> message = setLayerCloudThickness(layerNumber, value);
-                                                        case "cloudColor" -> message = setCloudColor(layerNumber, value);
+                                                        case "thickness" -> message = setLayerCloudThickness(layerNumber, value);
+                                                        case "color" -> message = setCloudColor(layerNumber, value);
                                                         case "shading" -> message = setShading(layerNumber, value);
                                                         default -> {
                                                         }
@@ -125,7 +125,7 @@ public class ElytraAeronauticsCommands {
             float lodRenderDistance = Float.parseFloat(value);
             CloudLayer.cloudLayers[layerNumber-1].setLodRenderDistance(lodRenderDistance);
             CloudLayer.writeCloudLayers();
-            return "Set LOD render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getHorizontalRenderDistance() + " chunks.";
+            return "Set LOD render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getLodRenderDistance() + " blocks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
