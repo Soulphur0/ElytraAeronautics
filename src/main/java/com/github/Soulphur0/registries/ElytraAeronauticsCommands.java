@@ -53,7 +53,7 @@ public class ElytraAeronauticsCommands {
                                                         case "lodRenderDistance" -> message = setLodRenderDistance(layerNumber, value);
                                                         case "cloudThickness" -> message = setLayerCloudThickness(layerNumber, value);
                                                         case "cloudColor" -> message = setCloudColor(layerNumber, value);
-                                                        case "isSolidColor" -> message = setSolidColor(layerNumber, value);
+                                                        case "shading" -> message = setShading(layerNumber, value);
                                                         default -> {
                                                         }
                                                     }
@@ -159,12 +159,12 @@ public class ElytraAeronauticsCommands {
         }
     }
 
-    private static String setSolidColor(int layerNumber, String value) throws CommandSyntaxException {
+    private static String setShading(int layerNumber, String value) throws CommandSyntaxException {
         try{
-            boolean solidColor = Boolean.parseBoolean(value);
-            CloudLayer.cloudLayers[layerNumber-1].setSolidColor(solidColor);
+            boolean shading = Boolean.parseBoolean(value);
+            CloudLayer.cloudLayers[layerNumber-1].setShading(shading);
             CloudLayer.writeCloudLayers();
-            return "Set solid color of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].isSolidColor() + ".";
+            return "Set shading of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].isShading() + ".";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){

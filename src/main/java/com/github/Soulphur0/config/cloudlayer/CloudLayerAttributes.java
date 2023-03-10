@@ -8,5 +8,5 @@ public enum CloudLayerAttributes {
     lodRenderDistance,
     cloudThickness,
     cloudColor,
-    isSolidColor
+    shading
 }

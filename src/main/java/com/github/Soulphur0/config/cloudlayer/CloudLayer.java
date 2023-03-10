@@ -34,7 +34,7 @@ public class CloudLayer implements Serializable {
     @Expose
     int cloudColor;
     @Expose
-    boolean solidColor;
+    boolean shading;
 
     // = Contextual attributes for rendering
     private float displacement; // Amount of pixels the texture for clouds will be moved in this layer.
@@ -65,7 +65,7 @@ public class CloudLayer implements Serializable {
             layer.setLodRenderDistance(config.lodRenderDistance);
             layer.setCloudThickness(config.cloudThickness);
             layer.setCloudColor(config.cloudColor);
-            layer.setSolidColor(config.solidColor);
+            layer.setShading(config.shading);
 
             cloudLayers[i] = layer;
         }
@@ -245,11 +245,11 @@ public class CloudLayer implements Serializable {
         this.cloudColor = cloudColor;
     }
 
-    public boolean isSolidColor() {
-        return solidColor;
+    public boolean isShading() {
+        return shading;
     }
 
-    public void setSolidColor(boolean solidColor) {
-        this.solidColor = solidColor;
+    public void setShading(boolean shading) {
+        this.shading = shading;
     }
 }

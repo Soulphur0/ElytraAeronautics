@@ -165,7 +165,7 @@ public class EanCloudRenderBehaviour {
                         int u = worldRenderer.getLastCloudRenderMode() == CloudRenderMode.FANCY ? 0 : 1;
 
                         for (int v = u; v < 2; ++v) {
-                            if (!layer.isSolidColor()){
+                            if (!layer.isShading()){
                                 if (v == 0) {
                                     RenderSystem.colorMask(false, false, false, false);
                                 } else {
@@ -218,20 +218,20 @@ public class EanCloudRenderBehaviour {
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
 
-        float m = (layer.isSolidColor()) ? (float) (color.x * 0.7F) : (float) color.x;
-        float p = (layer.isSolidColor()) ? (float) color.x : (float) (color.x * 0.9F);
-        float s = (layer.isSolidColor()) ? (float) color.x : (float) (color.x * 0.7F);
-        float v = (layer.isSolidColor()) ? (float) color.x : (float) (color.x * 0.8F);
+        float m = (layer.isShading()) ? (float) color.x : (float) (color.x * 0.7F);
+        float p = (layer.isShading()) ? (float) (color.x * 0.9F) : m;
+        float s = (layer.isShading()) ? (float) (color.x * 0.7F) : m;
+        float v = (layer.isShading()) ? (float) (color.x * 0.8F) : m;
 
-        float n = (layer.isSolidColor()) ? (float) (color.y * 0.7F) : (float) color.y;
-        float q = (layer.isSolidColor()) ? (float) color.y : (float) (color.y * 0.9F);
-        float t = (layer.isSolidColor()) ? (float) color.y : (float) (color.y * 0.7F);
-        float w = (layer.isSolidColor()) ? (float) color.y : (float) (color.y* 0.8F);
+        float n = (layer.isShading()) ? (float) color.y : (float) (color.y * 0.7F);
+        float q = (layer.isShading()) ? (float) (color.y * 0.9F) : n;
+        float t = (layer.isShading()) ? (float) (color.y * 0.7F) : n;
+        float w = (layer.isShading()) ? (float) (color.y * 0.8F) : n;
 
-        float o = (layer.isSolidColor()) ? (float) (color.z * 0.7F) : (float) color.z;
-        float r = (layer.isSolidColor()) ? (float) color.z : (float) (color.z * 0.9F);
-        float u = (layer.isSolidColor()) ? (float) color.z : (float) (color.z * 0.7F);
-        float aa = (layer.isSolidColor()) ? (float) color.z : (float) (color.z * 0.8F);
+        float o = (layer.isShading()) ? (float) color.z : (float) (color.z * 0.7F);
+        float r = (layer.isShading()) ? (float) (color.z * 0.9F) : o;
+        float u = (layer.isShading()) ? (float) (color.z * 0.7F) : o;
+        float aa = (layer.isShading()) ? (float) (color.z * 0.8F) : o;
 
         float cloudThickness = layer.getCloudThickness();
         float ab = (float)Math.floor(y / cloudThickness) * cloudThickness;
