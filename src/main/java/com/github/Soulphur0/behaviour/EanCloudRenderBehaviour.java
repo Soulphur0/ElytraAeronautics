@@ -115,6 +115,7 @@ public class EanCloudRenderBehaviour {
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
                 layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
                 // ! COLOR: new Vec3d(52.0D, 61.0D, 235.0D)
+                // ! Conversion ==> value / 255;
 
                 // = Store later object in the layers array to later render.
                 CloudLayer.cloudLayers[layerNum] = layer;
