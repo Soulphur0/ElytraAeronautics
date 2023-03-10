@@ -64,5 +64,10 @@ public class EanConfig implements ConfigData {
     @ConfigEntry.Gui.PrefixText
     public float cloudThickness =  4.0F;
     @ConfigEntry.Category(value ="cloud_settings")
+    @ConfigEntry.ColorPicker
+    public int cloudColor = 0xffffff;
+    @ConfigEntry.Category(value ="cloud_settings")
+    public boolean solidColor = false;
+    @ConfigEntry.Category(value ="cloud_settings")
     public float cloudSpeed = 1.0F;
 }
