@@ -7,6 +7,8 @@ public enum CloudLayerAttributes {
     horizontalRenderDistance,
     lodRenderDistance,
     thickness,
+    speed,
     color,
+    opacity,
     shading
 }

@@ -32,7 +32,11 @@ public class CloudLayer implements Serializable {
     @Expose
     float cloudThickness;
     @Expose
+    private double cloudSpeed;
+    @Expose
     int cloudColor;
+    @Expose
+    float cloudOpacity;
     @Expose
     boolean shading;
 
@@ -42,6 +46,8 @@ public class CloudLayer implements Serializable {
     BufferBuilder.BuiltBuffer vertexGeometry; // The geometry of the processed cloud layer to later render.
     boolean withinRenderDistance;
     boolean withinLodRenderDistance;
+    float translationX;
+    float translationZ;
 
     // = Cloud layers
     public static CloudLayer[] cloudLayers;
@@ -65,7 +71,9 @@ public class CloudLayer implements Serializable {
             layer.setLodRenderDistance(config.lodRenderDistance);
             layer.setCloudThickness(config.cloudThickness);
             layer.setCloudColor(config.cloudColor);
+            layer.setCloudOpacity(config.cloudOpacity);
             layer.setShading(config.shading);
+            layer.setCloudSpeed(config.cloudSpeed);
 
             cloudLayers[i] = layer;
         }
@@ -251,5 +259,37 @@ public class CloudLayer implements Serializable {
 
     public void setShading(boolean shading) {
         this.shading = shading;
+    }
+
+    public double getCloudSpeed() {
+        return cloudSpeed;
+    }
+
+    public void setCloudSpeed(double cloudSpeed) {
+        this.cloudSpeed = cloudSpeed;
+    }
+
+    public float getTranslationX() {
+        return translationX;
+    }
+
+    public void setTranslationX(float translationX) {
+        this.translationX = translationX;
+    }
+
+    public float getTranslationZ() {
+        return translationZ;
+    }
+
+    public void setTranslationZ(float translationZ) {
+        this.translationZ = translationZ;
+    }
+
+    public float getCloudOpacity() {
+        return cloudOpacity;
+    }
+
+    public void setCloudOpacity(float cloudOpacity) {
+        this.cloudOpacity = cloudOpacity;
     }
 }

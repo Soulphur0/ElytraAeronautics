@@ -67,6 +67,8 @@ public class EanConfig implements ConfigData {
     @ConfigEntry.ColorPicker
     public int cloudColor = 0xffffff;
     @ConfigEntry.Category(value ="cloud_settings")
+    public float cloudOpacity = 0.8F;
+    @ConfigEntry.Category(value ="cloud_settings")
     public boolean shading = true;
     @ConfigEntry.Category(value ="cloud_settings")
     public float cloudSpeed = 1.0F;
