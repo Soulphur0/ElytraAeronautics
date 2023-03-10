@@ -8,6 +8,7 @@ import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.math.Color;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.option.CloudRenderMode;
@@ -109,13 +110,14 @@ public class EanCloudRenderBehaviour {
                 layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
                 layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
 
-                // ; The geometry of the cloud layer.
-                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-                Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
+                // ; Color of the cloud layer
+                Color cloudColor = Color.ofTransparent(layer.getCloudColor());
+                Vec3d vec3d = new Vec3d(cloudColor.getRed() / 255.0, cloudColor.getGreen() / 255.0, cloudColor.getBlue() / 255.0);
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
+
+                // ; Geometry of the cloud layer.
+                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
                 layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
-                // ! COLOR: new Vec3d(52.0D, 61.0D, 235.0D)
-                // ! Conversion ==> value / 255;
 
                 // = Store later object in the layers array to later render.
                 CloudLayer.cloudLayers[layerNum] = layer;
@@ -164,10 +166,12 @@ public class EanCloudRenderBehaviour {
                         int u = worldRenderer.getLastCloudRenderMode() == CloudRenderMode.FANCY ? 0 : 1;
 
                         for (int v = u; v < 2; ++v) {
-                            if (v == 0) {
-                                RenderSystem.colorMask(false, false, false, false);
-                            } else {
-                                RenderSystem.colorMask(true, true, true, true);
+                            if (!layer.isShading()){
+                                if (v == 0) {
+                                    RenderSystem.colorMask(false, false, false, false);
+                                } else {
+                                    RenderSystem.colorMask(true, true, true, true);
+                                }
                             }
 
                             ShaderProgram shaderProgram = RenderSystem.getShader();
@@ -215,22 +219,20 @@ public class EanCloudRenderBehaviour {
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
 
-        float m = (float)color.x;
-        float p = m * 0.9F;
-        float s = m * 0.7F;
-        float v = m * 0.8F;
+        float m = (layer.isShading()) ? (float) color.x : (float) (color.x * 0.7F);
+        float p = (layer.isShading()) ? (float) (color.x * 0.9F) : m;
+        float s = (layer.isShading()) ? (float) (color.x * 0.7F) : m;
+        float v = (layer.isShading()) ? (float) (color.x * 0.8F) : m;
 
-        float n = (float)color.y;
-        float q = n * 0.9F;
-        float t = n * 0.7F;
-        float w = n * 0.8F;
+        float n = (layer.isShading()) ? (float) color.y : (float) (color.y * 0.7F);
+        float q = (layer.isShading()) ? (float) (color.y * 0.9F) : n;
+        float t = (layer.isShading()) ? (float) (color.y * 0.7F) : n;
+        float w = (layer.isShading()) ? (float) (color.y * 0.8F) : n;
 
-        float o = (float)color.z;
-        float r = o * 0.9F;
-        float u = o * 0.7F;
-        float aa = o * 0.8F;
-
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+        float o = (layer.isShading()) ? (float) color.z : (float) (color.z * 0.7F);
+        float r = (layer.isShading()) ? (float) (color.z * 0.9F) : o;
+        float u = (layer.isShading()) ? (float) (color.z * 0.7F) : o;
+        float aa = (layer.isShading()) ? (float) (color.z * 0.8F) : o;
 
         float cloudThickness = layer.getCloudThickness();
         float ab = (float)Math.floor(y / cloudThickness) * cloudThickness;

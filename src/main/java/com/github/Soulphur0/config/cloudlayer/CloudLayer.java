@@ -31,6 +31,10 @@ public class CloudLayer implements Serializable {
     private boolean useSmoothLODs; // Fast clouds will puff-up gradually.
     @Expose
     float cloudThickness;
+    @Expose
+    int cloudColor;
+    @Expose
+    boolean shading;
 
     // = Contextual attributes for rendering
     private float displacement; // Amount of pixels the texture for clouds will be moved in this layer.
@@ -60,6 +64,8 @@ public class CloudLayer implements Serializable {
             layer.setHorizontalRenderDistance(config.horizontalRenderDistance);
             layer.setLodRenderDistance(config.lodRenderDistance);
             layer.setCloudThickness(config.cloudThickness);
+            layer.setCloudColor(config.cloudColor);
+            layer.setShading(config.shading);
 
             cloudLayers[i] = layer;
         }
@@ -229,5 +235,21 @@ public class CloudLayer implements Serializable {
 
     public void setCloudThickness(float cloudThickness) {
         this.cloudThickness = cloudThickness;
+    }
+
+    public int getCloudColor() {
+        return cloudColor;
+    }
+
+    public void setCloudColor(int cloudColor) {
+        this.cloudColor = cloudColor;
+    }
+
+    public boolean isShading() {
+        return shading;
+    }
+
+    public void setShading(boolean shading) {
+        this.shading = shading;
     }
 }
