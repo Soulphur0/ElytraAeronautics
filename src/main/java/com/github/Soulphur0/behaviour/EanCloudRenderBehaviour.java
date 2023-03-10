@@ -8,6 +8,7 @@ import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.math.Color;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.option.CloudRenderMode;
@@ -111,7 +112,8 @@ public class EanCloudRenderBehaviour {
 
                 // ; The geometry of the cloud layer.
                 BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-                Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
+                Color cloudColor = Color.ofTransparent(layer.getCloudColor());
+                Vec3d vec3d = new Vec3d(cloudColor.getRed(), cloudColor.getGreen(), cloudColor.getBlue());
                 worldRenderer.setCloudsBuffer(new VertexBuffer());
                 layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
                 // ! COLOR: new Vec3d(52.0D, 61.0D, 235.0D)
@@ -163,10 +165,12 @@ public class EanCloudRenderBehaviour {
                         int u = worldRenderer.getLastCloudRenderMode() == CloudRenderMode.FANCY ? 0 : 1;
 
                         for (int v = u; v < 2; ++v) {
-                            if (v == 0) {
-                                RenderSystem.colorMask(false, false, false, false);
-                            } else {
-                                RenderSystem.colorMask(true, true, true, true);
+                            if (!layer.isSolidColor()){
+                                if (v == 0) {
+                                    RenderSystem.colorMask(false, false, false, false);
+                                } else {
+                                    RenderSystem.colorMask(true, true, true, true);
+                                }
                             }
 
                             ShaderProgram shaderProgram = RenderSystem.getShader();
@@ -214,22 +218,20 @@ public class EanCloudRenderBehaviour {
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
 
-        float m = (float)color.x;
-        float p = m * 0.9F;
-        float s = m * 0.7F;
-        float v = m * 0.8F;
+        float m = (layer.isSolidColor()) ? (float) (color.x * 0.7F) : (float) color.x;
+        float p = (layer.isSolidColor()) ? (float) color.x : (float) (color.x * 0.9F);
+        float s = (layer.isSolidColor()) ? (float) color.x : (float) (color.x * 0.7F);
+        float v = (layer.isSolidColor()) ? (float) color.x : (float) (color.x * 0.8F);
 
-        float n = (float)color.y;
-        float q = n * 0.9F;
-        float t = n * 0.7F;
-        float w = n * 0.8F;
+        float n = (layer.isSolidColor()) ? (float) (color.y * 0.7F) : (float) color.y;
+        float q = (layer.isSolidColor()) ? (float) color.y : (float) (color.y * 0.9F);
+        float t = (layer.isSolidColor()) ? (float) color.y : (float) (color.y * 0.7F);
+        float w = (layer.isSolidColor()) ? (float) color.y : (float) (color.y* 0.8F);
 
-        float o = (float)color.z;
-        float r = o * 0.9F;
-        float u = o * 0.7F;
-        float aa = o * 0.8F;
-
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+        float o = (layer.isSolidColor()) ? (float) (color.z * 0.7F) : (float) color.z;
+        float r = (layer.isSolidColor()) ? (float) color.z : (float) (color.z * 0.9F);
+        float u = (layer.isSolidColor()) ? (float) color.z : (float) (color.z * 0.7F);
+        float aa = (layer.isSolidColor()) ? (float) color.z : (float) (color.z * 0.8F);
 
         float cloudThickness = layer.getCloudThickness();
         float ab = (float)Math.floor(y / cloudThickness) * cloudThickness;
