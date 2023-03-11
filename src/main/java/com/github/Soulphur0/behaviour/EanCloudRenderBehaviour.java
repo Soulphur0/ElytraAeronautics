@@ -2,8 +2,7 @@
 package com.github.Soulphur0.behaviour;
 
 import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.config.cloudlayer.CloudLayer;
-import com.github.Soulphur0.config.cloudlayer.CloudTypes;
+import com.github.Soulphur0.config.objects.CloudLayer;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -40,13 +39,6 @@ public class EanCloudRenderBehaviour {
             RenderSystem.enableDepthTest();
             RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
             RenderSystem.depthMask(true);
-
-            // + Cloud rendering values.
-            float h = 12.0F;
-            float i = 4.0F;
-            double j = 2.0E-4D;
-
-
 
             // + Clear WorldRenderer's cloud buffer.
             // FIXME clouds won't be marked as dirty if the player stays still.
@@ -199,18 +191,6 @@ public class EanCloudRenderBehaviour {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
-        // ! Puff-up clouds. (Fully re-implement in the future)
-//        if (layer.getCloudType().equals(CloudTypes.LOD)){
-//            // * Sets puff-up start altitude.
-//            float puffUpStartAltitude = layer.getLodRenderDistance();
-//
-//            // * Puff-up clouds gradually or suddenly.
-//            if (layer.isUseSmoothLODs()){
-//                float valueX = (float) EanMath.getLinealValue(puffUpStartAltitude, 0.1, layer.getAltitude(), 4.0, Math.abs(camY));//Math.round();
-//                layer.setCloudThickness((float) Math.max(0.1, Math.min(4.0, valueX)));
-//            }
-//        }
-
         // + Draw cloud layer into the buffer.
         ean_buildCloudLayerGeometry(layer, bufferBuilder, camX, camY, camZ, color);
 
@@ -256,7 +236,7 @@ public class EanCloudRenderBehaviour {
         int northwestSpan = (int)Math.round((-layer.getHorizontalRenderDistance() / 4.0F));
         int southeastSpan = (int)Math.round((layer.getHorizontalRenderDistance() / 4.0F) - 1);
 
-        if ((layer.getCloudType().equals(CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
+        if ((layer.getCloudType().equals(CloudLayer.CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudLayer.CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
             // + The following 'for' loop counters determine cloud render distance.
             // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
@@ -344,7 +324,7 @@ public class EanCloudRenderBehaviour {
                     }
                 }
             }
-        } else if ((layer.getCloudType().equals(CloudTypes.FAST) || layer.getCloudType().equals(CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
+        } else if ((layer.getCloudType().equals(CloudLayer.CloudTypes.FAST) || layer.getCloudType().equals(CloudLayer.CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
             for(westToEastSpan = northwestSpan - displacementInQuadrants; westToEastSpan <= southeastSpan - displacementInQuadrants; ++westToEastSpan) {
                 for(northToSouthSpan = northwestSpan; northToSouthSpan <= southeastSpan; ++northToSouthSpan) {
                     float westToEastDrawPos = (float)(westToEastSpan * 8);

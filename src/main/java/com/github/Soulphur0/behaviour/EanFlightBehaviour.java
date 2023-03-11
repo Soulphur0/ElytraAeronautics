@@ -1,6 +1,5 @@
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.EanConfig;
 import com.github.Soulphur0.utility.EanMath;
 import me.shedaniel.autoconfig.AutoConfig;
@@ -20,10 +19,7 @@ public class EanFlightBehaviour {
 
     private static Vec3d ean_setupFlightCalc(LivingEntity player){
         // ? Re-read config file if data has been modified.
-        if (ElytraAeronautics.readConfigFileCue_LivingEntityMixin){
-            config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-            ElytraAeronautics.readConfigFileCue_LivingEntityMixin = false;
-        }
+        config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
 
         // + Gradual pitch realignment
         if(config.sneakingRealignsPitch && player.isSneaking()){

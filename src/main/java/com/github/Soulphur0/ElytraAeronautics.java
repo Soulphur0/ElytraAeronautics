@@ -1,9 +1,9 @@
 package com.github.Soulphur0;
 
 import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
+import com.github.Soulphur0.config.EanCommands;
 import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.config.cloudlayer.CloudLayer;
-import com.github.Soulphur0.registries.ElytraAeronauticsCommands;
+import com.github.Soulphur0.config.objects.CloudLayer;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.ModInitializer;
@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 public class ElytraAeronautics implements ModInitializer {
 
 	public static final Logger LOGGER = LogManager.getLogger("ElytraAeronautics");
-	public static boolean readConfigFileCue_LivingEntityMixin = true;
 
 	@Override
 	public void onInitialize() {
@@ -24,7 +23,7 @@ public class ElytraAeronautics implements ModInitializer {
 			EanCloudRenderBehaviour.configUpdated = true;
 			return ActionResult.PASS;
 		});
-		ElytraAeronauticsCommands.register();
+		EanCommands.register();
 
 		LOGGER.info("Elytra Aeronautics initialized! Have a good flight!");
 	}

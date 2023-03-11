@@ -1,4 +1,4 @@
-package com.github.Soulphur0.config.cloudlayer;
+package com.github.Soulphur0.config.objects;
 
 import com.github.Soulphur0.config.EanConfig;
 import com.google.common.reflect.TypeToken;
@@ -291,5 +291,32 @@ public class CloudLayer implements Serializable {
 
     public void setCloudOpacity(float cloudOpacity) {
         this.cloudOpacity = cloudOpacity;
+    }
+
+    public enum CloudTypes {
+        LOD,
+        FAST,
+        FANCY
+    }
+
+    public enum Attributes {
+        altitude,
+        cloudType,
+        verticalRenderDistance,
+        horizontalRenderDistance,
+        lodRenderDistance,
+        thickness,
+        speed,
+        color,
+        opacity,
+        shading
+    }
+
+    public enum Presets {
+        DEFAULT,
+        PUFFY_CLOUDS,
+        RAINBOW_CLOUDS,
+        HIGHWAY_CLOUDS,
+        MISTY_CLOUDS
     }
 }

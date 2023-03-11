@@ -1,5 +1,6 @@
-package com.github.Soulphur0.config;
+package com.github.Soulphur0.integration;
 
+import com.github.Soulphur0.config.EanConfig;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import me.shedaniel.autoconfig.AutoConfig;

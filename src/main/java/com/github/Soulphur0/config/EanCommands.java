@@ -1,9 +1,7 @@
-package com.github.Soulphur0.registries;
+package com.github.Soulphur0.config;
 
-import com.github.Soulphur0.config.cloudlayer.CloudLayer;
-import com.github.Soulphur0.config.cloudlayer.CloudLayerAttributes;
-import com.github.Soulphur0.config.cloudlayer.CloudTypes;
-import com.github.Soulphur0.config.flight.ElytraFlightOptions;
+import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.objects.ElytraFlight;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -19,45 +17,9 @@ import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
 
-public class ElytraAeronauticsCommands {
+public class EanCommands {
 
     public static void register(){
-
-//        // Define a suggestion provider that returns different suggestions based on the value of arg1
-//        SuggestionProvider<ServerCommandSource> suggestionProvider = (context, builder) -> {
-//            String arg1 = StringArgumentType.getString(context, "arg1");
-//            if (arg1.equals("ElytraFlight")) {
-//                Suggestion test = new Suggestion(context.getRange(), "a");
-//                Collection<Suggestion> suggestions = new ArrayList<>();
-//                suggestions.add(test);
-//                return CompletableFuture.completedFuture(Suggestions.create("ean", suggestions));
-//            } else if (arg1.equals("CloudLayer")) {
-//                Suggestion test = new Suggestion(context.getRange(), "b");
-//                Collection<Suggestion> suggestions = new ArrayList<>();
-//                suggestions.add(test);
-//                return CompletableFuture.completedFuture(Suggestions.create("ean", suggestions));
-//            } else {
-//                return Suggestions.empty();
-//            }
-//        };
-//
-//        // Build the command with dynamic argument suggestions
-//
-//
-//        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(CommandManager.literal("ean")
-//                .then(CommandManager.argument("arg1", StringArgumentType.word())
-//                        .then(CommandManager.argument("arg2", StringArgumentType.word())
-//                                .suggests(suggestionProvider)
-//                                .executes(context -> {
-//                                    String arg1 = StringArgumentType.getString(context, "arg1");
-//                                    String arg2 = StringArgumentType.getString(context, "arg2");
-//                                    // Execute the command based on the values of arg1 and arg2
-//                                    return Command.SINGLE_SUCCESS;
-//                                })
-//                        )
-//                )
-//        ));
-
         // $ Cloud layer config command
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("ean")
             // + Config mode argument
@@ -77,7 +39,7 @@ public class ElytraAeronauticsCommands {
                         String configMode = StringArgumentType.getString(commandContext, "configMode");
                         Collection<String> suggestions = new ArrayList<>();
                         if (configMode.equals("ElytraFlight")){
-                            for(ElytraFlightOptions option : ElytraFlightOptions.values()){
+                            for(ElytraFlight.Options option : ElytraFlight.Options.values()){
                                 suggestions.add(option.toString());
                             }
                         } else if (configMode.equals("CloudLayer")) {
@@ -132,58 +94,61 @@ public class ElytraAeronauticsCommands {
                             context.getSource().sendMessage(Text.of(message));
                             return 1;
                         })
-                        // + Cloud layer attribute argument
-                        .then(argument("arg3", string())
-                            // - Suggestions
-                            .suggests((commandContext, suggestionsBuilder) -> {
-                                String configMode = StringArgumentType.getString(commandContext, "configMode");
-                                Collection<String> suggestions = new ArrayList<>();
-                                if (configMode.equals("CloudLayer")){
-                                    for(CloudLayerAttributes attribute : CloudLayerAttributes.values()){
-                                        suggestions.add(attribute.toString());
-                                    }
+                    // + Cloud layer attribute argument
+                    .then(argument("arg3", string())
+                        // - Suggestions
+                        .suggests((commandContext, suggestionsBuilder) -> {
+                            String configMode = StringArgumentType.getString(commandContext, "configMode");
+                            Collection<String> suggestions = new ArrayList<>();
+                            if (configMode.equals("CloudLayer")){
+                                for(CloudLayer.Attributes attribute : CloudLayer.Attributes.values()){
+                                    suggestions.add(attribute.toString());
                                 }
-                                return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
-                            })
+                            }
+                            return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
+                        })
 
-                            // + Layer attribute value argument
-                            .then(argument("value", string())
-                                // = CloudLayer config execution
-                                .executes(context -> {
-                                    String configMode = StringArgumentType.getString(context, "configMode");
+                        // + Layer attribute value argument
+                        .then(argument("value", string())
+                            // = CloudLayer config execution
+                            .executes(context -> {
+                                String configMode = StringArgumentType.getString(context, "configMode");
 
-                                    if (configMode.equals("CloudLayer")){
-                                        String layerNumber = StringArgumentType.getString(context, "arg2");
-                                        String layerAttribute = StringArgumentType.getString(context, "arg3");
-                                        String value = StringArgumentType.getString(context, "value");
-                                        String message = "";
+                                if (configMode.equals("CloudLayer")){
+                                    String layerNumber = StringArgumentType.getString(context, "arg2");
+                                    String layerAttribute = StringArgumentType.getString(context, "arg3");
+                                    String value = StringArgumentType.getString(context, "value");
+                                    String message = "";
 
-                                        switch (layerAttribute) {
-                                            case "altitude" -> message = setLayerAltitude(layerNumber, value);
-                                            case "cloudType" -> message = setLayerCloudType(layerNumber, value);
-                                            case "verticalRenderDistance" -> message = setLayerVerticalRenderDistance(layerNumber, value);
-                                            case "horizontalRenderDistance" -> message = setLayerHorizontalRenderDistance(layerNumber, value);
-                                            case "lodRenderDistance" -> message = setLodRenderDistance(layerNumber, value);
-                                            case "thickness" -> message = setLayerCloudThickness(layerNumber, value);
-                                            case "color" -> message = setCloudColor(layerNumber, value);
-                                            case "opacity" -> message = setCloudOpacity(layerNumber, value);
-                                            case "shading" -> message = setShading(layerNumber, value);
-                                            case "speed" -> message = setCloudSpeed(layerNumber, value);
-                                            default -> throw new SimpleCommandExceptionType(Text.translatable("command.error.attribute")).create();
-                                        }
-                                        if (!message.equals(""))
-                                            context.getSource().sendMessage(Text.of(message));
+                                    switch (layerAttribute) {
+                                        case "altitude" -> message = setLayerAltitude(layerNumber, value);
+                                        case "cloudType" -> message = setLayerCloudType(layerNumber, value);
+                                        case "verticalRenderDistance" -> message = setLayerVerticalRenderDistance(layerNumber, value);
+                                        case "horizontalRenderDistance" -> message = setLayerHorizontalRenderDistance(layerNumber, value);
+                                        case "lodRenderDistance" -> message = setLodRenderDistance(layerNumber, value);
+                                        case "thickness" -> message = setLayerCloudThickness(layerNumber, value);
+                                        case "color" -> message = setCloudColor(layerNumber, value);
+                                        case "opacity" -> message = setCloudOpacity(layerNumber, value);
+                                        case "shading" -> message = setShading(layerNumber, value);
+                                        case "speed" -> message = setCloudSpeed(layerNumber, value);
+                                        default -> throw new SimpleCommandExceptionType(Text.translatable("command.error.attribute")).create();
                                     }
-                                    return 1;
-                                })
-                            )
+                                    if (!message.equals(""))
+                                        context.getSource().sendMessage(Text.of(message));
+                                }
+                                return 1;
+                            })
                         )
-                    )
+                    ))
                 )
             )
         ));
     }
 
+    // $ Elytra flight configuration
+
+
+    // $ Cloud layer configuration
     private static String setLayerAltitude(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
             double altitude = Double.parseDouble(value);
@@ -208,7 +173,7 @@ public class ElytraAeronauticsCommands {
 
     private static String setLayerCloudType(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
-            CloudTypes cloudType = CloudTypes.valueOf(value.toUpperCase());
+            CloudLayer.CloudTypes cloudType = CloudLayer.CloudTypes.valueOf(value.toUpperCase());
 
             if (layerNumberArg.equals("all")){
                 for(CloudLayer cloudLayer : CloudLayer.cloudLayers){

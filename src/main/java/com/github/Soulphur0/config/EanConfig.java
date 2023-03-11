@@ -1,11 +1,11 @@
 package com.github.Soulphur0.config;
 
-import com.github.Soulphur0.config.cloudlayer.CloudTypes;
+import com.github.Soulphur0.config.objects.CloudLayer;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
-@Config(name = "ean")
+@Config(name = "eanGeneralConfig")
 public class EanConfig implements ConfigData {
 
     // : Metadata
@@ -52,7 +52,7 @@ public class EanConfig implements ConfigData {
     public float firstLayerAltitude = 192.0F;
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     @ConfigEntry.Category(value ="cloud_settings")
-    public CloudTypes cloudType = CloudTypes.LOD;
+    public CloudLayer.CloudTypes cloudType = CloudLayer.CloudTypes.LOD;
     @ConfigEntry.Category(value ="cloud_settings")
     public float verticalRenderDistance = 1000;
     @ConfigEntry.Category(value ="cloud_settings")
