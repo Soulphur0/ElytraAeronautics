@@ -1,7 +1,7 @@
 package com.github.Soulphur0.config;
 
-import com.github.Soulphur0.config.objects.CloudLayer;
-import com.github.Soulphur0.config.objects.ElytraFlight;
+import com.github.Soulphur0.config.singletons.CloudLayer;
+import com.github.Soulphur0.config.singletons.ElytraFlight;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;

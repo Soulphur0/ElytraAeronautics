@@ -1,6 +1,7 @@
 package com.github.Soulphur0.behaviour;
 
 import com.github.Soulphur0.config.EanConfig;
+import com.github.Soulphur0.config.singletons.ElytraFlight;
 import com.github.Soulphur0.utility.EanMath;
 import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.entity.LivingEntity;
@@ -15,18 +16,26 @@ public class EanFlightBehaviour {
     }
 
     // : Calculations.
-    private static EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
+    private static boolean configToBeLoaded = true;
+    private static boolean configUpdated = false;
 
     private static Vec3d ean_setupFlightCalc(LivingEntity player){
+        EanConfig configFile = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
+        ElytraFlight configInstance = ElytraFlight.getInstance();
+
         // ? Re-read config file if data has been modified.
-        config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
+        if (configToBeLoaded || configUpdated){
+            ElytraFlight.refresh(configFile);
+            configToBeLoaded = false;
+            configUpdated = false;
+        }
 
         // + Gradual pitch realignment
-        if(config.sneakingRealignsPitch && player.isSneaking()){
+        if(configInstance.isSneakingRealignsPitch() && player.isSneaking()){
             float pitch = player.getPitch();
 
-            float alignmentAngle = config.realignAngle;
-            float alignementRate = config.realignRate;
+            float alignmentAngle = configInstance.getRealignAngle();
+            float alignementRate = configInstance.getRealignRate();
 
             if (Math.abs(pitch) <= alignementRate*2){
                 player.setPitch(alignmentAngle);
@@ -44,25 +53,25 @@ public class EanFlightBehaviour {
         double playerAltitude = positionVector.y;
 
         // % Calculate player speed based on altitude and return
-        Vec3d movementVector = ean_calcFlightMovementVector(player, playerAltitude);
+        Vec3d movementVector = ean_calcFlightMovementVector(configInstance, player, playerAltitude);
 
         return movementVector.multiply(0.99f, 0.98f, 0.99f);
     }
 
-    private static Vec3d ean_calcFlightMovementVector(LivingEntity player, double playerAltitude){
+    private static Vec3d ean_calcFlightMovementVector(ElytraFlight configInstance, LivingEntity player, double playerAltitude){
         double speedConstant = 0.08;
         double aux;
         double aux2;
 
         // ? Read config file values
-        double minSpeed = config.minSpeed;
-        double maxSpeed = config.maxSpeed;
-        double curveStart = config.minHeight;
-        double curveEnd = config.maxHeight;
+        double minSpeed = configInstance.getMinSpeed();
+        double maxSpeed = configInstance.getMaxSpeed();
+        double curveStart = configInstance.getMinHeight();
+        double curveEnd = configInstance.getMaxHeight();
 
         // + Calculate additional speed based on player altitude.
         // * Clamp the calculated modified speed to not be below or over the speed range.
-        double modHSpeed = (config.altitudeDeterminesSpeed) ? MathHelper.clamp(EanMath.getLinealValue(curveStart,minSpeed,curveEnd,maxSpeed,playerAltitude), minSpeed, maxSpeed) : minSpeed;
+        double modHSpeed = (configInstance.isAltitudeDeterminesSpeed()) ? MathHelper.clamp(EanMath.getLinealValue(curveStart,minSpeed,curveEnd,maxSpeed,playerAltitude), minSpeed, maxSpeed) : minSpeed;
 
         Vec3d movementVector = player.getVelocity();
         if (movementVector.y > -0.5) {

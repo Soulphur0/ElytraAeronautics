@@ -2,7 +2,7 @@
 package com.github.Soulphur0.behaviour;
 
 import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.singletons.CloudLayer;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
