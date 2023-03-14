@@ -16,19 +16,9 @@ public class EanFlightBehaviour {
     }
 
     // : Calculations.
-    private static boolean configToBeLoaded = true;
-    private static boolean configUpdated = false;
 
     private static Vec3d ean_setupFlightCalc(LivingEntity player){
-        EanConfig configFile = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
         ElytraFlight configInstance = ElytraFlight.getInstance();
-
-        // ? Re-read config file if data has been modified.
-        if (configToBeLoaded || configUpdated){
-            ElytraFlight.refresh(configFile);
-            configToBeLoaded = false;
-            configUpdated = false;
-        }
 
         // + Gradual pitch realignment
         if(configInstance.isSneakingRealignsPitch() && player.isSneaking()){

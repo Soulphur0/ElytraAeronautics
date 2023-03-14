@@ -74,14 +74,14 @@ public class EanCommands {
 
                             if (configMode.equals("ElytraFlight")){
                                 switch (arg1) {
-                                    case "altitudeDeterminesSpeed" -> message = "A value is " + value;
-                                    case "minSpeed" -> message = "B value is " + value;
-                                    case "maxSpeed" -> message = "C value is " + value;
-                                    case "minHeight" -> message = "D value is " + value;
-                                    case "maxHeight" -> message = "E value is " + value;
-                                    case "sneakingRealignsPitch" -> message = "F value is " + value;
-                                    case "realignAngle" -> message = "G value is " + value;
-                                    case "realignRate" -> message = "H value is " + value;
+                                    case "altitudeDeterminesSpeed" -> message = setAltitudeDeterminesSpeed(value);
+                                    case "minSpeed" -> message = setMinSpeed(value);
+                                    case "maxSpeed" -> message = setMaxSpeed(value);
+                                    case "minHeight" -> message = setMinHeight(value);
+                                    case "maxHeight" -> message = setMaxHeight(value);
+                                    case "sneakingRealignsPitch" -> message = setSneakingRealignsPitch(value);
+                                    case "realignAngle" -> message = setRealignAngle(value);
+                                    case "realignRate" -> message = setRealignRate(value);
                                     default -> {
                                     }
                                 }
@@ -146,7 +146,93 @@ public class EanCommands {
     }
 
     // $ Elytra flight configuration
+    private static String setAltitudeDeterminesSpeed(String value) throws CommandSyntaxException {
+        try{
+            boolean altitudeDeterminesSpeed = Boolean.parseBoolean(value);
+            ElytraFlight.getInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
 
+            return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed";
+        } catch (Exception e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setMinSpeed(String value) throws CommandSyntaxException {
+        try{
+            double minSpeed = Double.parseDouble(value);
+            ElytraFlight.getInstance().setMinSpeed(minSpeed);
+
+            return "Minimum flight speed is now " + value + "m/s";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setMaxSpeed(String value) throws CommandSyntaxException {
+        try{
+            double maxSpeed = Double.parseDouble(value);
+            ElytraFlight.getInstance().setMaxSpeed(maxSpeed);
+
+            return "Maximum flight speed is now " + value + "m/s";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setMinHeight(String value) throws CommandSyntaxException {
+        try{
+            double minHeight = Double.parseDouble(value);
+            ElytraFlight.getInstance().setMinHeight(minHeight);
+
+            return "The minimum height at which flight speed increases is now " + value + "m of altitude.";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setMaxHeight(String value) throws CommandSyntaxException {
+        try{
+            double maxHeight = Double.parseDouble(value);
+            ElytraFlight.getInstance().setMaxHeight(maxHeight);
+
+            return "The maximum height at which flight speed increases is now " + value + "m of altitude.";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setSneakingRealignsPitch(String value) throws CommandSyntaxException {
+        try{
+            boolean sneakingRealignsPitch = Boolean.parseBoolean(value);
+            ElytraFlight.getInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
+
+            return (sneakingRealignsPitch) ? "Sneaking mid flight now realigns flight pitch." : "Sneaking mid flight no longer realigns flight pitch.";
+        } catch (Exception e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setRealignAngle(String value) throws CommandSyntaxException {
+        try{
+            float realignAngle = Float.parseFloat(value);
+            ElytraFlight.getInstance().setRealignAngle(realignAngle);
+
+            return "The realign angle is now set to " + value + " degrees.";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setRealignRate(String value) throws CommandSyntaxException {
+        try{
+            float realignRate = Float.parseFloat(value);
+            ElytraFlight.getInstance().setRealignRate(realignRate);
+
+            return "The realign rate is now set to " + value + " degrees.";
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
 
     // $ Cloud layer configuration
     private static String setLayerAltitude(String layerNumberArg, String value) throws CommandSyntaxException {

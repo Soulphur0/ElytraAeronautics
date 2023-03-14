@@ -1,6 +1,7 @@
 package com.github.Soulphur0.config.singletons;
 
 import com.github.Soulphur0.config.EanConfig;
+import me.shedaniel.autoconfig.AutoConfig;
 
 public class ElytraFlight {
 
@@ -21,6 +22,10 @@ public class ElytraFlight {
     }
 
     public static ElytraFlight getInstance() {
+        if (instance == null){
+            instance = new ElytraFlight();
+            refresh(AutoConfig.getConfigHolder(EanConfig.class).getConfig());
+        }
         return instance;
     }
 

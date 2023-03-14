@@ -21,7 +21,7 @@ import org.joml.Matrix4f;
 public class EanCloudRenderBehaviour {
 
     // $ Variables
-    private static boolean layersToBeLoaded = true;
+    private static boolean configToBeLoaded = true;
     public static boolean configUpdated = false;
     public static boolean layersUpdated = false;
 
@@ -63,9 +63,9 @@ public class EanCloudRenderBehaviour {
             }
 
             // = Load stored cloud layers into memory.
-            if (layersToBeLoaded || layersUpdated) {
+            if (configToBeLoaded || layersUpdated) {
                 CloudLayer.readCloudLayers();
-                layersToBeLoaded = false;
+                configToBeLoaded = false;
                 layersUpdated = false;
             }
 
