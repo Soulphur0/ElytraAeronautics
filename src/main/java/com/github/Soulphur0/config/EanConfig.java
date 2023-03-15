@@ -5,7 +5,7 @@ import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
-@Config(name = "eanGeneralConfig")
+@Config(name = "ean")
 public class EanConfig implements ConfigData {
 
     // : Metadata
@@ -44,6 +44,8 @@ public class EanConfig implements ConfigData {
 
     // : Cloud layers fields
     @ConfigEntry.Gui.PrefixText
+    @ConfigEntry.Category(value ="cloud_settings")
+    public boolean useEanClouds = true;
     @ConfigEntry.Category(value ="cloud_settings")
     public int numberOfLayers = 2;
     @ConfigEntry.Category(value ="cloud_settings")

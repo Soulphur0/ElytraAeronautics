@@ -1,7 +1,6 @@
 package com.github.Soulphur0.config.singletons;
 
 import com.github.Soulphur0.config.EanConfig;
-import me.shedaniel.autoconfig.AutoConfig;
 
 public class ElytraFlight {
 
@@ -21,15 +20,16 @@ public class ElytraFlight {
 
     }
 
-    public static ElytraFlight getInstance() {
+    public static ElytraFlight getOrCreateInstance() {
         if (instance == null){
             instance = new ElytraFlight();
-            refresh(AutoConfig.getConfigHolder(EanConfig.class).getConfig());
         }
         return instance;
     }
 
     public static void refresh(EanConfig config){
+        getOrCreateInstance();
+
         instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
         instance.setMinSpeed(config.minSpeed);
         instance.setMaxSpeed(config.maxSpeed);

@@ -43,6 +43,7 @@ public class EanCommands {
                                 suggestions.add(option.toString());
                             }
                         } else if (configMode.equals("CloudLayer")) {
+                            suggestions.add("disableEanCloudRendering");
                             suggestions.add("layerAmount");
                             suggestions.add("configCloudLayer");
                         }
@@ -85,10 +86,19 @@ public class EanCommands {
                                     default -> {
                                     }
                                 }
-                            } else if(configMode.equals("CloudLayer") && arg1.equals("layerAmount")) {
+                            } else if (configMode.equals("CloudLayer")) {
+                                switch (arg1){
+                                    case "diableEanCloudRendering":
+
+                                        break;
+                                    case "layerAmount":
+
+                                        break;
+                                    default:
+                                        throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+                                }
+
                                 message = "Cloud layer value is " + value;
-                            } else {
-                                throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
                             }
 
                             context.getSource().sendMessage(Text.of(message));
@@ -149,7 +159,7 @@ public class EanCommands {
     private static String setAltitudeDeterminesSpeed(String value) throws CommandSyntaxException {
         try{
             boolean altitudeDeterminesSpeed = Boolean.parseBoolean(value);
-            ElytraFlight.getInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
+            ElytraFlight.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
 
             return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed";
         } catch (Exception e){
@@ -160,7 +170,7 @@ public class EanCommands {
     private static String setMinSpeed(String value) throws CommandSyntaxException {
         try{
             double minSpeed = Double.parseDouble(value);
-            ElytraFlight.getInstance().setMinSpeed(minSpeed);
+            ElytraFlight.getOrCreateInstance().setMinSpeed(minSpeed);
 
             return "Minimum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
@@ -171,7 +181,7 @@ public class EanCommands {
     private static String setMaxSpeed(String value) throws CommandSyntaxException {
         try{
             double maxSpeed = Double.parseDouble(value);
-            ElytraFlight.getInstance().setMaxSpeed(maxSpeed);
+            ElytraFlight.getOrCreateInstance().setMaxSpeed(maxSpeed);
 
             return "Maximum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
@@ -182,7 +192,7 @@ public class EanCommands {
     private static String setMinHeight(String value) throws CommandSyntaxException {
         try{
             double minHeight = Double.parseDouble(value);
-            ElytraFlight.getInstance().setMinHeight(minHeight);
+            ElytraFlight.getOrCreateInstance().setMinHeight(minHeight);
 
             return "The minimum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
@@ -193,7 +203,7 @@ public class EanCommands {
     private static String setMaxHeight(String value) throws CommandSyntaxException {
         try{
             double maxHeight = Double.parseDouble(value);
-            ElytraFlight.getInstance().setMaxHeight(maxHeight);
+            ElytraFlight.getOrCreateInstance().setMaxHeight(maxHeight);
 
             return "The maximum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
@@ -204,7 +214,7 @@ public class EanCommands {
     private static String setSneakingRealignsPitch(String value) throws CommandSyntaxException {
         try{
             boolean sneakingRealignsPitch = Boolean.parseBoolean(value);
-            ElytraFlight.getInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
+            ElytraFlight.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
 
             return (sneakingRealignsPitch) ? "Sneaking mid flight now realigns flight pitch." : "Sneaking mid flight no longer realigns flight pitch.";
         } catch (Exception e){
@@ -215,7 +225,7 @@ public class EanCommands {
     private static String setRealignAngle(String value) throws CommandSyntaxException {
         try{
             float realignAngle = Float.parseFloat(value);
-            ElytraFlight.getInstance().setRealignAngle(realignAngle);
+            ElytraFlight.getOrCreateInstance().setRealignAngle(realignAngle);
 
             return "The realign angle is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
@@ -226,7 +236,7 @@ public class EanCommands {
     private static String setRealignRate(String value) throws CommandSyntaxException {
         try{
             float realignRate = Float.parseFloat(value);
-            ElytraFlight.getInstance().setRealignRate(realignRate);
+            ElytraFlight.getOrCreateInstance().setRealignRate(realignRate);
 
             return "The realign rate is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
@@ -235,10 +245,12 @@ public class EanCommands {
     }
 
     // $ Cloud layer configuration
+
+
     private static String setLayerAltitude(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
             double altitude = Double.parseDouble(value);
-
+// !            AutoConfig.getConfigHolder(EanConfig.class).getConfig().useEanClouds = false;
             if (layerNumberArg.equals("all")){
                 for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
                     cloudLayer.setAltitude(altitude);

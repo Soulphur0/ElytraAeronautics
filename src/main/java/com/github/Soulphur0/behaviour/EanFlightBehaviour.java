@@ -1,9 +1,7 @@
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.config.EanConfig;
 import com.github.Soulphur0.config.singletons.ElytraFlight;
 import com.github.Soulphur0.utility.EanMath;
-import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -18,7 +16,7 @@ public class EanFlightBehaviour {
     // : Calculations.
 
     private static Vec3d ean_setupFlightCalc(LivingEntity player){
-        ElytraFlight configInstance = ElytraFlight.getInstance();
+        ElytraFlight configInstance = ElytraFlight.getOrCreateInstance();
 
         // + Gradual pitch realignment
         if(configInstance.isSneakingRealignsPitch() && player.isSneaking()){
