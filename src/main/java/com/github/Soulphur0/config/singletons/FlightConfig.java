@@ -1,44 +1,53 @@
 package com.github.Soulphur0.config.singletons;
 
 import com.github.Soulphur0.config.EanConfig;
+import com.github.Soulphur0.integration.DependencyChecker;
 
-public class ElytraFlight {
+public class FlightConfig {
 
+    // = Elytra flight attributes
+
+    // ; Flight speed settings.
     private boolean altitudeDeterminesSpeed;
     private double minSpeed;
     private double maxSpeed;
     private double minHeight;
     private double maxHeight;
 
+    // ; Flight alignment settings.
     private boolean sneakingRealignsPitch;
     private float realignAngle;
     private float realignRate;
 
-    private static ElytraFlight instance;
+    private static FlightConfig instance;
 
-    public ElytraFlight(){
+    public FlightConfig(){}
 
-    }
+    // $ CLASS METHODS
 
-    public static ElytraFlight getOrCreateInstance() {
+    // ? Instantiate singleton instance.
+    public static FlightConfig getOrCreateInstance() {
         if (instance == null){
-            instance = new ElytraFlight();
+            instance = new FlightConfig();
         }
         return instance;
     }
 
-    public static void refresh(EanConfig config){
+    // ? Get info from the config file.
+    public static void readConfig(EanConfig config){
         getOrCreateInstance();
+        if (DependencyChecker.checkForClothConfig()){
+            instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
+            instance.setMinSpeed(config.minSpeed);
+            instance.setMaxSpeed(config.maxSpeed);
+            instance.setMinHeight(config.minHeight);
+            instance.setMaxHeight(config.maxHeight);
+            instance.setSneakingRealignsPitch(config.sneakingRealignsPitch);
+            instance.setRealignAngle(config.realignAngle);
+            instance.setRealignRate(config.realignRate);
+        } else {
 
-        instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
-        instance.setMinSpeed(config.minSpeed);
-        instance.setMaxSpeed(config.maxSpeed);
-        instance.setMinHeight(config.minHeight);
-        instance.setMaxHeight(config.maxHeight);
-
-        instance.setSneakingRealignsPitch(config.sneakingRealignsPitch);
-        instance.setRealignAngle(config.realignAngle);
-        instance.setRealignRate(config.realignRate);
+        }
     }
 
     // $ GETTERS & SETTERS
