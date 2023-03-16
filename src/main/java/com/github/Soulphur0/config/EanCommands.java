@@ -1,7 +1,7 @@
 package com.github.Soulphur0.config;
 
 import com.github.Soulphur0.config.singletons.CloudLayer;
-import com.github.Soulphur0.config.singletons.ElytraFlight;
+import com.github.Soulphur0.config.singletons.FlightConfig;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -26,7 +26,7 @@ public class EanCommands {
             .then(argument("configMode", string())
                 // - Config option suggestions
                 .suggests((commandContext, suggestionsBuilder) -> {
-                    String[] suggestions = {"ElytraFlight", "CloudLayer"};
+                    String[] suggestions = {"FlightConfig", "Test2"};
 
                     return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                 })
@@ -38,11 +38,11 @@ public class EanCommands {
                     .suggests((commandContext, suggestionsBuilder) -> {
                         String configMode = StringArgumentType.getString(commandContext, "configMode");
                         Collection<String> suggestions = new ArrayList<>();
-                        if (configMode.equals("ElytraFlight")){
-                            for(ElytraFlight.Options option : ElytraFlight.Options.values()){
+                        if (configMode.equals("FlightConfig")){
+                            for(FlightConfig.Options option : FlightConfig.Options.values()){
                                 suggestions.add(option.toString());
                             }
-                        } else if (configMode.equals("CloudLayer")) {
+                        } else if (configMode.equals("Test2")) {
                             suggestions.add("disableEanCloudRendering");
                             suggestions.add("layerAmount");
                             suggestions.add("configCloudLayer");
@@ -58,7 +58,7 @@ public class EanCommands {
                             String configMode = StringArgumentType.getString(commandContext, "configMode");
                             String arg1 = StringArgumentType.getString(commandContext, "arg1");
                             Collection<String> suggestions = new ArrayList<>();
-                            if (configMode.equals("CloudLayer") && arg1.equals("configCloudLayer")) {
+                            if (configMode.equals("Test2") && arg1.equals("configCloudLayer")) {
                                 suggestions.add("all");
                                 for(int i = 1; i <= CloudLayer.cloudLayers.length; i++){
                                     suggestions.add(String.valueOf(i));
@@ -66,14 +66,14 @@ public class EanCommands {
                             }
                             return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                         })
-                        // = ElytraFlight config execution
+                        // = FlightConfig config execution
                         .executes(context -> {
                             String configMode = StringArgumentType.getString(context, "configMode");
                             String arg1 = StringArgumentType.getString(context, "arg1");
                             String value = StringArgumentType.getString(context, "arg2");
                             String message = "";
 
-                            if (configMode.equals("ElytraFlight")){
+                            if (configMode.equals("FlightConfig")){
                                 switch (arg1) {
                                     case "altitudeDeterminesSpeed" -> message = setAltitudeDeterminesSpeed(value);
                                     case "minSpeed" -> message = setMinSpeed(value);
@@ -86,7 +86,7 @@ public class EanCommands {
                                     default -> {
                                     }
                                 }
-                            } else if (configMode.equals("CloudLayer")) {
+                            } else if (configMode.equals("Test2")) {
                                 switch (arg1){
                                     case "diableEanCloudRendering":
 
@@ -110,7 +110,7 @@ public class EanCommands {
                         .suggests((commandContext, suggestionsBuilder) -> {
                             String configMode = StringArgumentType.getString(commandContext, "configMode");
                             Collection<String> suggestions = new ArrayList<>();
-                            if (configMode.equals("CloudLayer")){
+                            if (configMode.equals("Test2")){
                                 for(CloudLayer.Attributes attribute : CloudLayer.Attributes.values()){
                                     suggestions.add(attribute.toString());
                                 }
@@ -120,11 +120,11 @@ public class EanCommands {
 
                         // + Layer attribute value argument
                         .then(argument("value", string())
-                            // = CloudLayer config execution
+                            // = Test2 config execution
                             .executes(context -> {
                                 String configMode = StringArgumentType.getString(context, "configMode");
 
-                                if (configMode.equals("CloudLayer")){
+                                if (configMode.equals("Test2")){
                                     String layerNumber = StringArgumentType.getString(context, "arg2");
                                     String layerAttribute = StringArgumentType.getString(context, "arg3");
                                     String value = StringArgumentType.getString(context, "value");
@@ -159,7 +159,7 @@ public class EanCommands {
     private static String setAltitudeDeterminesSpeed(String value) throws CommandSyntaxException {
         try{
             boolean altitudeDeterminesSpeed = Boolean.parseBoolean(value);
-            ElytraFlight.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
+            FlightConfig.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
 
             return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed";
         } catch (Exception e){
@@ -170,7 +170,7 @@ public class EanCommands {
     private static String setMinSpeed(String value) throws CommandSyntaxException {
         try{
             double minSpeed = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMinSpeed(minSpeed);
+            FlightConfig.getOrCreateInstance().setMinSpeed(minSpeed);
 
             return "Minimum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
@@ -181,7 +181,7 @@ public class EanCommands {
     private static String setMaxSpeed(String value) throws CommandSyntaxException {
         try{
             double maxSpeed = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMaxSpeed(maxSpeed);
+            FlightConfig.getOrCreateInstance().setMaxSpeed(maxSpeed);
 
             return "Maximum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
@@ -192,7 +192,7 @@ public class EanCommands {
     private static String setMinHeight(String value) throws CommandSyntaxException {
         try{
             double minHeight = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMinHeight(minHeight);
+            FlightConfig.getOrCreateInstance().setMinHeight(minHeight);
 
             return "The minimum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
@@ -203,7 +203,7 @@ public class EanCommands {
     private static String setMaxHeight(String value) throws CommandSyntaxException {
         try{
             double maxHeight = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMaxHeight(maxHeight);
+            FlightConfig.getOrCreateInstance().setMaxHeight(maxHeight);
 
             return "The maximum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
@@ -214,7 +214,7 @@ public class EanCommands {
     private static String setSneakingRealignsPitch(String value) throws CommandSyntaxException {
         try{
             boolean sneakingRealignsPitch = Boolean.parseBoolean(value);
-            ElytraFlight.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
+            FlightConfig.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
 
             return (sneakingRealignsPitch) ? "Sneaking mid flight now realigns flight pitch." : "Sneaking mid flight no longer realigns flight pitch.";
         } catch (Exception e){
@@ -225,7 +225,7 @@ public class EanCommands {
     private static String setRealignAngle(String value) throws CommandSyntaxException {
         try{
             float realignAngle = Float.parseFloat(value);
-            ElytraFlight.getOrCreateInstance().setRealignAngle(realignAngle);
+            FlightConfig.getOrCreateInstance().setRealignAngle(realignAngle);
 
             return "The realign angle is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
@@ -236,7 +236,7 @@ public class EanCommands {
     private static String setRealignRate(String value) throws CommandSyntaxException {
         try{
             float realignRate = Float.parseFloat(value);
-            ElytraFlight.getOrCreateInstance().setRealignRate(realignRate);
+            FlightConfig.getOrCreateInstance().setRealignRate(realignRate);
 
             return "The realign rate is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
@@ -245,12 +245,10 @@ public class EanCommands {
     }
 
     // $ Cloud layer configuration
-
-
     private static String setLayerAltitude(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
             double altitude = Double.parseDouble(value);
-// !            AutoConfig.getConfigHolder(EanConfig.class).getConfig().useEanClouds = false;
+
             if (layerNumberArg.equals("all")){
                 for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
                     cloudLayer.setAltitude(altitude);

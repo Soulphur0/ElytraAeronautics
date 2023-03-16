@@ -55,16 +55,16 @@ public class EanCloudRenderBehaviour {
             EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
 
             // = Create layer array if the config was updated or first ever loaded.
-            if (config.generateDefaultPreset || configUpdated){
-                CloudLayer.generateCloudLayers(config);
-                config.generateDefaultPreset = false;
+            if (config.fresh || configUpdated){
+                CloudLayer.CloudLayer.readConfig(config);
+                config.fresh = false;
                 configUpdated = false;
                 layersUpdated = true;
             }
 
             // = Load stored cloud layers into memory.
             if (configToBeLoaded || layersUpdated) {
-                CloudLayer.readCloudLayers();
+                // ! Test2.readCloudLayers();
                 configToBeLoaded = false;
                 layersUpdated = false;
             }
@@ -74,7 +74,7 @@ public class EanCloudRenderBehaviour {
             // * All values besides the geometry that are important for rendering are stored in an array too.
             for (int layerNum = 0; layerNum < config.numberOfLayers; layerNum++) {
                 // ? Load configured cloud layer.
-                CloudLayer layer = CloudLayer.cloudLayers[layerNum];
+                CloudLayer.CloudLayer layer = CloudLayer.cloudLayers[layerNum];
 
                 // = Rendering context parameters.
                 // ; Get cloud relative Y distance to the camera.
@@ -135,7 +135,7 @@ public class EanCloudRenderBehaviour {
 
             // + Render cloud geometry.
             // * Using the previously generated array, clouds are rendered with their own settings.
-            for (CloudLayer layer : CloudLayer.cloudLayers) {
+            for (CloudLayer.CloudLayer layer : CloudLayer.cloudLayers) {
 
                 // > Added this conditional clause.
                 // < Since geometries are set to null after they are drawn a couple of times.
@@ -187,7 +187,7 @@ public class EanCloudRenderBehaviour {
         }
     }
 
-    private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
+    private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer.CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
@@ -198,7 +198,7 @@ public class EanCloudRenderBehaviour {
         return bufferBuilder.end();
     }
 
-    private static void ean_buildCloudLayerGeometry(CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
+    private static void ean_buildCloudLayerGeometry(CloudLayer.CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
 
