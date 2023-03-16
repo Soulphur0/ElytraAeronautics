@@ -1,6 +1,6 @@
 package com.github.Soulphur0.config;
 
-import com.github.Soulphur0.config.singletons.CloudLayer;
+import com.github.Soulphur0.config.singletons.CloudConfig;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
@@ -11,7 +11,7 @@ public class EanConfig implements ConfigData {
     // : Metadata
     @ConfigEntry.Category(value ="elytra_flight_settings")
     @ConfigEntry.Gui.Excluded
-    public boolean generateDefaultPreset = true;
+    public boolean fresh = true;
 
     // : Elytra flight fields
     @ConfigEntry.Category(value ="elytra_flight_settings")
@@ -43,9 +43,9 @@ public class EanConfig implements ConfigData {
     public float realignRate = 0.1F;
 
     // : Cloud layers fields
-    @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Category(value ="cloud_settings")
     public boolean useEanClouds = true;
+    @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Category(value ="cloud_settings")
     public int numberOfLayers = 2;
     @ConfigEntry.Category(value ="cloud_settings")
@@ -54,7 +54,7 @@ public class EanConfig implements ConfigData {
     public float firstLayerAltitude = 192.0F;
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     @ConfigEntry.Category(value ="cloud_settings")
-    public CloudLayer.CloudTypes cloudType = CloudLayer.CloudTypes.LOD;
+    public CloudConfig.CloudTypes cloudType = CloudConfig.CloudTypes.LOD;
     @ConfigEntry.Category(value ="cloud_settings")
     public float verticalRenderDistance = 1000;
     @ConfigEntry.Category(value ="cloud_settings")
