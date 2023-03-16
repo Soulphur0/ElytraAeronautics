@@ -1,6 +1,6 @@
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.config.singletons.ElytraFlight;
+import com.github.Soulphur0.config.singletons.FlightConfig;
 import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
@@ -16,7 +16,7 @@ public class EanFlightBehaviour {
     // : Calculations.
 
     private static Vec3d ean_setupFlightCalc(LivingEntity player){
-        ElytraFlight configInstance = ElytraFlight.getOrCreateInstance();
+        FlightConfig configInstance = FlightConfig.getOrCreateInstance();
 
         // + Gradual pitch realignment
         if(configInstance.isSneakingRealignsPitch() && player.isSneaking()){
@@ -46,7 +46,7 @@ public class EanFlightBehaviour {
         return movementVector.multiply(0.99f, 0.98f, 0.99f);
     }
 
-    private static Vec3d ean_calcFlightMovementVector(ElytraFlight configInstance, LivingEntity player, double playerAltitude){
+    private static Vec3d ean_calcFlightMovementVector(FlightConfig configInstance, LivingEntity player, double playerAltitude){
         double speedConstant = 0.08;
         double aux;
         double aux2;
