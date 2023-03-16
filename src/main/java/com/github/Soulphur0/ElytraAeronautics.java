@@ -1,7 +1,6 @@
 package com.github.Soulphur0;
 
 import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
-import com.github.Soulphur0.behaviour.EanFlightBehaviour;
 import com.github.Soulphur0.config.EanCommands;
 import com.github.Soulphur0.config.EanConfig;
 import com.github.Soulphur0.config.singletons.CloudLayer;
@@ -17,6 +16,7 @@ public class ElytraAeronautics implements ModInitializer {
 
 	public static final Logger LOGGER = LogManager.getLogger("ElytraAeronautics");
 
+	// TODO: This will be a future conflict; ConfigSystemRefactorization started in 16/03/23
 	@Override
 	public void onInitialize() {
 		AutoConfig.register(EanConfig.class, GsonConfigSerializer::new);
