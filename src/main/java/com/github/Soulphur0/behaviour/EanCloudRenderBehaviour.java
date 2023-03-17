@@ -1,12 +1,11 @@
 
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.config.singletons.CloudLayer;
+import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.math.Color;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
@@ -21,10 +20,6 @@ import org.joml.Matrix4f;
 public class EanCloudRenderBehaviour {
 
     // $ Variables
-    private static boolean configToBeLoaded = true;
-    public static boolean configUpdated = false;
-    public static boolean layersUpdated = false;
-
     private static final Identifier CLOUDS = new Identifier("textures/environment/clouds.png");
 
     public static void ean_renderClouds(WorldRenderer instance, MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double camPosX, double camPosY, double camPosZ){
@@ -51,30 +46,15 @@ public class EanCloudRenderBehaviour {
                 }
             }
 
-            // = Load config.
-            EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-
-            // = Create layer array if the config was updated or first ever loaded.
-            if (config.fresh || configUpdated){
-                CloudLayer.CloudLayer.readConfig(config);
-                config.fresh = false;
-                configUpdated = false;
-                layersUpdated = true;
-            }
-
-            // = Load stored cloud layers into memory.
-            if (configToBeLoaded || layersUpdated) {
-                // ! Test2.readCloudLayers();
-                configToBeLoaded = false;
-                layersUpdated = false;
-            }
+            // = Get cloud config manager
+            CloudConfig config = CloudConfig.getOrCreateInstance();
 
             // + Build geometry for each cloud layer.
             // * The geometry for each layer is built using its own parameters, and is stored in an array.
             // * All values besides the geometry that are important for rendering are stored in an array too.
-            for (int layerNum = 0; layerNum < config.numberOfLayers; layerNum++) {
+            for (int layerNum = 0; layerNum < config.getNumberOfLayers(); layerNum++) {
                 // ? Load configured cloud layer.
-                CloudLayer.CloudLayer layer = CloudLayer.cloudLayers[layerNum];
+                CloudLayer layer = CloudConfig.cloudLayers[layerNum];
 
                 // = Rendering context parameters.
                 // ; Get cloud relative Y distance to the camera.
@@ -115,11 +95,11 @@ public class EanCloudRenderBehaviour {
                 layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
 
                 // = Store later object in the layers array to later render.
-                CloudLayer.cloudLayers[layerNum] = layer;
+                CloudConfig.cloudLayers[layerNum] = layer;
 
                 // TODO Find out what these parameters do...
                 int r = (int) Math.floor(l);
-                int s = (int) Math.floor(cloudRenderAltitude / config.cloudThickness);
+                int s = (int) Math.floor(cloudRenderAltitude / config.getCloudThickness());
                 int t = (int) Math.floor(n);
 
                 // ? Mark clouds as dirty
@@ -135,7 +115,7 @@ public class EanCloudRenderBehaviour {
 
             // + Render cloud geometry.
             // * Using the previously generated array, clouds are rendered with their own settings.
-            for (CloudLayer.CloudLayer layer : CloudLayer.cloudLayers) {
+            for (CloudLayer layer : CloudConfig.cloudLayers) {
 
                 // > Added this conditional clause.
                 // < Since geometries are set to null after they are drawn a couple of times.
@@ -187,7 +167,7 @@ public class EanCloudRenderBehaviour {
         }
     }
 
-    private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer.CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
+    private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
         RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
@@ -198,7 +178,7 @@ public class EanCloudRenderBehaviour {
         return bufferBuilder.end();
     }
 
-    private static void ean_buildCloudLayerGeometry(CloudLayer.CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
+    private static void ean_buildCloudLayerGeometry(CloudLayer layer, BufferBuilder builder, double x, double y, double z, Vec3d color){
         float k = (float) MathHelper.floor(x) * 0.00390625F;
         float l = (float)MathHelper.floor(z) * 0.00390625F;
 
@@ -236,7 +216,7 @@ public class EanCloudRenderBehaviour {
         int northwestSpan = (int)Math.round((-layer.getHorizontalRenderDistance() / 4.0F));
         int southeastSpan = (int)Math.round((layer.getHorizontalRenderDistance() / 4.0F) - 1);
 
-        if ((layer.getCloudType().equals(CloudLayer.CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudLayer.CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
+        if ((layer.getCloudType().equals(CloudConfig.CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudConfig.CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
             // + The following 'for' loop counters determine cloud render distance.
             // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
@@ -324,7 +304,7 @@ public class EanCloudRenderBehaviour {
                     }
                 }
             }
-        } else if ((layer.getCloudType().equals(CloudLayer.CloudTypes.FAST) || layer.getCloudType().equals(CloudLayer.CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
+        } else if ((layer.getCloudType().equals(CloudConfig.CloudTypes.FAST) || layer.getCloudType().equals(CloudConfig.CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
             for(westToEastSpan = northwestSpan - displacementInQuadrants; westToEastSpan <= southeastSpan - displacementInQuadrants; ++westToEastSpan) {
                 for(northToSouthSpan = northwestSpan; northToSouthSpan <= southeastSpan; ++northToSouthSpan) {
                     float westToEastDrawPos = (float)(westToEastSpan * 8);

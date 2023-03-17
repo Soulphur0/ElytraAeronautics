@@ -1,7 +1,6 @@
 package com.github.Soulphur0.config.singletons;
 
-import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.integration.DependencyChecker;
+import com.github.Soulphur0.config.clothConfig.FlightConfigScreen;
 
 public class FlightConfig {
 
@@ -34,9 +33,11 @@ public class FlightConfig {
     }
 
     // ? Get info from the config file.
-    public static void readConfig(EanConfig config){
+    public static void readConfig(FlightConfigScreen... optional){
         getOrCreateInstance();
-        if (DependencyChecker.checkForClothConfig()){
+        try {
+            FlightConfigScreen config = optional[0];
+
             instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
             instance.setMinSpeed(config.minSpeed);
             instance.setMaxSpeed(config.maxSpeed);
@@ -45,7 +46,7 @@ public class FlightConfig {
             instance.setSneakingRealignsPitch(config.sneakingRealignsPitch);
             instance.setRealignAngle(config.realignAngle);
             instance.setRealignRate(config.realignRate);
-        } else {
+        } catch (IndexOutOfBoundsException e){
 
         }
     }

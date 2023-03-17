@@ -1,6 +1,7 @@
+/*
 package com.github.Soulphur0.config.singletons;
 
-import com.github.Soulphur0.config.EanConfig;
+import com.github.Soulphur0.config.clothConfig.EanConfig;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -345,4 +346,4 @@ public class Test {
         SKY_HIGHWAY,
         SEA_MISTY
     }
-}
+}*/

@@ -1,10 +1,9 @@
 package com.github.Soulphur0.mixin;
 
 import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
-import com.github.Soulphur0.config.EanConfig;
+import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -38,8 +37,7 @@ public abstract class WorldRendererMixin implements SynchronousResourceReloader,
 
     @WrapOperation(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;renderClouds(Lnet/minecraft/client/util/math/MatrixStack;Lorg/joml/Matrix4f;FDDD)V", ordinal = 1))
     private void ean_renderClouds(WorldRenderer instance, MatrixStack matrices, Matrix4f positionMatrix, float tickDelta, double x, double y, double z, Operation<Void> original){
-        EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-        if (config.useEanClouds)
+        if (CloudConfig.getOrCreateInstance().isUseEanClouds())
             EanCloudRenderBehaviour.ean_renderClouds(instance, matrices, positionMatrix, tickDelta, x, y, z);
         else
             original.call(instance, matrices, positionMatrix, tickDelta, x, y, z);
