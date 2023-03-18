@@ -11,25 +11,25 @@ public class CloudLayer {
 
     // ; Cloud rendering settings
     @Expose
-    private CloudConfig.CloudTypes cloudType;
+    private CloudConfig.CloudTypes cloudType = CloudConfig.CloudTypes.LOD;
     @Expose
-    private float verticalRenderDistance;
+    private float verticalRenderDistance = 1000.0F;
     @Expose
-    private int horizontalRenderDistance;
+    private int horizontalRenderDistance = 20;
     @Expose
-    private float lodRenderDistance;
+    private float lodRenderDistance = 50.0F;
 
     // ; Cloud style settings
     @Expose
-    private float cloudSpeed;
+    private float cloudSpeed = 1.0F;
     @Expose
-    private float cloudThickness;
+    private float cloudThickness = 4.0F;
     @Expose
-    private int cloudColor;
+    private int cloudColor = 0xffffff;
     @Expose
-    private float cloudOpacity;
+    private float cloudOpacity = 0.8F;
     @Expose
-    private boolean shading;
+    private boolean shading = true;
 
     // = Contextual attributes for rendering
     private BufferBuilder.BuiltBuffer vertexGeometry; // The geometry of the processed cloud layer to later render.
@@ -39,6 +39,10 @@ public class CloudLayer {
     private boolean withinLodRenderDistance;
     private float translationX;
     private float translationZ;
+
+    public CloudLayer(){
+
+    }
 
     // $ GETTERS & SETTERS
     public double getAltitude() {

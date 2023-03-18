@@ -2,8 +2,10 @@ package com.github.Soulphur0.config.clothConfig;
 
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
+@Config(name = "cloud_settings")
 public class CloudConfigScreen implements ConfigData {
     public CloudConfigScreen() {
     }
@@ -14,9 +16,9 @@ public class CloudConfigScreen implements ConfigData {
     @ConfigEntry.Category(value ="cloud_settings")
     public int numberOfLayers = 2;
     @ConfigEntry.Category(value ="cloud_settings")
-    public float distanceBetweenLayers = 250.0F;
-    @ConfigEntry.Category(value ="cloud_settings")
     public float firstLayerAltitude = 192.0F;
+    @ConfigEntry.Category(value ="cloud_settings")
+    public float distanceBetweenLayers = 25.0F;
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     @ConfigEntry.Category(value ="cloud_settings")
     public CloudConfig.CloudTypes cloudType = CloudConfig.CloudTypes.LOD;
