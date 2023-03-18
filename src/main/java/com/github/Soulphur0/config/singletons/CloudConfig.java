@@ -8,7 +8,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -19,46 +18,43 @@ public class CloudConfig {
 
     // ; Cloud positioning settings
     @Expose
-    private int numberOfLayers;
+    private int numberOfLayers = 2;
     @Expose
-    private float firstLayerAltitude;
+    private float firstLayerAltitude = 192.0F;
     @Expose
-    private float distanceBetweenLayers;
+    private float distanceBetweenLayers = 25.0F;
 
     // ; Cloud rendering settings
     @Expose
-    private boolean useEanClouds;
+    private boolean useEanClouds = true;
     @Expose
-    private CloudTypes cloudType;
+    private CloudTypes cloudType = CloudTypes.LOD;
     @Expose
-    private float verticalRenderDistance;
+    private float verticalRenderDistance = 1000.0F;
     @Expose
-    private int horizontalRenderDistance;
+    private int horizontalRenderDistance = 20;
     @Expose
-    private float lodRenderDistance;
+    private float lodRenderDistance = 50.0F;
 
     // ; Cloud style settings
     @Expose
-    private float cloudSpeed;
+    private float cloudSpeed = 1.0F;
     @Expose
-    private float cloudThickness;
+    private float cloudThickness = 4.0F;
     @Expose
-    private int cloudColor;
+    private int cloudColor = 0xffffff;
     @Expose
-    private float cloudOpacity;
+    private float cloudOpacity = 0.8F;
     @Expose
-    private boolean shading;
+    private boolean shading = true;
 
     // = Config instance
-    // ; The singleton instance stores and manages general cloud config data.
-    // ; Fields are made private to conditionally write the data directly into the config screen via its setters.
     public static CloudConfig instance;
 
     // = Layers loaded in memory.
-    // ; The static array of cloud layers stores all cloud layers in an easier to access way.
+    @Expose
     public static CloudLayer[] cloudLayers;
 
-    // $ CLASS METHODS
     public static CloudConfig getOrCreateInstance(){
         if (instance == null){
             instance = new CloudConfig();
@@ -66,87 +62,168 @@ public class CloudConfig {
         return instance;
     }
 
-    // ? Method accessed via the ClothConfig save listener
-    // ¿ Updates the config instance with the config screen values.
-    public static void updateConfig(CloudConfigScreen... optional){
+    // $ ClothConfig config updater.
+    // € Updates the config instance with the config screen values, which are automatically saved on disk.
+    public static void updateConfig(CloudConfigScreen config){
         getOrCreateInstance();
+
+        // Load general config settings to the singleton instance.
+        instance.setNumberOfLayers(config.numberOfLayers);
+        instance.setFirstLayerAltitude(config.firstLayerAltitude);
+        instance.setDistanceBetweenLayers(config.distanceBetweenLayers);
+
+        instance.setUseEanClouds(config.useEanClouds);
+        instance.setCloudType(config.cloudType);
+        instance.setVerticalRenderDistance(config.verticalRenderDistance);
+        instance.setHorizontalRenderDistance(config.horizontalRenderDistance);
+        instance.setLodRenderDistance(config.lodRenderDistance);
+
+        instance.setCloudSpeed(config.cloudSpeed);
+        instance.setCloudThickness(config.cloudThickness);
+        instance.setCloudColor(config.cloudColor);
+        instance.setCloudOpacity(config.cloudOpacity);
+        instance.setShading(config.shading);
+
+        // Apply changes to all cloud layers.
+        cloudLayers = new CloudLayer[getOrCreateInstance().getNumberOfLayers()];
+        for (int i = 0; i < getOrCreateInstance().numberOfLayers; i++) {
+            CloudLayer layer = new CloudLayer();
+            layer.setAltitude((getOrCreateInstance().firstLayerAltitude + getOrCreateInstance().distanceBetweenLayers * i));
+            layer.setCloudType(getOrCreateInstance().cloudType);
+            layer.setVerticalRenderDistance(getOrCreateInstance().verticalRenderDistance);
+            layer.setHorizontalRenderDistance(getOrCreateInstance().horizontalRenderDistance);
+            layer.setLodRenderDistance(getOrCreateInstance().lodRenderDistance);
+            layer.setCloudThickness(getOrCreateInstance().cloudThickness);
+            layer.setCloudColor(getOrCreateInstance().cloudColor);
+            layer.setCloudOpacity(getOrCreateInstance().cloudOpacity);
+            layer.setShading(getOrCreateInstance().shading);
+            layer.setCloudSpeed(getOrCreateInstance().cloudSpeed);
+
+            cloudLayers[i] = layer;
+        }
+    }
+
+    // $ Non-ClothConfig config updater
+    // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
+
+    // ? Only called once in mod initialization.
+    public static void readFromDisk(){
+        // - Extract json as string.
+        StringBuilder json = new StringBuilder();
         try {
-            CloudConfigScreen config = optional[0];
+            // Create dir if it doesn't exist.
+            File directory = new File("config/ElytraAeronautics");
+            if (!directory.exists())
+                directory.mkdir();
 
-            // Load general config settings to the singleton instance.
-            instance.setNumberOfLayers(config.numberOfLayers);
-            instance.setFirstLayerAltitude(config.firstLayerAltitude);
-            instance.setDistanceBetweenLayers(config.distanceBetweenLayers);
+            File file = new File("config/ElytraAeronautics/cloud_settings.json");
 
-            instance.setUseEanClouds(config.useEanClouds);
-            instance.setCloudType(config.cloudType);
-            instance.setVerticalRenderDistance(config.verticalRenderDistance);
-            instance.setHorizontalRenderDistance(config.horizontalRenderDistance);
-            instance.setLodRenderDistance(config.lodRenderDistance);
-
-            instance.setCloudSpeed(config.cloudSpeed);
-            instance.setCloudThickness(config.cloudThickness);
-            instance.setCloudColor(config.cloudColor);
-            instance.setCloudOpacity(config.cloudOpacity);
-            instance.setShading(config.shading);
-
-            // Apply settings to each layer.
-            cloudLayers = new CloudLayer[config.numberOfLayers];
-            for (int i = 0; i < config.numberOfLayers; i++) {
-                CloudLayer layer = new CloudLayer();
-                layer.setAltitude((config.firstLayerAltitude + config.distanceBetweenLayers * i));
-                layer.setCloudType(config.cloudType);
-                layer.setVerticalRenderDistance(config.verticalRenderDistance);
-                layer.setHorizontalRenderDistance(config.horizontalRenderDistance);
-                layer.setLodRenderDistance(config.lodRenderDistance);
-                layer.setCloudThickness(config.cloudThickness);
-                layer.setCloudColor(config.cloudColor);
-                layer.setCloudOpacity(config.cloudOpacity);
-                layer.setShading(config.shading);
-                layer.setCloudSpeed(config.cloudSpeed);
-
-                cloudLayers[i] = layer;
-            }
-        } catch (IndexOutOfBoundsException e){
-            // - Extract json as string
-            StringBuilder json = new StringBuilder();
-
-            try {
-                File file = new File("config/elytraAeronautics/eanCloudLayers.json");
+            // If file doesn't exist yet, create instance with default values and write it to disk.
+            // Also, the default cloud preset will be generated to be saved as well.
+            if (file.createNewFile()) {
+                getOrCreateInstance();
+                cloudPreset_default();
+                writeToDisk();
+            } else {
                 Scanner reader = new Scanner(file);
-
                 while(reader.hasNextLine()){
                     json.append(reader.nextLine());
                 }
                 reader.close();
-            } catch (FileNotFoundException f){
-                e.printStackTrace();
-            }
 
-            // - Convert extracted string into list of configured CloudLayers.
-            Gson gson = new Gson();
-            Type type = new TypeToken<List<CloudLayer>>(){}.getType();
-            List<CloudLayer> readCloudLayers = gson.fromJson(String.valueOf(json), type);
-
-            // - Load read CloudLayers into the in-memory array.
-            cloudLayers = new CloudLayer[readCloudLayers.size()];
-            for(int i = 0; i< readCloudLayers.size(); i++){
-                cloudLayers[i] = readCloudLayers.get(i);
+                // + After reading general config from disk, read the cloud layers into array.
+                readCloudLayers();
             }
+        } catch (IOException e){
+            e.printStackTrace();
         }
+
+        // - Convert extracted string into the config instance.
+        Gson gson = new Gson();
+        instance = gson.fromJson(String.valueOf(json), CloudConfig.class);
     }
 
-    public static void writeConfig(){
+    // ? Called every time the config is updated via command.
+    public static void writeToDisk(){
         Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
-        String json = gson.toJson(cloudLayers);
+        String json = gson.toJson(instance);
 
         try {
-            FileWriter writer = new FileWriter("config/eanCloudLayers.json");
+            FileWriter writer = new FileWriter("config/ElytraAeronautics/cloud_settings.json");
             writer.write(json);
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // + After writing general config to disk, write the cloud layers array into JSON.
+        writeCloudLayers();
+    }
+
+    // $ Saving-to and loading-from disk all the Cloud Layers.
+    // € Always called in conjunction with the methods that read and write the config.
+
+    // ? Reads the cloud layers from disk, if not present, generates the default preset and saves it to disk.
+    public static void readCloudLayers(){
+        StringBuilder json = new StringBuilder();
+
+        try {
+            File file = new File("config/ElytraAeronautics/cloud_layers.json");
+
+            // If only the cloud layers file doesn't exist, create default one.
+            if (!file.exists()){
+                cloudPreset_default();
+                writeCloudLayers();
+            }
+
+            Scanner reader = new Scanner(file);
+            while(reader.hasNextLine()){
+                json.append(reader.nextLine());
+            }
+            reader.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        Gson gson = new Gson();
+        Type type = new TypeToken<List<CloudLayer>>(){}.getType();
+        List<CloudLayer> readCloudLayers = gson.fromJson(String.valueOf(json), type);
+
+        // - Load read CloudLayers into the in-memory array.
+        cloudLayers = new CloudLayer[readCloudLayers.size()];
+        for(int i = 0; i< readCloudLayers.size(); i++){
+            cloudLayers[i] = readCloudLayers.get(i);
+        }
+    }
+
+    // ? Called every time the config is updated via command (by the writeConfig method).
+    public static void writeCloudLayers(){
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+        String json = gson.toJson(cloudLayers);
+
+        try{
+            FileWriter writer = new FileWriter("config/ElytraAeronautics/cloud_layers.json");
+            writer.write(json);
+            writer.close();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    // $ Cloud preset methods
+    // € Each method generated a different cloud preset, names registered in enum at the end.
+    public static void cloudPreset_default(){
+        cloudLayers = new CloudLayer[3];
+
+        cloudLayers[0] = new CloudLayer();
+        cloudLayers[0].setAltitude(192.0D);
+        cloudLayers[0].setCloudType(CloudTypes.FANCY);
+
+        cloudLayers[1] = new CloudLayer();
+        cloudLayers[1].setAltitude(250.0D);
+
+        cloudLayers[2] = new CloudLayer();
+        cloudLayers[2].setAltitude(1000.0D);
     }
 
     // $ GETTERS & SETTERS
@@ -164,6 +241,23 @@ public class CloudConfig {
 
     public void setNumberOfLayers(int numberOfLayers) {
         this.numberOfLayers = numberOfLayers;
+
+        if (cloudLayers.length > this.numberOfLayers){
+            CloudLayer[] aux = new CloudLayer[this.numberOfLayers];
+            for (int i = 0; i < this.numberOfLayers; i++){
+                aux[i] = cloudLayers[i];
+            }
+            cloudLayers = aux;
+        } else if (cloudLayers.length < this.numberOfLayers){
+            CloudLayer[] aux = new CloudLayer[this.numberOfLayers];
+            for (int i = 0; i < this.numberOfLayers; i++){
+                if (i < cloudLayers.length)
+                    aux[i] = cloudLayers[i];
+                else
+                    aux[i] = new CloudLayer();
+            }
+            cloudLayers = aux;
+        }
     }
 
     public float getFirstLayerAltitude() {
@@ -278,6 +372,6 @@ public class CloudConfig {
         PUFFY,
         RAINBOW,
         SKY_HIGHWAY,
-        SEA_MISTY
+        SEA_MIST
     }
 }
