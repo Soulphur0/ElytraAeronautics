@@ -4,6 +4,7 @@ import com.github.Soulphur0.config.EanCommands;
 import com.github.Soulphur0.config.clothConfig.EanConfig;
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.config.singletons.FlightConfig;
+import com.github.Soulphur0.integration.DependencyChecker;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
@@ -18,23 +19,26 @@ public class ElytraAeronautics implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// ? Check for ClothConfig, if not present, create config file manually.
-		// Register config class as config screen.
-		AutoConfig.register(EanConfig.class, PartitioningSerializer.wrap(GsonConfigSerializer::new));
+		// ? Check for ClothConfig, and register config screen and listeners.
+		if (DependencyChecker.checkForClothConfig()){
+			// Register config class as config screen.
+			AutoConfig.register(EanConfig.class, PartitioningSerializer.wrap(GsonConfigSerializer::new));
 
-		// Register save config listener, this will load the config screen data to memory and write it to storage.
-		AutoConfig.getConfigHolder(EanConfig.class).registerSaveListener(((configHolder, eanConfig) -> {
-			FlightConfig.readConfig(eanConfig.getFlightConfigScreen());
-			CloudConfig.updateConfig(eanConfig.getCloudConfigScreen());
-			return ActionResult.PASS;
-		}));
-//		if (DependencyChecker.checkForClothConfig()){
-//
-//		} else {
-//
-//		}
+			// Register save config listener, this will load the config screen data to memory and write it to storage.
+			AutoConfig.getConfigHolder(EanConfig.class).registerSaveListener(((configHolder, eanConfig) -> {
+				FlightConfig.updateConfig(eanConfig.getFlightConfigScreen());
+				CloudConfig.updateConfig(eanConfig.getCloudConfigScreen());
+				return ActionResult.PASS;
+			}));
+		}
 
+		// ? Read data saved in disk directly to config instance.
+		FlightConfig.readFromDisk();
+		CloudConfig.readFromDisk();
+
+		// ? Register config command.
 		EanCommands.register();
+
 		LOGGER.info("Elytra Aeronautics initialized! Have a good flight!");
 	}
 }
