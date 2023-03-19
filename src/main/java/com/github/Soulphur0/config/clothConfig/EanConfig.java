@@ -4,7 +4,7 @@ import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
 
-@Config(name = "ean")
+@Config(name = "ElytraAeronautics")
 public class EanConfig extends PartitioningSerializer.GlobalData {
 
     @ConfigEntry.Category(value ="elytra_flight_settings")
