@@ -1,16 +1,16 @@
 package com.github.Soulphur0.config.clothConfig;
 
 import me.shedaniel.autoconfig.ConfigData;
+import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.autoconfig.annotation.ConfigEntry;
 
+@Config(name = "elytra_flight_settings")
 public class FlightConfigScreen implements ConfigData {
     public FlightConfigScreen() {
 
     }
 
     @ConfigEntry.Category(value ="elytra_flight_settings")
-    @ConfigEntry.Gui.Excluded
-    public boolean fresh = true;
     @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Gui.Tooltip(count = 2)
     public boolean altitudeDeterminesSpeed = true;
