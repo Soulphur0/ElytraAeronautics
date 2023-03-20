@@ -1,30 +1,32 @@
 package com.github.Soulphur0.config.singletons;
 
 import com.github.Soulphur0.config.clothConfig.FlightConfigScreen;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class FlightConfig {
 
     // = Elytra flight attributes
 
     // ; Flight speed settings.
-    private boolean altitudeDeterminesSpeed;
-    private double minSpeed;
-    private double maxSpeed;
-    private double minHeight;
-    private double maxHeight;
+    private boolean altitudeDeterminesSpeed = true;
+    private double minSpeed = 30.35;
+    private double maxSpeed = 257.22;
+    private double minHeight = 250.0;
+    private double maxHeight = 1000.0;
 
     // ; Flight alignment settings.
-    private boolean sneakingRealignsPitch;
-    private float realignAngle;
-    private float realignRate;
+    private boolean sneakingRealignsPitch = true;
+    private float realignAngle = 0.0F;
+    private float realignRate = 0.1F;
 
     private static FlightConfig instance;
 
-    public FlightConfig(){}
-
-    // $ CLASS METHODS
-
-    // ? Instantiate singleton instance.
     public static FlightConfig getOrCreateInstance() {
         if (instance == null){
             instance = new FlightConfig();
@@ -32,22 +34,68 @@ public class FlightConfig {
         return instance;
     }
 
-    // ? Get info from the config file.
-    public static void readConfig(FlightConfigScreen... optional){
+    // $ ClothConfig config updater.
+    // € Updates the config instance with the config screen values, which are automatically saved on disk.
+    public static void updateConfig(FlightConfigScreen config){
         getOrCreateInstance();
+
+        instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
+        instance.setMinSpeed(config.minSpeed);
+        instance.setMaxSpeed(config.maxSpeed);
+        instance.setMinHeight(config.minHeight);
+        instance.setMaxHeight(config.maxHeight);
+        instance.setSneakingRealignsPitch(config.sneakingRealignsPitch);
+        instance.setRealignAngle(config.realignAngle);
+        instance.setRealignRate(config.realignRate);
+    }
+
+    // $ Non-ClothConfig config updater
+    // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
+
+    // ? Only called once in mod initialization.
+    public static void readFromDisk(){
+        // - Extract json as string
+        StringBuilder json = new StringBuilder();
+
+        try{
+            // Create dir if it doesn't exist
+            File directory = new File("config/ElytraAeronautics");
+            if (!directory.exists())
+                directory.mkdir();
+
+            File file = new File("config/ElytraAeronautics/flight_settings.json");
+
+            // If file doesn't exist yet, create instance with default values and write it to disk.
+            if (file.createNewFile()) {
+                getOrCreateInstance();
+                writeToDisk();
+            } else {
+                Scanner reader = new Scanner(file);
+                while(reader.hasNextLine()){
+                    json.append(reader.nextLine());
+                }
+                reader.close();
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+        // - Convert extracted string into the config instance.
+        Gson gson = new Gson();
+        instance = gson.fromJson(String.valueOf(json), FlightConfig.class);
+    }
+
+    // ? Called every time the config is updated via command.
+    public static void writeToDisk(){
+        Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
+        String json = gson.toJson(instance);
+
         try {
-            FlightConfigScreen config = optional[0];
-
-            instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
-            instance.setMinSpeed(config.minSpeed);
-            instance.setMaxSpeed(config.maxSpeed);
-            instance.setMinHeight(config.minHeight);
-            instance.setMaxHeight(config.maxHeight);
-            instance.setSneakingRealignsPitch(config.sneakingRealignsPitch);
-            instance.setRealignAngle(config.realignAngle);
-            instance.setRealignRate(config.realignRate);
-        } catch (IndexOutOfBoundsException e){
-
+            FileWriter writer = new FileWriter("config/ElytraAeronautics/flight_settings.json");
+            writer.write(json);
+            writer.close();
+        } catch (IOException e){
+            e.printStackTrace();
         }
     }
 
