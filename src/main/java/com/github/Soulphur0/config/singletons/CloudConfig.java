@@ -101,6 +101,8 @@ public class CloudConfig {
 
             cloudLayers[i] = layer;
         }
+
+        writeCloudLayers();
     }
 
     // $ Non-ClothConfig config updater
