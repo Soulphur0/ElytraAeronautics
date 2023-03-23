@@ -14,7 +14,6 @@ public class EanFlightBehaviour {
     }
 
     // : Calculations.
-
     private static Vec3d ean_setupFlightCalc(LivingEntity player){
         FlightConfig configInstance = FlightConfig.getOrCreateInstance();
 
