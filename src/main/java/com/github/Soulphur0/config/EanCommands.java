@@ -1,7 +1,8 @@
 package com.github.Soulphur0.config;
 
-import com.github.Soulphur0.config.singletons.CloudLayer;
-import com.github.Soulphur0.config.singletons.ElytraFlight;
+import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.singletons.CloudConfig;
+import com.github.Soulphur0.config.singletons.FlightConfig;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -20,60 +21,58 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class EanCommands {
 
     public static void register(){
-        // $ Cloud layer config command
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("ean")
-            // + Config mode argument
+            // $ Config mode argument
+            // € Either FlightConfig or CloudConfig
             .then(argument("configMode", string())
-                // - Config option suggestions
                 .suggests((commandContext, suggestionsBuilder) -> {
-                    String[] suggestions = {"ElytraFlight", "CloudLayer"};
+                    String[] suggestions = {"FlightConfig", "CloudConfig"};
 
                     return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                 })
-                // + 1# multi-type argument
-                // * ElytraFlightOption
-                // * CloudLayerOption
+                // + Choose a setting to change
+                // * FlightOptions (enable/disable, speed, height, ...)
+                // * CloudOptions (enable/disable, layerAmount, layerConfig, ...)
                 .then(argument("arg1", string())
-                    // - Suggestions
                     .suggests((commandContext, suggestionsBuilder) -> {
                         String configMode = StringArgumentType.getString(commandContext, "configMode");
                         Collection<String> suggestions = new ArrayList<>();
-                        if (configMode.equals("ElytraFlight")){
-                            for(ElytraFlight.Options option : ElytraFlight.Options.values()){
+                        if (configMode.equals("FlightConfig")){
+                            for(FlightConfig.Options option : FlightConfig.Options.values()){
                                 suggestions.add(option.toString());
                             }
-                        } else if (configMode.equals("CloudLayer")) {
-                            suggestions.add("disableEanCloudRendering");
-                            suggestions.add("layerAmount");
+                        } else if (configMode.equals("CloudConfig")) {
+                            suggestions.add("useEanCloudRendering");
+                            suggestions.add("setCloudLayerAmount");
                             suggestions.add("configCloudLayer");
                         }
                         return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                     })
-                    // + 2# multi-type argument
-                    // * ElytraFlightOptionValue
-                    // * CloudLayerNumber
+                    // + Choose a value for the setting
+                    // * FlightOptionValue (speed, height, realign angle, ...)
+                    // * CloudOptionValue (layerAmount, ...)
+                        // + CloudLayerNumber (1, 2, all, ...)
                     .then(argument("arg2", string())
-                        // - Suggestions
                         .suggests((commandContext, suggestionsBuilder) -> {
                             String configMode = StringArgumentType.getString(commandContext, "configMode");
                             String arg1 = StringArgumentType.getString(commandContext, "arg1");
                             Collection<String> suggestions = new ArrayList<>();
-                            if (configMode.equals("CloudLayer") && arg1.equals("configCloudLayer")) {
+                            if (configMode.equals("CloudConfig") && arg1.equals("configCloudLayer")) {
                                 suggestions.add("all");
-                                for(int i = 1; i <= CloudLayer.cloudLayers.length; i++){
+                                for(int i = 1; i <= CloudConfig.cloudLayers.length; i++){
                                     suggestions.add(String.valueOf(i));
                                 }
                             }
                             return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                         })
-                        // = ElytraFlight config execution
+                        // < FlightConfigScreen & GeneralCloudConfig config execution.
                         .executes(context -> {
                             String configMode = StringArgumentType.getString(context, "configMode");
                             String arg1 = StringArgumentType.getString(context, "arg1");
                             String value = StringArgumentType.getString(context, "arg2");
                             String message = "";
 
-                            if (configMode.equals("ElytraFlight")){
+                            if (configMode.equals("FlightConfig")){
                                 switch (arg1) {
                                     case "altitudeDeterminesSpeed" -> message = setAltitudeDeterminesSpeed(value);
                                     case "minSpeed" -> message = setMinSpeed(value);
@@ -86,45 +85,38 @@ public class EanCommands {
                                     default -> {
                                     }
                                 }
-                            } else if (configMode.equals("CloudLayer")) {
-                                switch (arg1){
-                                    case "diableEanCloudRendering":
-
-                                        break;
-                                    case "layerAmount":
-
-                                        break;
-                                    default:
-                                        throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-                                }
-
-                                message = "Cloud layer value is " + value;
+                            } else if (configMode.equals("CloudConfig")) {
+                                message = switch (arg1) {
+                                    case "useEanCloudRendering" -> setUseEanCloudRendering(value);
+                                    case "setCloudLayerAmount" -> setCloudLayerAmount(value);
+                                    default -> throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+                                };
                             }
 
-                            context.getSource().sendMessage(Text.of(message));
+                            if (!message.equals(""))
+                                context.getSource().sendMessage(Text.of(message));
                             return 1;
                         })
-                    // + Cloud layer attribute argument
+                    // + Cloud layer option (altitude, speed, color, thickness, ...)
                     .then(argument("arg3", string())
-                        // - Suggestions
                         .suggests((commandContext, suggestionsBuilder) -> {
                             String configMode = StringArgumentType.getString(commandContext, "configMode");
                             Collection<String> suggestions = new ArrayList<>();
-                            if (configMode.equals("CloudLayer")){
-                                for(CloudLayer.Attributes attribute : CloudLayer.Attributes.values()){
+                            if (configMode.equals("CloudConfig")){
+                                for(CloudConfig.LayerAttributes attribute : CloudConfig.LayerAttributes.values()){
                                     suggestions.add(attribute.toString());
                                 }
                             }
                             return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                         })
 
-                        // + Layer attribute value argument
+                        // + Cloud layer attribute value.
                         .then(argument("value", string())
-                            // = CloudLayer config execution
+                            // < CloudLayer config execution.
                             .executes(context -> {
                                 String configMode = StringArgumentType.getString(context, "configMode");
 
-                                if (configMode.equals("CloudLayer")){
+                                if (configMode.equals("CloudConfig")){
                                     String layerNumber = StringArgumentType.getString(context, "arg2");
                                     String layerAttribute = StringArgumentType.getString(context, "arg3");
                                     String value = StringArgumentType.getString(context, "value");
@@ -159,9 +151,10 @@ public class EanCommands {
     private static String setAltitudeDeterminesSpeed(String value) throws CommandSyntaxException {
         try{
             boolean altitudeDeterminesSpeed = Boolean.parseBoolean(value);
-            ElytraFlight.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
+            FlightConfig.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
 
-            return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed";
+            FlightConfig.writeToDisk();
+            return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed.";
         } catch (Exception e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         }
@@ -170,8 +163,9 @@ public class EanCommands {
     private static String setMinSpeed(String value) throws CommandSyntaxException {
         try{
             double minSpeed = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMinSpeed(minSpeed);
+            FlightConfig.getOrCreateInstance().setMinSpeed(minSpeed);
 
+            FlightConfig.writeToDisk();
             return "Minimum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -181,8 +175,9 @@ public class EanCommands {
     private static String setMaxSpeed(String value) throws CommandSyntaxException {
         try{
             double maxSpeed = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMaxSpeed(maxSpeed);
+            FlightConfig.getOrCreateInstance().setMaxSpeed(maxSpeed);
 
+            FlightConfig.writeToDisk();
             return "Maximum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -192,8 +187,9 @@ public class EanCommands {
     private static String setMinHeight(String value) throws CommandSyntaxException {
         try{
             double minHeight = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMinHeight(minHeight);
+            FlightConfig.getOrCreateInstance().setMinHeight(minHeight);
 
+            FlightConfig.writeToDisk();
             return "The minimum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -203,8 +199,9 @@ public class EanCommands {
     private static String setMaxHeight(String value) throws CommandSyntaxException {
         try{
             double maxHeight = Double.parseDouble(value);
-            ElytraFlight.getOrCreateInstance().setMaxHeight(maxHeight);
+            FlightConfig.getOrCreateInstance().setMaxHeight(maxHeight);
 
+            FlightConfig.writeToDisk();
             return "The maximum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -214,8 +211,9 @@ public class EanCommands {
     private static String setSneakingRealignsPitch(String value) throws CommandSyntaxException {
         try{
             boolean sneakingRealignsPitch = Boolean.parseBoolean(value);
-            ElytraFlight.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
+            FlightConfig.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
 
+            FlightConfig.writeToDisk();
             return (sneakingRealignsPitch) ? "Sneaking mid flight now realigns flight pitch." : "Sneaking mid flight no longer realigns flight pitch.";
         } catch (Exception e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -225,8 +223,9 @@ public class EanCommands {
     private static String setRealignAngle(String value) throws CommandSyntaxException {
         try{
             float realignAngle = Float.parseFloat(value);
-            ElytraFlight.getOrCreateInstance().setRealignAngle(realignAngle);
+            FlightConfig.getOrCreateInstance().setRealignAngle(realignAngle);
 
+            FlightConfig.writeToDisk();
             return "The realign angle is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -236,32 +235,56 @@ public class EanCommands {
     private static String setRealignRate(String value) throws CommandSyntaxException {
         try{
             float realignRate = Float.parseFloat(value);
-            ElytraFlight.getOrCreateInstance().setRealignRate(realignRate);
+            FlightConfig.getOrCreateInstance().setRealignRate(realignRate);
 
+            FlightConfig.writeToDisk();
             return "The realign rate is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         }
     }
 
+    // $ Cloud general configuration
+    private static String setUseEanCloudRendering(String value) throws CommandSyntaxException {
+        try{
+            boolean useEanCloudRendering = Boolean.parseBoolean(value);
+            CloudConfig.getOrCreateInstance().setUseEanClouds(useEanCloudRendering);
+
+            CloudConfig.writeToDisk();
+            return (useEanCloudRendering) ? "Elytra Aeronautics cloud rendering is now enabled." : "Elytra Aeronautics cloud rendering is now disabled.";
+        } catch (Exception e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
+    private static String setCloudLayerAmount(String value) throws CommandSyntaxException{
+        try {
+            int amount = Integer.parseInt(value);
+            CloudConfig.getOrCreateInstance().setNumberOfLayers(amount);
+
+            CloudConfig.writeToDisk();
+            return "Set number of cloud layers to " + amount;
+        } catch (NumberFormatException e){
+            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+        }
+    }
+
     // $ Cloud layer configuration
-
-
     private static String setLayerAltitude(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
             double altitude = Double.parseDouble(value);
-// !            AutoConfig.getConfigHolder(EanConfig.class).getConfig().useEanClouds = false;
+
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setAltitude(altitude);
                 }
                 return "Set altitude of all layers to " + altitude;
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setAltitude(altitude);
+            CloudConfig.cloudLayers[layerNumber-1].setAltitude(altitude);
 
-            CloudLayer.writeCloudLayers();
-            return "Set altitude of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getAltitude();
+            CloudConfig.writeToDisk();
+            return "Set altitude of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getAltitude();
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -271,19 +294,19 @@ public class EanCommands {
 
     private static String setLayerCloudType(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
-            CloudLayer.CloudTypes cloudType = CloudLayer.CloudTypes.valueOf(value.toUpperCase());
+            CloudConfig.CloudTypes cloudType = CloudConfig.CloudTypes.valueOf(value.toUpperCase());
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setCloudType(cloudType);
                 }
                 return "Set cloud type of all layers to " + cloudType;
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setCloudType(cloudType);
+            CloudConfig.cloudLayers[layerNumber-1].setCloudType(cloudType);
 
-            CloudLayer.writeCloudLayers();
-            return "Set cloud type of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getCloudType();
+            CloudConfig.writeToDisk();
+            return "Set cloud type of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getCloudType();
         } catch (IllegalArgumentException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -296,16 +319,16 @@ public class EanCommands {
             float verticalRenderDistance = Float.parseFloat(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setVerticalRenderDistance(verticalRenderDistance);
                 }
                 return "Set vertical render distance of all layers to " + verticalRenderDistance + " blocks.";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setVerticalRenderDistance(verticalRenderDistance);
+            CloudConfig.cloudLayers[layerNumber-1].setVerticalRenderDistance(verticalRenderDistance);
 
-            CloudLayer.writeCloudLayers();
-            return "Set vertical render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getVerticalRenderDistance() + " blocks.";
+            CloudConfig.writeToDisk();
+            return "Set vertical render distance of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getVerticalRenderDistance() + " blocks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -318,16 +341,16 @@ public class EanCommands {
             int horizontalRenderDistance = Integer.parseInt(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setHorizontalRenderDistance(horizontalRenderDistance);
                 }
                 return "Set horizontal render distance of all layers to " + horizontalRenderDistance + " chunks.";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setHorizontalRenderDistance(horizontalRenderDistance);
+            CloudConfig.cloudLayers[layerNumber-1].setHorizontalRenderDistance(horizontalRenderDistance);
 
-            CloudLayer.writeCloudLayers();
-            return "Set horizontal render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getHorizontalRenderDistance() + " chunks.";
+            CloudConfig.writeToDisk();
+            return "Set horizontal render distance of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getHorizontalRenderDistance() + " chunks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -340,16 +363,16 @@ public class EanCommands {
             float lodRenderDistance = Float.parseFloat(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setLodRenderDistance(lodRenderDistance);
                 }
                 return "Set LOD render distance of all layers to " + lodRenderDistance + " blocks.";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setLodRenderDistance(lodRenderDistance);
+            CloudConfig.cloudLayers[layerNumber-1].setLodRenderDistance(lodRenderDistance);
 
-            CloudLayer.writeCloudLayers();
-            return "Set LOD render distance of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getLodRenderDistance() + " blocks.";
+            CloudConfig.writeToDisk();
+            return "Set LOD render distance of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getLodRenderDistance() + " blocks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -362,16 +385,16 @@ public class EanCommands {
             float cloudThickness = Float.parseFloat(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setCloudThickness(cloudThickness);
                 }
                 return "Set cloud thickness of all layers to " + cloudThickness + " blocks.";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setCloudThickness(cloudThickness);
+            CloudConfig.cloudLayers[layerNumber-1].setCloudThickness(cloudThickness);
 
-            CloudLayer.writeCloudLayers();
-            return "Set cloud thickness of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getCloudThickness() + " blocks.";
+            CloudConfig.writeToDisk();
+            return "Set cloud thickness of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getCloudThickness() + " blocks.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -384,15 +407,15 @@ public class EanCommands {
             int cloudColor = Integer.parseInt(value,16);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setCloudColor(cloudColor);
                 }
                 return "Set cloud color of all layers to " + value + ".";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setCloudColor(cloudColor);
+            CloudConfig.cloudLayers[layerNumber-1].setCloudColor(cloudColor);
 
-            CloudLayer.writeCloudLayers();
+            CloudConfig.writeToDisk();
             return "Set cloud color of layer " + layerNumber + " to " + value + ".";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -406,16 +429,16 @@ public class EanCommands {
             float cloudOpacity = Float.parseFloat(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setCloudOpacity(cloudOpacity);
                 }
                 return "Set cloud opacity of all layers to " + value + ".";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setCloudOpacity(cloudOpacity);
+            CloudConfig.cloudLayers[layerNumber-1].setCloudOpacity(cloudOpacity);
 
-            CloudLayer.writeCloudLayers();
-            return "Set cloud opacity of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].getCloudOpacity() + ".";
+            CloudConfig.writeToDisk();
+            return "Set cloud opacity of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getCloudOpacity() + ".";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -428,16 +451,16 @@ public class EanCommands {
             boolean shading = Boolean.parseBoolean(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setShading(shading);
                 }
                 return "Set shading of all layers to " + value + ".";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setShading(shading);
+            CloudConfig.cloudLayers[layerNumber-1].setShading(shading);
 
-            CloudLayer.writeCloudLayers();
-            return "Set shading of layer " + layerNumber + " to " + CloudLayer.cloudLayers[layerNumber-1].isShading() + ".";
+            CloudConfig.writeToDisk();
+            return "Set shading of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].isShading() + ".";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){
@@ -447,19 +470,19 @@ public class EanCommands {
 
     private static String setCloudSpeed(String layerNumberArg, String value) throws CommandSyntaxException {
         try{
-            double cloudSpeed = Double.parseDouble(value);
+            float cloudSpeed = Float.parseFloat(value);
 
             if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudLayer.cloudLayers){
+                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
                     cloudLayer.setCloudSpeed(cloudSpeed);
                 }
                 return "Set speed of all layers to x" + value + "speed.";
             }
             int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudLayer.cloudLayers[layerNumber-1].setCloudSpeed(cloudSpeed);
+            CloudConfig.cloudLayers[layerNumber-1].setCloudSpeed(cloudSpeed);
 
-            CloudLayer.writeCloudLayers();
-            return "Set speed of layer " + layerNumber + " to x" + CloudLayer.cloudLayers[layerNumber-1].getCloudSpeed() + " speed.";
+            CloudConfig.writeToDisk();
+            return "Set speed of layer " + layerNumber + " to x" + CloudConfig.cloudLayers[layerNumber-1].getCloudSpeed() + " speed.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
         } catch (IndexOutOfBoundsException e){

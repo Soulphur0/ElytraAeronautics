@@ -1,12 +1,13 @@
 package com.github.Soulphur0;
 
-import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
 import com.github.Soulphur0.config.EanCommands;
-import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.config.singletons.CloudLayer;
-import com.github.Soulphur0.config.singletons.ElytraFlight;
+import com.github.Soulphur0.config.clothConfig.EanConfig;
+import com.github.Soulphur0.config.singletons.CloudConfig;
+import com.github.Soulphur0.config.singletons.FlightConfig;
+import com.github.Soulphur0.integration.DependencyChecker;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
+import me.shedaniel.autoconfig.serializer.PartitioningSerializer;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.ActionResult;
 import org.apache.logging.log4j.LogManager;
@@ -20,16 +21,24 @@ public class ElytraAeronautics implements ModInitializer {
 	// Continued 17/03/23
 	@Override
 	public void onInitialize() {
-		AutoConfig.register(EanConfig.class, GsonConfigSerializer::new);
-		AutoConfig.getConfigHolder(EanConfig.class).registerSaveListener((configHolder, eanConfig)->{
-			CloudLayer.generateCloudLayers(eanConfig);
-			EanCloudRenderBehaviour.configUpdated = true;
-			return ActionResult.PASS;
-		});
-		AutoConfig.getConfigHolder(EanConfig.class).registerSaveListener(((configHolder, eanConfig) -> {
-			ElytraFlight.refresh(eanConfig);
-			return ActionResult.PASS;
-		}));
+		// ? Check for ClothConfig, and register config screen and listeners.
+		if (DependencyChecker.checkForClothConfig()){
+			// Register config class as config screen.
+			AutoConfig.register(EanConfig.class, PartitioningSerializer.wrap(GsonConfigSerializer::new));
+
+			// Register save config listener, this will load the config screen data to memory and write it to storage.
+			AutoConfig.getConfigHolder(EanConfig.class).registerSaveListener(((configHolder, eanConfig) -> {
+				FlightConfig.updateConfig(eanConfig.getFlightConfigScreen());
+				CloudConfig.updateConfig(eanConfig.getCloudConfigScreen());
+				return ActionResult.PASS;
+			}));
+		}
+
+		// ? Read data saved in disk directly to config instance.
+		FlightConfig.readFromDisk();
+		CloudConfig.readFromDisk();
+
+		// ? Register config command.
 		EanCommands.register();
 
 		LOGGER.info("Elytra Aeronautics initialized! Have a good flight!");

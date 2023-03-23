@@ -1,12 +1,11 @@
 
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.config.EanConfig;
-import com.github.Soulphur0.config.singletons.CloudLayer;
+import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.math.Color;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
@@ -21,170 +20,148 @@ import org.joml.Matrix4f;
 public class EanCloudRenderBehaviour {
 
     // $ Variables
-    private static boolean configToBeLoaded = true;
-    public static boolean configUpdated = false;
-    public static boolean layersUpdated = false;
-
     private static final Identifier CLOUDS = new Identifier("textures/environment/clouds.png");
 
     public static void ean_renderClouds(WorldRenderer instance, MatrixStack matrices, Matrix4f projectionMatrix, float tickDelta, double camPosX, double camPosY, double camPosZ){
         WorldRendererAccessors worldRenderer = ((WorldRendererAccessors)instance);
 
-        float vanillaCloudHeight = worldRenderer.getWorld().getDimensionEffects().getCloudsHeight();
+        // + Cloud rendering parameters.
+        RenderSystem.disableCull();
+        RenderSystem.enableBlend();
+        RenderSystem.enableDepthTest();
+        RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.depthMask(true);
 
-        if (!Float.isNaN(vanillaCloudHeight)) {
-            // + Cloud rendering parameters.
-            RenderSystem.disableCull();
-            RenderSystem.enableBlend();
-            RenderSystem.enableDepthTest();
-            RenderSystem.blendFuncSeparate(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
-            RenderSystem.depthMask(true);
+        // + Clear WorldRenderer's cloud buffer.
+        // FIXME clouds won't be marked as dirty if the player stays still.
+        //  I have to find a way to clear the buffer otherwise the memory leak present
+        //  eventually floods the memory if the player stays still.
+        if (worldRenderer.getCloudsDirty()) {
+            worldRenderer.setCloudsDirty(false);
+            if (worldRenderer.getCloudsBuffer() != null) {
+                worldRenderer.getCloudsBuffer().close();
+            }
+        }
 
-            // + Clear WorldRenderer's cloud buffer.
-            // FIXME clouds won't be marked as dirty if the player stays still.
-            //  I have to find a way to clear the buffer otherwise the memory leak present
-            //  eventually floods the memory if the player stays still.
-            if (worldRenderer.getCloudsDirty()) {
-                worldRenderer.setCloudsDirty(false);
+        // = Get cloud config manager
+        CloudConfig config = CloudConfig.getOrCreateInstance();
+
+        // + Build geometry for each cloud layer.
+        // * The geometry for each layer is built using its own parameters, and is stored in an array.
+        // * All values besides the geometry that are important for rendering are stored in an array too.
+        for (int layerNum = 0; layerNum < config.getNumberOfLayers(); layerNum++) {
+            // ? Load configured cloud layer.
+            CloudLayer layer = CloudConfig.cloudLayers[layerNum];
+
+            // = Rendering context parameters.
+            // ; Get cloud relative Y distance to the camera.
+            double cloudRenderAltitude = (double) (layer.getAltitude() - (float) camPosY + 0.33F);
+
+            // ; The layer's texture displacement towards the right.
+            layer.setDisplacement(layerNum * 64);
+
+            // ; Exact render altitude of the layer and store it in the altitudes array.
+            layer.setRenderAltitude((float) (cloudRenderAltitude / layer.getCloudThickness() - (double) MathHelper.floor(cloudRenderAltitude / layer.getCloudThickness())) * layer.getCloudThickness());
+
+            // ; Whether the layer is within a certain render distance.
+            layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
+            layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
+
+            // ; Color of the cloud layer
+            Color cloudColor = Color.ofTransparent(layer.getCloudColor());
+            Vec3d vec3d = new Vec3d(cloudColor.getRed() / 255.0, cloudColor.getGreen() / 255.0, cloudColor.getBlue() / 255.0);
+            worldRenderer.setCloudsBuffer(new VertexBuffer());
+
+            // ; Speed of the cloud layer
+            double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F * layer.getCloudSpeed()); // The multiplying constant determines the speed of clouds; default => 0.03F
+
+            // Maybe used to position  the pivot of the clouds within a relative position to the player's camera.
+            double l = (camPosX + k) / 12.0D;
+            double n = camPosZ / 12.0D + 0.33000001311302185D;
+
+            // Used to precisely position the pivot
+            l -= (double) (MathHelper.floor(l / 2048.0D) * 2048);
+            n -= (double) (MathHelper.floor(n / 2048.0D) * 2048);
+
+            // Used to translate the clouds little by little, a fraction of their position at a time.
+            layer.setTranslationX((float) (l - (double) MathHelper.floor(l)));
+            layer.setTranslationZ((float) (n - (double) MathHelper.floor(n)));
+
+            // ; Geometry of the cloud layer.
+            BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
+            layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
+
+            // = Store later object in the layers array to later render.
+            CloudConfig.cloudLayers[layerNum] = layer;
+
+            // TODO Find out what these parameters do...
+            int r = (int) Math.floor(l);
+            int s = (int) Math.floor(cloudRenderAltitude / config.getCloudThickness());
+            int t = (int) Math.floor(n);
+
+            // ? Mark clouds as dirty
+            if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(vec3d) > 2.0E-4D) {
+                worldRenderer.setLastCloudsBlockX(r);
+                worldRenderer.setLastCloudsBlockY(s);
+                worldRenderer.setLastCloudsBlockZ(t);
+                worldRenderer.setLastCloudsColor(vec3d);
+                worldRenderer.setLastCloudRenderMode(worldRenderer.getClient().options.getCloudRenderModeValue());
+                worldRenderer.setCloudsDirty(true);
+            }
+        }
+
+        // + Render cloud geometry.
+        // * Using the previously generated array, clouds are rendered with their own settings.
+        for (CloudLayer layer : CloudConfig.cloudLayers) {
+
+            // > Added this conditional clause.
+            // < Since geometries are set to null after they are drawn a couple of times.
+            // < Most likely because they are cleared off by the garbage collector, but I don't know that much about OpenGL ATM.
+            if (layer.getVertexGeometry() != null) {
+                worldRenderer.getCloudsBuffer().bind();
+                worldRenderer.getCloudsBuffer().upload(layer.getVertexGeometry());
+                VertexBuffer.unbind();
+
+                // * Get shader, texture and background to draw with cloud geometry.
+                RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+                RenderSystem.setShaderTexture(0, CLOUDS);
+                BackgroundRenderer.setFogBlack();
+
+                // * Scale cloud geometry to cloud size and translate it.
+                matrices.push();
+                matrices.scale(12.0F, 1.0F, 12.0F);
+                matrices.translate(-layer.getTranslationX(), layer.getRenderAltitude(), -layer.getTranslationZ());
+
+                // * Render clouds
                 if (worldRenderer.getCloudsBuffer() != null) {
-                    worldRenderer.getCloudsBuffer().close();
-                }
-            }
-
-            // = Load config.
-            EanConfig config = AutoConfig.getConfigHolder(EanConfig.class).getConfig();
-
-            // = Create layer array if the config was updated or first ever loaded.
-            if (config.generateDefaultPreset || configUpdated){
-                CloudLayer.generateCloudLayers(config);
-                config.generateDefaultPreset = false;
-                configUpdated = false;
-                layersUpdated = true;
-            }
-
-            // = Load stored cloud layers into memory.
-            if (configToBeLoaded || layersUpdated) {
-                CloudLayer.readCloudLayers();
-                configToBeLoaded = false;
-                layersUpdated = false;
-            }
-
-            // + Build geometry for each cloud layer.
-            // * The geometry for each layer is built using its own parameters, and is stored in an array.
-            // * All values besides the geometry that are important for rendering are stored in an array too.
-            for (int layerNum = 0; layerNum < config.numberOfLayers; layerNum++) {
-                // ? Load configured cloud layer.
-                CloudLayer layer = CloudLayer.cloudLayers[layerNum];
-
-                // = Rendering context parameters.
-                // ; Get cloud relative Y distance to the camera.
-                double cloudRenderAltitude = (double) (layer.getAltitude() - (float) camPosY + 0.33F);
-
-                // ; The layer's texture displacement towards the right.
-                layer.setDisplacement(layerNum * 64);
-
-                // ; Exact render altitude of the layer and store it in the altitudes array.
-                layer.setRenderAltitude((float) (cloudRenderAltitude / layer.getCloudThickness() - (double) MathHelper.floor(cloudRenderAltitude / layer.getCloudThickness())) * layer.getCloudThickness());
-
-                // ; Whether the layer is within a certain render distance.
-                layer.setWithinRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getVerticalRenderDistance());
-                layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
-
-                // ; Color of the cloud layer
-                Color cloudColor = Color.ofTransparent(layer.getCloudColor());
-                Vec3d vec3d = new Vec3d(cloudColor.getRed() / 255.0, cloudColor.getGreen() / 255.0, cloudColor.getBlue() / 255.0);
-                worldRenderer.setCloudsBuffer(new VertexBuffer());
-
-                // ; Speed of the cloud layer
-                double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F * layer.getCloudSpeed()); // The multiplying constant determines the speed of clouds; default => 0.03F
-
-                // Maybe used to position  the pivot of the clouds within a relative position to the player's camera.
-                double l = (camPosX + k) / 12.0D;
-                double n = camPosZ / 12.0D + 0.33000001311302185D;
-
-                // Used to precisely position the pivot
-                l -= (double) (MathHelper.floor(l / 2048.0D) * 2048);
-                n -= (double) (MathHelper.floor(n / 2048.0D) * 2048);
-
-                // Used to translate the clouds little by little, a fraction of their position at a time.
-                layer.setTranslationX((float) (l - (double) MathHelper.floor(l)));
-                layer.setTranslationZ((float) (n - (double) MathHelper.floor(n)));
-
-                // ; Geometry of the cloud layer.
-                BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-                layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
-
-                // = Store later object in the layers array to later render.
-                CloudLayer.cloudLayers[layerNum] = layer;
-
-                // TODO Find out what these parameters do...
-                int r = (int) Math.floor(l);
-                int s = (int) Math.floor(cloudRenderAltitude / config.cloudThickness);
-                int t = (int) Math.floor(n);
-
-                // ? Mark clouds as dirty
-                if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(vec3d) > 2.0E-4D) {
-                    worldRenderer.setLastCloudsBlockX(r);
-                    worldRenderer.setLastCloudsBlockY(s);
-                    worldRenderer.setLastCloudsBlockZ(t);
-                    worldRenderer.setLastCloudsColor(vec3d);
-                    worldRenderer.setLastCloudRenderMode(worldRenderer.getClient().options.getCloudRenderModeValue());
-                    worldRenderer.setCloudsDirty(true);
-                }
-            }
-
-            // + Render cloud geometry.
-            // * Using the previously generated array, clouds are rendered with their own settings.
-            for (CloudLayer layer : CloudLayer.cloudLayers) {
-
-                // > Added this conditional clause.
-                // < Since geometries are set to null after they are drawn a couple of times.
-                // < Most likely because they are cleared off by the garbage collector, but I don't know that much about OpenGL ATM.
-                if (layer.getVertexGeometry() != null) {
                     worldRenderer.getCloudsBuffer().bind();
-                    worldRenderer.getCloudsBuffer().upload(layer.getVertexGeometry());
-                    VertexBuffer.unbind();
+                    int u = worldRenderer.getLastCloudRenderMode() == CloudRenderMode.FANCY ? 0 : 1;
 
-                    // * Get shader, texture and background to draw with cloud geometry.
-                    RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
-                    RenderSystem.setShaderTexture(0, CLOUDS);
-                    BackgroundRenderer.setFogBlack();
-
-                    // * Scale cloud geometry to cloud size and translate it.
-                    matrices.push();
-                    matrices.scale(12.0F, 1.0F, 12.0F);
-                    matrices.translate(-layer.getTranslationX(), layer.getRenderAltitude(), -layer.getTranslationZ());
-
-                    // * Render clouds
-                    if (worldRenderer.getCloudsBuffer() != null) {
-                        worldRenderer.getCloudsBuffer().bind();
-                        int u = worldRenderer.getLastCloudRenderMode() == CloudRenderMode.FANCY ? 0 : 1;
-
-                        for (int v = u; v < 2; ++v) {
-                            if (!layer.isShading()){
-                                if (v == 0) {
-                                    RenderSystem.colorMask(false, false, false, false);
-                                } else {
-                                    RenderSystem.colorMask(true, true, true, true);
-                                }
+                    for (int v = u; v < 2; ++v) {
+                        if (!layer.isShading()){
+                            if (v == 0) {
+                                RenderSystem.colorMask(false, false, false, false);
+                            } else {
+                                RenderSystem.colorMask(true, true, true, true);
                             }
-
-                            ShaderProgram shaderProgram = RenderSystem.getShader();
-                            worldRenderer.getCloudsBuffer().draw(matrices.peek().getPositionMatrix(), projectionMatrix, shaderProgram);
                         }
 
-                        VertexBuffer.unbind();
+                        ShaderProgram shaderProgram = RenderSystem.getShader();
+                        worldRenderer.getCloudsBuffer().draw(matrices.peek().getPositionMatrix(), projectionMatrix, shaderProgram);
                     }
 
-                    // * Finish cloud rendering.
-                    matrices.pop();
-
+                    VertexBuffer.unbind();
                 }
+
+                // * Finish cloud rendering.
+                matrices.pop();
+
             }
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderSystem.enableCull();
-            RenderSystem.disableBlend();
         }
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableCull();
+        RenderSystem.disableBlend();
+
     }
 
     private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
@@ -236,7 +213,7 @@ public class EanCloudRenderBehaviour {
         int northwestSpan = (int)Math.round((-layer.getHorizontalRenderDistance() / 4.0F));
         int southeastSpan = (int)Math.round((layer.getHorizontalRenderDistance() / 4.0F) - 1);
 
-        if ((layer.getCloudType().equals(CloudLayer.CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudLayer.CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
+        if ((layer.getCloudType().equals(CloudConfig.CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudConfig.CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
             // + The following 'for' loop counters determine cloud render distance.
             // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
@@ -324,7 +301,7 @@ public class EanCloudRenderBehaviour {
                     }
                 }
             }
-        } else if ((layer.getCloudType().equals(CloudLayer.CloudTypes.FAST) || layer.getCloudType().equals(CloudLayer.CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
+        } else if ((layer.getCloudType().equals(CloudConfig.CloudTypes.FAST) || layer.getCloudType().equals(CloudConfig.CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
             for(westToEastSpan = northwestSpan - displacementInQuadrants; westToEastSpan <= southeastSpan - displacementInQuadrants; ++westToEastSpan) {
                 for(northToSouthSpan = northwestSpan; northToSouthSpan <= southeastSpan; ++northToSouthSpan) {
                     float westToEastDrawPos = (float)(westToEastSpan * 8);
