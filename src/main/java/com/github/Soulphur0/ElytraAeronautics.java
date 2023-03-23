@@ -17,6 +17,8 @@ public class ElytraAeronautics implements ModInitializer {
 
 	public static final Logger LOGGER = LogManager.getLogger("ElytraAeronautics");
 
+	// TODO: This will be a future conflict; ConfigSystemRefactorization started in 16/03/23
+	// Continued 17/03/23
 	@Override
 	public void onInitialize() {
 		// ? Check for ClothConfig, and register config screen and listeners.
