@@ -55,6 +55,9 @@ public class CloudConfig {
     @Expose
     public static CloudLayer[] cloudLayers;
 
+    // = Config screen
+    public static CloudConfigScreen configScreen;
+
     public static CloudConfig getOrCreateInstance(){
         if (instance == null){
             instance = new CloudConfig();
@@ -82,7 +85,7 @@ public class CloudConfig {
         instance.setCloudThickness(config.cloudThickness);
         instance.setCloudColor(config.cloudColor);
         instance.setCloudOpacity(config.cloudOpacity);
-        instance.setShading(config.shading);
+        instance.setShading(config.cloudShading);
 
         // Apply changes to all cloud layers.
         cloudLayers = new CloudLayer[getOrCreateInstance().getNumberOfLayers()];
@@ -103,6 +106,24 @@ public class CloudConfig {
         }
 
         writeCloudLayers();
+    }
+
+    // ? Updates the config screen if settings were changed via command.
+    public static void updateConfigScreen(){
+        if (configScreen == null) return;
+
+        configScreen.useEanClouds = instance.isUseEanClouds();
+        configScreen.numberOfLayers = instance.getNumberOfLayers();
+        configScreen.firstLayerAltitude = instance.getFirstLayerAltitude();
+        configScreen.distanceBetweenLayers = instance.getDistanceBetweenLayers();
+        configScreen.verticalRenderDistance = instance.getVerticalRenderDistance();
+        configScreen.horizontalRenderDistance = instance.getHorizontalRenderDistance();
+        configScreen.lodRenderDistance = instance.getLodRenderDistance();
+        configScreen.cloudThickness = instance.getCloudThickness();
+        configScreen.cloudColor = instance.getCloudColor();
+        configScreen.cloudOpacity = instance.getCloudOpacity();
+        configScreen.cloudShading = instance.isShading();
+        configScreen.cloudSpeed = instance.getCloudSpeed();
     }
 
     // $ Non-ClothConfig config updater

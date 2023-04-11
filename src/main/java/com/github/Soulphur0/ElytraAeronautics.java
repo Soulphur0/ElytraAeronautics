@@ -32,6 +32,10 @@ public class ElytraAeronautics implements ModInitializer {
 				CloudConfig.updateConfig(eanConfig.getCloudConfigScreen());
 				return ActionResult.PASS;
 			}));
+
+			// Store config screens in each singleton, in order to update the config screen in case values were changed via command.
+			FlightConfig.configScreen = AutoConfig.getConfigHolder(EanConfig.class).getConfig().getFlightConfigScreen();
+			CloudConfig.configScreen = AutoConfig.getConfigHolder(EanConfig.class).getConfig().getCloudConfigScreen();
 		}
 
 		// ? Read data saved in disk directly to config instance.

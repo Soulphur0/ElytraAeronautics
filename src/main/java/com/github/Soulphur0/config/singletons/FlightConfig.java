@@ -1,8 +1,11 @@
 package com.github.Soulphur0.config.singletons;
 
+import com.github.Soulphur0.config.clothConfig.EanConfig;
 import com.github.Soulphur0.config.clothConfig.FlightConfigScreen;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.Expose;
+import me.shedaniel.autoconfig.AutoConfig;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -25,7 +28,11 @@ public class FlightConfig {
     private float realignAngle = 0.0F;
     private float realignRate = 0.1F;
 
-    private static FlightConfig instance;
+    // = Config instance
+    public static FlightConfig instance;
+
+    // = Config screen
+    public static FlightConfigScreen configScreen;
 
     public static FlightConfig getOrCreateInstance() {
         if (instance == null){
@@ -49,6 +56,22 @@ public class FlightConfig {
         instance.setRealignRate(config.realignRate);
     }
 
+    // ? Updates the config screen if settings were changed via command.
+    public static void updateConfigScreen(){
+        if (configScreen == null) return;
+
+        configScreen.altitudeDeterminesSpeed = instance.isAltitudeDeterminesSpeed();
+        configScreen.minSpeed = instance.getMinSpeed();
+        configScreen.maxSpeed = instance.getMaxSpeed();
+        configScreen.minHeight = instance.getMinHeight();
+        configScreen.maxHeight = instance.getMaxHeight();
+        configScreen.sneakingRealignsPitch = instance.isSneakingRealignsPitch();
+        configScreen.realignAngle = instance.getRealignAngle();
+        configScreen.realignRate = instance.getRealignRate();
+
+        AutoConfig.getConfigHolder(EanConfig.class).save();
+    }
+
     // $ Non-ClothConfig config updater
     // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
 
@@ -63,7 +86,7 @@ public class FlightConfig {
             if (!directory.exists())
                 directory.mkdir();
 
-            File file = new File("config/ElytraAeronautics/flight_settings.json");
+            File file = new File("config/ElytraAeronautics/elytra_flight_settings.json");
 
             // If file doesn't exist yet, create instance with default values and write it to disk.
             if (file.createNewFile()) {
@@ -91,7 +114,7 @@ public class FlightConfig {
         String json = gson.toJson(instance);
 
         try {
-            FileWriter writer = new FileWriter("config/ElytraAeronautics/flight_settings.json");
+            FileWriter writer = new FileWriter("config/ElytraAeronautics/elytra_flight_settings.json");
             writer.write(json);
             writer.close();
         } catch (IOException e){

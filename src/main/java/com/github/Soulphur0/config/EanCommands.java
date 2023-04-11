@@ -153,6 +153,7 @@ public class EanCommands {
             boolean altitudeDeterminesSpeed = Boolean.parseBoolean(value);
             FlightConfig.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed.";
         } catch (Exception e){
@@ -165,6 +166,7 @@ public class EanCommands {
             double minSpeed = Double.parseDouble(value);
             FlightConfig.getOrCreateInstance().setMinSpeed(minSpeed);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return "Minimum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
@@ -177,6 +179,7 @@ public class EanCommands {
             double maxSpeed = Double.parseDouble(value);
             FlightConfig.getOrCreateInstance().setMaxSpeed(maxSpeed);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return "Maximum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
@@ -189,6 +192,7 @@ public class EanCommands {
             double minHeight = Double.parseDouble(value);
             FlightConfig.getOrCreateInstance().setMinHeight(minHeight);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return "The minimum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
@@ -201,6 +205,7 @@ public class EanCommands {
             double maxHeight = Double.parseDouble(value);
             FlightConfig.getOrCreateInstance().setMaxHeight(maxHeight);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return "The maximum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
@@ -213,6 +218,7 @@ public class EanCommands {
             boolean sneakingRealignsPitch = Boolean.parseBoolean(value);
             FlightConfig.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return (sneakingRealignsPitch) ? "Sneaking mid flight now realigns flight pitch." : "Sneaking mid flight no longer realigns flight pitch.";
         } catch (Exception e){
@@ -225,6 +231,7 @@ public class EanCommands {
             float realignAngle = Float.parseFloat(value);
             FlightConfig.getOrCreateInstance().setRealignAngle(realignAngle);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return "The realign angle is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
@@ -237,6 +244,7 @@ public class EanCommands {
             float realignRate = Float.parseFloat(value);
             FlightConfig.getOrCreateInstance().setRealignRate(realignRate);
 
+            FlightConfig.updateConfigScreen();
             FlightConfig.writeToDisk();
             return "The realign rate is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
@@ -250,6 +258,7 @@ public class EanCommands {
             boolean useEanCloudRendering = Boolean.parseBoolean(value);
             CloudConfig.getOrCreateInstance().setUseEanClouds(useEanCloudRendering);
 
+            CloudConfig.updateConfigScreen();
             CloudConfig.writeToDisk();
             return (useEanCloudRendering) ? "Elytra Aeronautics cloud rendering is now enabled." : "Elytra Aeronautics cloud rendering is now disabled.";
         } catch (Exception e){
@@ -262,6 +271,7 @@ public class EanCommands {
             int amount = Integer.parseInt(value);
             CloudConfig.getOrCreateInstance().setNumberOfLayers(amount);
 
+            CloudConfig.updateConfigScreen();
             CloudConfig.writeToDisk();
             return "Set number of cloud layers to " + amount;
         } catch (NumberFormatException e){
