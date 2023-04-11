@@ -17,15 +17,23 @@ public class FlightConfig {
     // = Elytra flight attributes
 
     // ; Flight speed settings.
+    @Expose
     private boolean altitudeDeterminesSpeed = true;
+    @Expose
     private double minSpeed = 30.35;
+    @Expose
     private double maxSpeed = 257.22;
+    @Expose
     private double minHeight = 250.0;
+    @Expose
     private double maxHeight = 1000.0;
 
     // ; Flight alignment settings.
+    @Expose
     private boolean sneakingRealignsPitch = true;
+    @Expose
     private float realignAngle = 0.0F;
+    @Expose
     private float realignRate = 0.1F;
 
     // = Config instance
