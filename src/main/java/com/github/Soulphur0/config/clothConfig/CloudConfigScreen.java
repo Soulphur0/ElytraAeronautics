@@ -10,9 +10,14 @@ public class CloudConfigScreen implements ConfigData {
     public CloudConfigScreen() {
     }
 
+
+    @ConfigEntry.Gui.PrefixText
+    @ConfigEntry.Gui.Tooltip(count = 7)
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public EanConfig.Info info = EanConfig.Info.INFO;
+    @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Category(value ="cloud_settings")
     public boolean useEanClouds = true;
-    @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Category(value ="cloud_settings")
     public int numberOfLayers = 2;
     @ConfigEntry.Category(value ="cloud_settings")
@@ -36,9 +41,11 @@ public class CloudConfigScreen implements ConfigData {
     @ConfigEntry.ColorPicker
     public int cloudColor = 0xffffff;
     @ConfigEntry.Category(value ="cloud_settings")
-    public float cloudOpacity = 0.8F;
-    @ConfigEntry.Category(value ="cloud_settings")
-    public boolean shading = true;
-    @ConfigEntry.Category(value ="cloud_settings")
     public float cloudSpeed = 1.0F;
+    @ConfigEntry.Category(value ="cloud_settings")
+    @ConfigEntry.Gui.Tooltip(count = 2)
+    public boolean cloudShading = true;
+    @ConfigEntry.Category(value ="cloud_settings")
+    public float cloudOpacity = 0.8F;
+
 }

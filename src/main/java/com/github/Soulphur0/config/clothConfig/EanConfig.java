@@ -23,4 +23,8 @@ public class EanConfig extends PartitioningSerializer.GlobalData {
     public CloudConfigScreen getCloudConfigScreen() {
         return cloudConfigScreen;
     }
+
+    public enum Info {
+        INFO
+    }
 }

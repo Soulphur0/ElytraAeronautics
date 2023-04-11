@@ -10,6 +10,10 @@ public class FlightConfigScreen implements ConfigData {
 
     }
 
+    @ConfigEntry.Gui.PrefixText
+    @ConfigEntry.Gui.Tooltip(count = 6)
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public EanConfig.Info info = EanConfig.Info.INFO;
     @ConfigEntry.Category(value ="elytra_flight_settings")
     @ConfigEntry.Gui.PrefixText
     @ConfigEntry.Gui.Tooltip(count = 2)
@@ -35,7 +39,7 @@ public class FlightConfigScreen implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public float realignAngle = 0.0F;
     @ConfigEntry.Category(value ="elytra_flight_settings")
-    @ConfigEntry.Gui.Tooltip(count = 2)
+    @ConfigEntry.Gui.Tooltip
     public float realignRate = 0.1F;
 
 }
