@@ -30,16 +30,8 @@ dependencies {
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	// $ Cloth config (required)
-	modApi("me.shedaniel.cloth:cloth-config-fabric:9.0.93") {
-		exclude(group: "net.fabricmc.fabric-api")
-	}
-
-	// ? Fabric API. (non-required)
+	// ? Fabric API.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	// ? Modmenu (optional)
-	modImplementation "com.terraformersmc:modmenu:5.0.1"
 
 	// + LlamaLad's MixinExtras (embedded)
 	include(implementation("com.github.LlamaLad7:MixinExtras:0.1.0"))

@@ -1,6 +1,5 @@
 package com.github.Soulphur0.config.singletons;
 
-import com.github.Soulphur0.config.clothConfig.CloudConfigScreen;
 import com.github.Soulphur0.config.objects.CloudLayer;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -55,9 +54,6 @@ public class CloudConfig {
     @Expose
     public static CloudLayer[] cloudLayers;
 
-    // = Config screen
-    public static CloudConfigScreen configScreen;
-
     public static CloudConfig getOrCreateInstance(){
         if (instance == null){
             instance = new CloudConfig();
@@ -65,71 +61,11 @@ public class CloudConfig {
         return instance;
     }
 
-    // $ ClothConfig config updater.
-    // € Updates the config instance with the config screen values, which are automatically saved on disk.
-    public static void updateConfig(CloudConfigScreen config){
-        getOrCreateInstance();
-
-        // Load general config settings to the singleton instance.
-        instance.setNumberOfLayers(config.numberOfLayers);
-        instance.setFirstLayerAltitude(config.firstLayerAltitude);
-        instance.setDistanceBetweenLayers(config.distanceBetweenLayers);
-
-        instance.setUseEanClouds(config.useEanClouds);
-        instance.setCloudType(config.cloudType);
-        instance.setVerticalRenderDistance(config.verticalRenderDistance);
-        instance.setHorizontalRenderDistance(config.horizontalRenderDistance);
-        instance.setLodRenderDistance(config.lodRenderDistance);
-
-        instance.setCloudSpeed(config.cloudSpeed);
-        instance.setCloudThickness(config.cloudThickness);
-        instance.setCloudColor(config.cloudColor);
-        instance.setCloudOpacity(config.cloudOpacity);
-        instance.setShading(config.cloudShading);
-
-        // Apply changes to all cloud layers.
-        cloudLayers = new CloudLayer[getOrCreateInstance().getNumberOfLayers()];
-        for (int i = 0; i < getOrCreateInstance().numberOfLayers; i++) {
-            CloudLayer layer = new CloudLayer();
-            layer.setAltitude((getOrCreateInstance().firstLayerAltitude + getOrCreateInstance().distanceBetweenLayers * i));
-            layer.setCloudType(getOrCreateInstance().cloudType);
-            layer.setVerticalRenderDistance(getOrCreateInstance().verticalRenderDistance);
-            layer.setHorizontalRenderDistance(getOrCreateInstance().horizontalRenderDistance);
-            layer.setLodRenderDistance(getOrCreateInstance().lodRenderDistance);
-            layer.setCloudThickness(getOrCreateInstance().cloudThickness);
-            layer.setCloudColor(getOrCreateInstance().cloudColor);
-            layer.setCloudOpacity(getOrCreateInstance().cloudOpacity);
-            layer.setShading(getOrCreateInstance().shading);
-            layer.setCloudSpeed(getOrCreateInstance().cloudSpeed);
-
-            cloudLayers[i] = layer;
-        }
-
-        writeCloudLayers();
-    }
-
-    // ? Updates the config screen if settings were changed via command.
-    public static void updateConfigScreen(){
-        if (configScreen == null) return;
-
-        configScreen.useEanClouds = instance.isUseEanClouds();
-        configScreen.numberOfLayers = instance.getNumberOfLayers();
-        configScreen.firstLayerAltitude = instance.getFirstLayerAltitude();
-        configScreen.distanceBetweenLayers = instance.getDistanceBetweenLayers();
-        configScreen.verticalRenderDistance = instance.getVerticalRenderDistance();
-        configScreen.horizontalRenderDistance = instance.getHorizontalRenderDistance();
-        configScreen.lodRenderDistance = instance.getLodRenderDistance();
-        configScreen.cloudThickness = instance.getCloudThickness();
-        configScreen.cloudColor = instance.getCloudColor();
-        configScreen.cloudOpacity = instance.getCloudOpacity();
-        configScreen.cloudShading = instance.isShading();
-        configScreen.cloudSpeed = instance.getCloudSpeed();
-    }
-
     // $ Non-ClothConfig config updater
     // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
 
-    // ? Only called once in mod initialization.
+    // ? Reads cloud config values from the cloud config file.
+    // ¿ Only called once in mod initialization.
     public static void readFromDisk(){
         // - Extract json as string.
         StringBuilder json = new StringBuilder();
@@ -141,7 +77,7 @@ public class CloudConfig {
 
             File file = new File("config/ElytraAeronautics/cloud_settings.json");
 
-            // If file doesn't exist yet, create instance with default values and write it to disk.
+            // _ If file doesn't exist yet, create instance with default values and write it to disk.
             // Also, the default cloud preset will be generated to be saved as well.
             if (file.createNewFile()) {
                 getOrCreateInstance();
@@ -234,7 +170,7 @@ public class CloudConfig {
     }
 
     // $ Cloud preset methods
-    // € Each method generated a different cloud preset, names registered in enum at the end.
+    // € Each method generates a different cloud preset, names are registered in an enum at the end.
     public static void cloudPreset_default(){
         cloudLayers = new CloudLayer[3];
 
@@ -276,8 +212,11 @@ public class CloudConfig {
             for (int i = 0; i < this.numberOfLayers; i++){
                 if (i < cloudLayers.length)
                     aux[i] = cloudLayers[i];
-                else
+                else{
                     aux[i] = new CloudLayer();
+                    aux[i].setAltitude(instance.getFirstLayerAltitude() + instance.getDistanceBetweenLayers() * i);
+                }
+
             }
             cloudLayers = aux;
         }
@@ -393,6 +332,7 @@ public class CloudConfig {
     public enum Presets {
         DEFAULT,
         PUFFY,
+        WINDY,
         RAINBOW,
         SKY_HIGHWAY,
         SEA_MIST

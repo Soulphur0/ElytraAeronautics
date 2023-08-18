@@ -22,9 +22,6 @@
     "main": [
       "com.github.Soulphur0.ElytraAeronautics"
     ],
-    "modmenu": [
-      "com.github.Soulphur0.integration.ModMenuIntegration"
-    ],
     "preLaunch": [
       "com.llamalad7.mixinextras.MixinExtrasBootstrap::init"
     ]

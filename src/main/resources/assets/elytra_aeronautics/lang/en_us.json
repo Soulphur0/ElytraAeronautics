@@ -45,7 +45,7 @@
   "text.autoconfig.ElytraAeronautics.option.cloudConfigScreen.info.@Tooltip[3]": "CLOUD-SPECIFIC INFO",
   "text.autoconfig.ElytraAeronautics.option.cloudConfigScreen.info.@Tooltip[4]": "- Cloud configuration is specific to each player and cannot be seen by other players. Your clouds will not appear to other players, and their clouds will not appear to you.",
   "text.autoconfig.ElytraAeronautics.option.cloudConfigScreen.info.@Tooltip[5]": "- This screen changes all of your cloud layers at once. If you want to modify each layer separately, you should use the config command.",
-  "text.autoconfig.ElytraAeronautics.option.cloudConfigScreen.info.@Tooltip[6]": "- You can save cloud layer presets you like or share them with friends by accessing the /config/ElytraAeronautics/cloud_layers.json file.",
+  "text.autoconfig.ElytraAeronautics.option.cloudConfigScreen.info.@Tooltip[6]": "- You can save cloud layer presets you like or share them with friends by accessing the /config/ElytraAeronautics/cloud_layers.json file in your Minecraft installation folder.",
 
   "text.autoconfig.ElytraAeronautics.option.cloudConfigScreen.useEanClouds.@PrefixText": "――― Cloud render settings",
 

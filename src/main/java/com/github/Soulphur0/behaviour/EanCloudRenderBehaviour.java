@@ -6,7 +6,6 @@ import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.shedaniel.math.Color;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.option.CloudRenderMode;
@@ -68,8 +67,13 @@ public class EanCloudRenderBehaviour {
             layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
 
             // ; Color of the cloud layer
-            Color cloudColor = Color.ofTransparent(layer.getCloudColor());
-            Vec3d vec3d = new Vec3d(cloudColor.getRed() / 255.0, cloudColor.getGreen() / 255.0, cloudColor.getBlue() / 255.0);
+            int cloudColor = layer.getCloudColor();
+
+            int red = (cloudColor >> 16) & 0xFF;
+            int green = (cloudColor >> 8) & 0xFF;
+            int blue = cloudColor & 0xFF;
+
+            Vec3d cloudColorVec3d = new Vec3d(red / 255.0, green / 255.0, blue / 255.0);
             worldRenderer.setCloudsBuffer(new VertexBuffer());
 
             // ; Speed of the cloud layer
@@ -89,7 +93,7 @@ public class EanCloudRenderBehaviour {
 
             // ; Geometry of the cloud layer.
             BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-            layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
+            layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, cloudColorVec3d)); // > Cloud rendering entry.
 
             // = Store later object in the layers array to later render.
             CloudConfig.cloudLayers[layerNum] = layer;
@@ -100,11 +104,11 @@ public class EanCloudRenderBehaviour {
             int t = (int) Math.floor(n);
 
             // ? Mark clouds as dirty
-            if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(vec3d) > 2.0E-4D) {
+            if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(cloudColorVec3d) > 2.0E-4D) {
                 worldRenderer.setLastCloudsBlockX(r);
                 worldRenderer.setLastCloudsBlockY(s);
                 worldRenderer.setLastCloudsBlockZ(t);
-                worldRenderer.setLastCloudsColor(vec3d);
+                worldRenderer.setLastCloudsColor(cloudColorVec3d);
                 worldRenderer.setLastCloudRenderMode(worldRenderer.getClient().options.getCloudRenderModeValue());
                 worldRenderer.setCloudsDirty(true);
             }
