@@ -12,6 +12,7 @@ import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static net.minecraft.server.command.CommandManager.argument;
@@ -62,6 +63,11 @@ public class EanCommands {
                                 for(int i = 1; i <= CloudConfig.cloudLayers.length; i++){
                                     suggestions.add(String.valueOf(i));
                                 }
+                            } else if (configMode.equals("CloudConfig") && arg1.equals("useEanCloudRendering")){
+                                suggestions.add("true");
+                                suggestions.add("false");
+                            } else if (configMode.equals("CloudConfig") && arg1.equals("setCloudLayerAmount")){
+                                suggestions.add("3");
                             }
                             return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
                         })
@@ -112,6 +118,40 @@ public class EanCommands {
 
                         // + Cloud layer attribute value.
                         .then(argument("value", string())
+                            .suggests((commandContext, suggestionsBuilder) -> {
+                                String configMode = StringArgumentType.getString(commandContext, "configMode");
+                                Collection<String> suggestions = new ArrayList<>();
+                                if (configMode.equals("CloudConfig")){
+                                    String layerNumber = StringArgumentType.getString(commandContext, "arg2");
+                                    String layerAttribute = StringArgumentType.getString(commandContext, "arg3");
+
+                                    if (Objects.equals(layerAttribute, "altitude")){
+                                        suggestions.add("192");
+                                    } else if (Objects.equals(layerAttribute, "cloudType")){
+                                        suggestions.add("LOD");
+                                        suggestions.add("Fancy");
+                                        suggestions.add("Fast");
+                                    } else if (Objects.equals(layerAttribute, "verticalRenderDistance")){
+                                        suggestions.add("1000");
+                                    } else if (Objects.equals(layerAttribute, "horizontalRenderDistance")){
+                                        suggestions.add("20");
+                                    } else if (Objects.equals(layerAttribute, "lodRenderDistance")){
+                                        suggestions.add("100");
+                                    } else if (Objects.equals(layerAttribute, "thickness")){
+                                        suggestions.add("4.0");
+                                    } else if (Objects.equals(layerAttribute, "color")){
+                                        suggestions.add("FFFFFF");
+                                    } else if (Objects.equals(layerAttribute, "opacity")){
+                                        suggestions.add("1.0");
+                                    } else if (Objects.equals(layerAttribute, "shading")){
+                                        suggestions.add("true");
+                                        suggestions.add("false");
+                                    } else if (Objects.equals(layerAttribute, "speed")){
+                                        suggestions.add("1.0");
+                                    }
+                                }
+                                return CommandSource.suggestMatching(suggestions, suggestionsBuilder);
+                            })
                             // < CloudLayer config execution.
                             .executes(context -> {
                                 String configMode = StringArgumentType.getString(context, "configMode");
