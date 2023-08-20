@@ -17,7 +17,7 @@ public class CloudLayer {
     @Expose
     private int horizontalRenderDistance = 20;
     @Expose
-    private float lodRenderDistance = 50.0F;
+    private float lodRenderDistance = 150.0F;
 
     // ; Cloud style settings
     @Expose
@@ -30,6 +30,8 @@ public class CloudLayer {
     private float cloudOpacity = 0.8F;
     @Expose
     private boolean shading = true;
+    @Expose
+    private boolean skyEffects = true;
 
     // = Contextual attributes for rendering
     private BufferBuilder.BuiltBuffer vertexGeometry; // The geometry of the processed cloud layer to later render.
@@ -179,5 +181,13 @@ public class CloudLayer {
 
     public void setTranslationZ(float translationZ) {
         this.translationZ = translationZ;
+    }
+
+    public boolean isSkyEffects() {
+        return skyEffects;
+    }
+
+    public void setSkyEffects(boolean skyEffects) {
+        this.skyEffects = skyEffects;
     }
 }

@@ -1,11 +1,8 @@
 package com.github.Soulphur0.config.singletons;
 
-import com.github.Soulphur0.config.clothConfig.EanConfig;
-import com.github.Soulphur0.config.clothConfig.FlightConfigScreen;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
-import me.shedaniel.autoconfig.AutoConfig;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -39,9 +36,6 @@ public class FlightConfig {
     // = Config instance
     public static FlightConfig instance;
 
-    // = Config screen
-    public static FlightConfigScreen configScreen;
-
     public static FlightConfig getOrCreateInstance() {
         if (instance == null){
             instance = new FlightConfig();
@@ -49,41 +43,11 @@ public class FlightConfig {
         return instance;
     }
 
-    // $ ClothConfig config updater.
-    // € Updates the config instance with the config screen values, which are automatically saved on disk.
-    public static void updateConfig(FlightConfigScreen config){
-        getOrCreateInstance();
-
-        instance.setAltitudeDeterminesSpeed(config.altitudeDeterminesSpeed);
-        instance.setMinSpeed(config.minSpeed);
-        instance.setMaxSpeed(config.maxSpeed);
-        instance.setMinHeight(config.minHeight);
-        instance.setMaxHeight(config.maxHeight);
-        instance.setSneakingRealignsPitch(config.sneakingRealignsPitch);
-        instance.setRealignAngle(config.realignAngle);
-        instance.setRealignRate(config.realignRate);
-    }
-
-    // ? Updates the config screen if settings were changed via command.
-    public static void updateConfigScreen(){
-        if (configScreen == null) return;
-
-        configScreen.altitudeDeterminesSpeed = instance.isAltitudeDeterminesSpeed();
-        configScreen.minSpeed = instance.getMinSpeed();
-        configScreen.maxSpeed = instance.getMaxSpeed();
-        configScreen.minHeight = instance.getMinHeight();
-        configScreen.maxHeight = instance.getMaxHeight();
-        configScreen.sneakingRealignsPitch = instance.isSneakingRealignsPitch();
-        configScreen.realignAngle = instance.getRealignAngle();
-        configScreen.realignRate = instance.getRealignRate();
-
-        AutoConfig.getConfigHolder(EanConfig.class).save();
-    }
-
     // $ Non-ClothConfig config updater
     // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
 
-    // ? Only called once in mod initialization.
+    // ? Reads flight config values from the flight config file.
+    // ¿ Only called once, in mod initialization.
     public static void readFromDisk(){
         // - Extract json as string
         StringBuilder json = new StringBuilder();
@@ -116,7 +80,8 @@ public class FlightConfig {
         instance = gson.fromJson(String.valueOf(json), FlightConfig.class);
     }
 
-    // ? Called every time the config is updated via command.
+    // ? Writes flight config values to the flight config file.
+    // ¿ Called every time the config is updated via command.
     public static void writeToDisk(){
         Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
         String json = gson.toJson(instance);

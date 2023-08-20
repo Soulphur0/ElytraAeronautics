@@ -6,7 +6,6 @@ import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.shedaniel.math.Color;
 import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.option.CloudRenderMode;
@@ -33,9 +32,6 @@ public class EanCloudRenderBehaviour {
         RenderSystem.depthMask(true);
 
         // + Clear WorldRenderer's cloud buffer.
-        // FIXME clouds won't be marked as dirty if the player stays still.
-        //  I have to find a way to clear the buffer otherwise the memory leak present
-        //  eventually floods the memory if the player stays still.
         if (worldRenderer.getCloudsDirty()) {
             worldRenderer.setCloudsDirty(false);
             if (worldRenderer.getCloudsBuffer() != null) {
@@ -68,8 +64,13 @@ public class EanCloudRenderBehaviour {
             layer.setWithinLodRenderDistance(Math.abs(layer.getAltitude() - camPosY) <= layer.getLodRenderDistance());
 
             // ; Color of the cloud layer
-            Color cloudColor = Color.ofTransparent(layer.getCloudColor());
-            Vec3d vec3d = new Vec3d(cloudColor.getRed() / 255.0, cloudColor.getGreen() / 255.0, cloudColor.getBlue() / 255.0);
+            int cloudColor = layer.getCloudColor();
+
+            int red = (cloudColor >> 16) & 0xFF;
+            int green = (cloudColor >> 8) & 0xFF;
+            int blue = cloudColor & 0xFF;
+
+            Vec3d configuredCloudColorVec3d = new Vec3d(red / 255.0, green / 255.0, blue / 255.0);
             worldRenderer.setCloudsBuffer(new VertexBuffer());
 
             // ; Speed of the cloud layer
@@ -87,24 +88,34 @@ public class EanCloudRenderBehaviour {
             layer.setTranslationX((float) (l - (double) MathHelper.floor(l)));
             layer.setTranslationZ((float) (n - (double) MathHelper.floor(n)));
 
+            // ; Multiply world renderer's cloud color with the user chosen color vector, allowing weather/night effect to apply to the clouds
+            Vec3d colorVec3d;
+            if (layer.isSkyEffects()){
+                Vec3d vec3d = worldRenderer.getWorld().getCloudsColor(tickDelta);
+                colorVec3d = vec3d.multiply(configuredCloudColorVec3d);
+            } else {
+                colorVec3d = configuredCloudColorVec3d;
+            }
+
             // ; Geometry of the cloud layer.
             BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-            layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, vec3d)); // > Cloud rendering entry.
+            layer.setVertexGeometry(ean_preProcessCloudLayerGeometry(layer, bufferBuilder, l, cloudRenderAltitude, n, colorVec3d)); // > Cloud geometry building.
 
             // = Store later object in the layers array to later render.
             CloudConfig.cloudLayers[layerNum] = layer;
 
-            // TODO Find out what these parameters do...
+            // TODO Find out what these parameters do... this might have to do with the current memory issues,
+            //  considering this handles marking clouds dirty for cache to be cleared.
             int r = (int) Math.floor(l);
-            int s = (int) Math.floor(cloudRenderAltitude / config.getCloudThickness());
+            int s = (int) Math.floor(cloudRenderAltitude / layer.getCloudThickness());
             int t = (int) Math.floor(n);
 
             // ? Mark clouds as dirty
-            if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(vec3d) > 2.0E-4D) {
+            if (r != worldRenderer.getLastCloudsBlockX() || s != worldRenderer.getLastCloudsBlockY() || t != worldRenderer.getLastCloudsBlockZ() || worldRenderer.getClient().options.getCloudRenderModeValue() != worldRenderer.getLastCloudRenderMode() || worldRenderer.getLastCloudsColor().squaredDistanceTo(configuredCloudColorVec3d) > 2.0E-4D) {
                 worldRenderer.setLastCloudsBlockX(r);
                 worldRenderer.setLastCloudsBlockY(s);
                 worldRenderer.setLastCloudsBlockZ(t);
-                worldRenderer.setLastCloudsColor(vec3d);
+                worldRenderer.setLastCloudsColor(configuredCloudColorVec3d);
                 worldRenderer.setLastCloudRenderMode(worldRenderer.getClient().options.getCloudRenderModeValue());
                 worldRenderer.setCloudsDirty(true);
             }

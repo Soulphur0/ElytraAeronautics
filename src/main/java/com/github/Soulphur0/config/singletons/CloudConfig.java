@@ -1,6 +1,5 @@
 package com.github.Soulphur0.config.singletons;
 
-import com.github.Soulphur0.config.clothConfig.CloudConfigScreen;
 import com.github.Soulphur0.config.objects.CloudLayer;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
@@ -18,35 +17,11 @@ public class CloudConfig {
 
     // ; Cloud positioning settings
     @Expose
-    private int numberOfLayers = 2;
-    @Expose
-    private float firstLayerAltitude = 192.0F;
-    @Expose
-    private float distanceBetweenLayers = 25.0F;
+    private int numberOfLayers = 3;
 
     // ; Cloud rendering settings
     @Expose
     private boolean useEanClouds = true;
-    @Expose
-    private CloudTypes cloudType = CloudTypes.LOD;
-    @Expose
-    private float verticalRenderDistance = 1000.0F;
-    @Expose
-    private int horizontalRenderDistance = 20;
-    @Expose
-    private float lodRenderDistance = 50.0F;
-
-    // ; Cloud style settings
-    @Expose
-    private float cloudSpeed = 1.0F;
-    @Expose
-    private float cloudThickness = 4.0F;
-    @Expose
-    private int cloudColor = 0xffffff;
-    @Expose
-    private float cloudOpacity = 0.8F;
-    @Expose
-    private boolean shading = true;
 
     // = Config instance
     public static CloudConfig instance;
@@ -55,9 +30,6 @@ public class CloudConfig {
     @Expose
     public static CloudLayer[] cloudLayers;
 
-    // = Config screen
-    public static CloudConfigScreen configScreen;
-
     public static CloudConfig getOrCreateInstance(){
         if (instance == null){
             instance = new CloudConfig();
@@ -65,71 +37,11 @@ public class CloudConfig {
         return instance;
     }
 
-    // $ ClothConfig config updater.
-    // € Updates the config instance with the config screen values, which are automatically saved on disk.
-    public static void updateConfig(CloudConfigScreen config){
-        getOrCreateInstance();
-
-        // Load general config settings to the singleton instance.
-        instance.setNumberOfLayers(config.numberOfLayers);
-        instance.setFirstLayerAltitude(config.firstLayerAltitude);
-        instance.setDistanceBetweenLayers(config.distanceBetweenLayers);
-
-        instance.setUseEanClouds(config.useEanClouds);
-        instance.setCloudType(config.cloudType);
-        instance.setVerticalRenderDistance(config.verticalRenderDistance);
-        instance.setHorizontalRenderDistance(config.horizontalRenderDistance);
-        instance.setLodRenderDistance(config.lodRenderDistance);
-
-        instance.setCloudSpeed(config.cloudSpeed);
-        instance.setCloudThickness(config.cloudThickness);
-        instance.setCloudColor(config.cloudColor);
-        instance.setCloudOpacity(config.cloudOpacity);
-        instance.setShading(config.cloudShading);
-
-        // Apply changes to all cloud layers.
-        cloudLayers = new CloudLayer[getOrCreateInstance().getNumberOfLayers()];
-        for (int i = 0; i < getOrCreateInstance().numberOfLayers; i++) {
-            CloudLayer layer = new CloudLayer();
-            layer.setAltitude((getOrCreateInstance().firstLayerAltitude + getOrCreateInstance().distanceBetweenLayers * i));
-            layer.setCloudType(getOrCreateInstance().cloudType);
-            layer.setVerticalRenderDistance(getOrCreateInstance().verticalRenderDistance);
-            layer.setHorizontalRenderDistance(getOrCreateInstance().horizontalRenderDistance);
-            layer.setLodRenderDistance(getOrCreateInstance().lodRenderDistance);
-            layer.setCloudThickness(getOrCreateInstance().cloudThickness);
-            layer.setCloudColor(getOrCreateInstance().cloudColor);
-            layer.setCloudOpacity(getOrCreateInstance().cloudOpacity);
-            layer.setShading(getOrCreateInstance().shading);
-            layer.setCloudSpeed(getOrCreateInstance().cloudSpeed);
-
-            cloudLayers[i] = layer;
-        }
-
-        writeCloudLayers();
-    }
-
-    // ? Updates the config screen if settings were changed via command.
-    public static void updateConfigScreen(){
-        if (configScreen == null) return;
-
-        configScreen.useEanClouds = instance.isUseEanClouds();
-        configScreen.numberOfLayers = instance.getNumberOfLayers();
-        configScreen.firstLayerAltitude = instance.getFirstLayerAltitude();
-        configScreen.distanceBetweenLayers = instance.getDistanceBetweenLayers();
-        configScreen.verticalRenderDistance = instance.getVerticalRenderDistance();
-        configScreen.horizontalRenderDistance = instance.getHorizontalRenderDistance();
-        configScreen.lodRenderDistance = instance.getLodRenderDistance();
-        configScreen.cloudThickness = instance.getCloudThickness();
-        configScreen.cloudColor = instance.getCloudColor();
-        configScreen.cloudOpacity = instance.getCloudOpacity();
-        configScreen.cloudShading = instance.isShading();
-        configScreen.cloudSpeed = instance.getCloudSpeed();
-    }
-
-    // $ Non-ClothConfig config updater
+    // $ Config updater
     // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
 
-    // ? Only called once in mod initialization.
+    // ? Reads cloud config values from the cloud config file.
+    // ¿ Only called once in mod initialization.
     public static void readFromDisk(){
         // - Extract json as string.
         StringBuilder json = new StringBuilder();
@@ -141,7 +53,7 @@ public class CloudConfig {
 
             File file = new File("config/ElytraAeronautics/cloud_settings.json");
 
-            // If file doesn't exist yet, create instance with default values and write it to disk.
+            // _ If file doesn't exist yet, create instance with default values and write it to disk.
             // Also, the default cloud preset will be generated to be saved as well.
             if (file.createNewFile()) {
                 getOrCreateInstance();
@@ -234,8 +146,9 @@ public class CloudConfig {
     }
 
     // $ Cloud preset methods
-    // € Each method generated a different cloud preset, names registered in enum at the end.
+    // € Each method generates a different cloud preset, names are registered in an enum at the end.
     public static void cloudPreset_default(){
+        getOrCreateInstance().setNumberOfLayers(3);
         cloudLayers = new CloudLayer[3];
 
         cloudLayers[0] = new CloudLayer();
@@ -247,6 +160,132 @@ public class CloudConfig {
 
         cloudLayers[2] = new CloudLayer();
         cloudLayers[2].setAltitude(1000.0D);
+    }
+
+    public static void cloudPreset_denseAndPuffy(){
+        getOrCreateInstance().setNumberOfLayers(5);
+        cloudLayers = new CloudLayer[5];
+
+        cloudLayers[0] = new CloudLayer();
+        cloudLayers[0].setAltitude(192.0D);
+        cloudLayers[0].setCloudType(CloudTypes.FANCY);
+
+        cloudLayers[1] = new CloudLayer();
+        cloudLayers[1].setAltitude(196.0D);
+        cloudLayers[1].setCloudType(CloudTypes.FANCY);
+
+        cloudLayers[2] = new CloudLayer();
+        cloudLayers[2].setAltitude(200.0D);
+        cloudLayers[2].setCloudType(CloudTypes.FANCY);
+
+        cloudLayers[3] = new CloudLayer();
+        cloudLayers[3].setAltitude(256.0D);
+        cloudLayers[3].setCloudType(CloudTypes.FANCY);
+
+        cloudLayers[4] = new CloudLayer();
+        cloudLayers[4].setAltitude(260.0D);
+        cloudLayers[4].setCloudType(CloudTypes.FANCY);
+    }
+
+    public static void cloudPreset_windy(){
+        getOrCreateInstance().setNumberOfLayers(2);
+        cloudLayers = new CloudLayer[2];
+
+        cloudLayers[0] = new CloudLayer();
+        cloudLayers[0].setAltitude(192.0D);
+        cloudLayers[0].setCloudType(CloudTypes.FANCY);
+        cloudLayers[0].setCloudSpeed(4.0F);
+
+        cloudLayers[1] = new CloudLayer();
+        cloudLayers[1].setAltitude(196.0D);
+        cloudLayers[1].setCloudType(CloudTypes.FAST);
+        cloudLayers[1].setCloudSpeed(8.0F);
+    }
+
+    public static void cloudPreset_rainbow(){
+        getOrCreateInstance().setNumberOfLayers(7);
+        cloudLayers = new CloudLayer[7];
+
+        cloudLayers[0] = new CloudLayer();
+        cloudLayers[0].setAltitude(192.0D);
+        cloudLayers[0].setCloudType(CloudTypes.FAST);
+        cloudLayers[0].setCloudSpeed(1.0F);
+        cloudLayers[0].setCloudColor(0xffffff);
+
+        cloudLayers[1] = new CloudLayer();
+        cloudLayers[1].setAltitude(196.0D);
+        cloudLayers[1].setCloudType(CloudTypes.FAST);
+        cloudLayers[1].setCloudSpeed(2.0F);
+        cloudLayers[1].setCloudColor(0xffa500);
+
+        cloudLayers[2] = new CloudLayer();
+        cloudLayers[2].setAltitude(200.0D);
+        cloudLayers[2].setCloudType(CloudTypes.FAST);
+        cloudLayers[2].setCloudSpeed(3.0F);
+        cloudLayers[2].setCloudColor(0xffff00);
+
+        cloudLayers[3] = new CloudLayer();
+        cloudLayers[3].setAltitude(204.0D);
+        cloudLayers[3].setCloudType(CloudTypes.FAST);
+        cloudLayers[3].setCloudSpeed(4.0F);
+        cloudLayers[3].setCloudColor(0x008000);
+
+        cloudLayers[4] = new CloudLayer();
+        cloudLayers[4].setAltitude(208.0D);
+        cloudLayers[4].setCloudType(CloudTypes.FAST);
+        cloudLayers[4].setCloudSpeed(5.0F);
+        cloudLayers[4].setCloudColor(0x0000ff);
+
+        cloudLayers[5] = new CloudLayer();
+        cloudLayers[5].setAltitude(212.0D);
+        cloudLayers[5].setCloudType(CloudTypes.FAST);
+        cloudLayers[5].setCloudSpeed(6.0F);
+        cloudLayers[5].setCloudColor(0x4b0082);
+
+        cloudLayers[6] = new CloudLayer();
+        cloudLayers[6].setAltitude(216.0D);
+        cloudLayers[6].setCloudType(CloudTypes.FAST);
+        cloudLayers[6].setCloudSpeed(7.0F);
+        cloudLayers[6].setCloudColor(0xee82ee);
+    }
+
+    public static void cloudPreset_skyHighway(){
+        getOrCreateInstance().setNumberOfLayers(3);
+        cloudLayers = new CloudLayer[3];
+
+        cloudLayers[0] = new CloudLayer();
+        cloudLayers[0].setAltitude(200.0D);
+        cloudLayers[0].setCloudType(CloudTypes.FANCY);
+        cloudLayers[0].setCloudSpeed(8.0F);
+        cloudLayers[0].setCloudColor(0x555555);
+
+        cloudLayers[1] = new CloudLayer();
+        cloudLayers[1].setAltitude(220.0D);
+        cloudLayers[1].setCloudType(CloudTypes.FAST);
+        cloudLayers[1].setCloudSpeed(8.0F);
+        cloudLayers[1].setCloudColor(0x555555);
+
+        cloudLayers[2] = new CloudLayer();
+        cloudLayers[2].setAltitude(250.0D);
+        cloudLayers[2].setCloudType(CloudTypes.FAST);
+        cloudLayers[2].setCloudSpeed(64.0F);
+        cloudLayers[2].setCloudColor(0xffff00);
+        cloudLayers[2].setSkyEffects(false);
+    }
+
+    public static void cloudPreset_seaMist(){
+        getOrCreateInstance().setNumberOfLayers(2);
+        cloudLayers = new CloudLayer[2];
+
+        cloudLayers[0] = new CloudLayer();
+        cloudLayers[0].setAltitude(192.0D);
+        cloudLayers[0].setCloudType(CloudTypes.FANCY);
+
+        cloudLayers[1] = new CloudLayer();
+        cloudLayers[1].setAltitude(63.0D);
+        cloudLayers[1].setCloudType(CloudTypes.FANCY);
+        cloudLayers[1].setCloudThickness(1.0F);
+        cloudLayers[1].setCloudOpacity(0.2F);
     }
 
     // $ GETTERS & SETTERS
@@ -274,107 +313,23 @@ public class CloudConfig {
         } else if (cloudLayers.length < this.numberOfLayers){
             CloudLayer[] aux = new CloudLayer[this.numberOfLayers];
             for (int i = 0; i < this.numberOfLayers; i++){
-                if (i < cloudLayers.length)
+                if (i < cloudLayers.length){
                     aux[i] = cloudLayers[i];
-                else
+                    aux[i].setAltitude(192.0 + 50.0 * i);
+                } else {
                     aux[i] = new CloudLayer();
+                    aux[i].setAltitude(192.0 + 50.0 * i);
+                }
             }
             cloudLayers = aux;
         }
     }
 
-    public float getFirstLayerAltitude() {
-        return firstLayerAltitude;
-    }
-
-    public void setFirstLayerAltitude(float firstLayerAltitude) {
-        this.firstLayerAltitude = firstLayerAltitude;
-    }
-
-    public float getDistanceBetweenLayers() {
-        return distanceBetweenLayers;
-    }
-
-    public void setDistanceBetweenLayers(float distanceBetweenLayers) {
-        this.distanceBetweenLayers = distanceBetweenLayers;
-    }
-
-    public CloudTypes getCloudType() {
-        return cloudType;
-    }
-
-    public void setCloudType(CloudTypes cloudType) {
-        this.cloudType = cloudType;
-    }
-
-    public float getVerticalRenderDistance() {
-        return verticalRenderDistance;
-    }
-
-    public void setVerticalRenderDistance(float verticalRenderDistance) {
-        this.verticalRenderDistance = verticalRenderDistance;
-    }
-
-    public int getHorizontalRenderDistance() {
-        return horizontalRenderDistance;
-    }
-
-    public void setHorizontalRenderDistance(int horizontalRenderDistance) {
-        this.horizontalRenderDistance = horizontalRenderDistance;
-    }
-
-    public float getLodRenderDistance() {
-        return lodRenderDistance;
-    }
-
-    public void setLodRenderDistance(float lodRenderDistance) {
-        this.lodRenderDistance = lodRenderDistance;
-    }
-
-    public float getCloudSpeed() {
-        return cloudSpeed;
-    }
-
-    public void setCloudSpeed(float cloudSpeed) {
-        this.cloudSpeed = cloudSpeed;
-    }
-
-    public float getCloudThickness() {
-        return cloudThickness;
-    }
-
-    public void setCloudThickness(float cloudThickness) {
-        this.cloudThickness = cloudThickness;
-    }
-
-    public int getCloudColor() {
-        return cloudColor;
-    }
-
-    public void setCloudColor(int cloudColor) {
-        this.cloudColor = cloudColor;
-    }
-
-    public float getCloudOpacity() {
-        return cloudOpacity;
-    }
-
-    public void setCloudOpacity(float cloudOpacity) {
-        this.cloudOpacity = cloudOpacity;
-    }
-
-    public boolean isShading() {
-        return shading;
-    }
-
-    public void setShading(boolean shading) {
-        this.shading = shading;
-    }
-
-    public enum CloudTypes {
-        LOD,
-        FAST,
-        FANCY
+    public enum Options {
+        useEanCloudRendering,
+        setCloudLayerAmount,
+        configCloudLayer,
+        loadPreset
     }
 
     public enum LayerAttributes {
@@ -387,12 +342,20 @@ public class CloudConfig {
         speed,
         color,
         opacity,
-        shading
+        shading,
+        skyEffects
+    }
+
+    public enum CloudTypes {
+        LOD,
+        FAST,
+        FANCY
     }
 
     public enum Presets {
         DEFAULT,
-        PUFFY,
+        DENSE_AND_PUFFY,
+        WINDY,
         RAINBOW,
         SKY_HIGHWAY,
         SEA_MIST

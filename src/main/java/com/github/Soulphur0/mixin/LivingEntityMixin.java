@@ -1,7 +1,6 @@
 package com.github.Soulphur0.mixin;
 
 import com.github.Soulphur0.behaviour.EanFlightBehaviour;
-import com.github.Soulphur0.config.singletons.FlightConfig;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -19,9 +18,10 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     @ModifyArg(method = "travel(Lnet/minecraft/util/math/Vec3d;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 6))
-    private Vec3d modifyVelocity(Vec3d vector){
-        if (FlightConfig.getOrCreateInstance().isAltitudeDeterminesSpeed())
-            return EanFlightBehaviour.ean_flightBehaviour(((LivingEntity)(Object)this));
+    private Vec3d ean_modifyVelocity(Vec3d vector){
+        Vec3d eanFlightVector = EanFlightBehaviour.ean_flightBehaviour(((LivingEntity)(Object)this));
+        if (eanFlightVector != null)
+            return eanFlightVector;
         else
             return vector;
     }

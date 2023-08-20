@@ -4,6 +4,7 @@
   "package": "com.github.Soulphur0.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "FireworkRocketEntityMixin"
   ],
   "client": [
     "CameraMixin",
