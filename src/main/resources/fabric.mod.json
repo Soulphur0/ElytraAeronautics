@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "Elytra aeronautics",
-  "description": "Fly faster with the higher you travel! For more information, visit the mod's Github page.",
+  "description": "Fly faster with the elytra the higher you travel and customise cloud layers at will! \nThis mod is highly configurable, use the '/ean' command without extra arguments for more information. \nFor an in-depth explanation regarding configuration, click the Website button above.",
   "authors": [
     "Soulphur"
   ],
