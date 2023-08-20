@@ -31,7 +31,7 @@ public class EanCommands {
                 ServerPlayerEntity player = context.getSource().getPlayer();
                 Text message = Text.literal("\n")
                         .append(Text.literal("Type '/ean' and press TAB to see available options.\nWrite '-help' at the end of each option to see its usage and default values.\n\n").formatted(Formatting.GOLD))
-                        .append(Text.literal("You can read an in-depth guide about this command ").append(Text.literal("clicking here.\n").formatted(Formatting.UNDERLINE).styled((style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/Soulphur0/ElytraAeronautics"))))));
+                        .append(Text.literal("You can read an in-depth guide about this command ").append(Text.literal("clicking here.\n").formatted(Formatting.UNDERLINE).styled((style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/Soulphur0/Soulphur-Mods-ResoucesAndChangelogs/blob/main/ElytraAeronautics/mod_resources/ean_command_guide.md"))))));
 
                 if (player != null)
                     player.sendMessage(message);
@@ -197,7 +197,7 @@ public class EanCommands {
                                             suggestions.add("1000");
                                         } else if (Objects.equals(layerAttribute, "horizontalRenderDistance")){
                                             suggestions.add("-help");
-                                            suggestions.add("20");
+                                            suggestions.add("15");
                                         } else if (Objects.equals(layerAttribute, "lodRenderDistance")){
                                             suggestions.add("-help");
                                             suggestions.add("150");
@@ -614,7 +614,7 @@ public class EanCommands {
                         --- Cloud layer horizontal render distance ---
                         Area of the sky that the selected cloud layer/s will occupy.
                         
-                        Default value: 20 (chunks) (Vanilla value)
+                        Default value: 15 (chunks) (Vanilla value)
                         """;
         try{
             int horizontalRenderDistance = Integer.parseInt(value);

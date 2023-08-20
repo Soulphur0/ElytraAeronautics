@@ -15,7 +15,7 @@ public class CloudLayer {
     @Expose
     private float verticalRenderDistance = 1000.0F;
     @Expose
-    private int horizontalRenderDistance = 20;
+    private int horizontalRenderDistance = 15;
     @Expose
     private float lodRenderDistance = 150.0F;
 
