@@ -4,11 +4,11 @@
   "package": "com.github.Soulphur0.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
-    "FireworkRocketEntityMixin"
+    "FireworkRocketEntityMixin",
+    "LivingEntityMixin"
   ],
   "client": [
     "CameraMixin",
-    "LivingEntityMixin",
     "WorldRendererAccessors",
     "WorldRendererMixin"
   ],

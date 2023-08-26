@@ -5,11 +5,14 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Scanner;
 
@@ -42,56 +45,69 @@ public class CloudConfig {
 
     // ? Reads cloud config values from the cloud config file.
     // ¿ Only called once in mod initialization.
-    public static void readFromDisk(){
-        // - Extract json as string.
+    public static void readFromDisk() {
+        // Obtain the configuration directory
+        Path configDir = FabricLoader.getInstance().getConfigDir();
+
+        // Define the path for the cloud config file within the config directory
+        Path configFile = configDir.resolve("ElytraAeronautics/cloud_settings.json");
+
         StringBuilder json = new StringBuilder();
         try {
             // Create dir if it doesn't exist.
-            File directory = new File("config/ElytraAeronautics");
+            File directory = configFile.getParent().toFile();
             if (!directory.exists())
                 directory.mkdir();
 
-            File file = new File("config/ElytraAeronautics/cloud_settings.json");
+            File file = configFile.toFile();
 
-            // _ If file doesn't exist yet, create instance with default values and write it to disk.
+            // If the file doesn't exist yet, create instance with default values and write it to disk.
             // Also, the default cloud preset will be generated to be saved as well.
             if (file.createNewFile()) {
                 getOrCreateInstance();
                 cloudPreset_default();
                 writeToDisk();
             } else {
-                Scanner reader = new Scanner(file);
-                while(reader.hasNextLine()){
-                    json.append(reader.nextLine());
+                FileReader reader = new FileReader(file);
+                int character;
+                while ((character = reader.read()) != -1) {
+                    json.append((char) character);
                 }
                 reader.close();
 
-                // + After reading general config from disk, read the cloud layers into array.
+                // After reading general config from disk, read the cloud layers into the array.
                 readCloudLayers();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // - Convert extracted string into the config instance.
+        // Convert extracted string into the config instance.
         Gson gson = new Gson();
-        instance = gson.fromJson(String.valueOf(json), CloudConfig.class);
+        instance = gson.fromJson(json.toString(), CloudConfig.class);
     }
 
     // ? Called every time the config is updated via command.
-    public static void writeToDisk(){
+    public static void writeToDisk() {
         Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
         String json = gson.toJson(instance);
 
+        // Obtain the configuration directory
+        Path configDir = FabricLoader.getInstance().getConfigDir();
+
+        // Define the path for the config file within the config directory
+        Path configFile = configDir.resolve("ElytraAeronautics/cloud_settings.json");
+
         try {
-            FileWriter writer = new FileWriter("config/ElytraAeronautics/cloud_settings.json");
+            // Write JSON to the config file
+            FileWriter writer = new FileWriter(configFile.toFile());
             writer.write(json);
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // + After writing general config to disk, write the cloud layers array into JSON.
+        // After writing general config to disk, write the cloud layers array into JSON.
         writeCloudLayers();
     }
 
@@ -197,7 +213,7 @@ public class CloudConfig {
         cloudLayers[0].setCloudSpeed(4.0F);
 
         cloudLayers[1] = new CloudLayer();
-        cloudLayers[1].setAltitude(196.0D);
+        cloudLayers[1].setAltitude(242.0D);
         cloudLayers[1].setCloudType(CloudTypes.FAST);
         cloudLayers[1].setCloudSpeed(8.0F);
     }
@@ -210,7 +226,7 @@ public class CloudConfig {
         cloudLayers[0].setAltitude(192.0D);
         cloudLayers[0].setCloudType(CloudTypes.FAST);
         cloudLayers[0].setCloudSpeed(1.0F);
-        cloudLayers[0].setCloudColor(0xffffff);
+        cloudLayers[0].setCloudColor(0xff0000);
 
         cloudLayers[1] = new CloudLayer();
         cloudLayers[1].setAltitude(196.0D);
@@ -303,6 +319,8 @@ public class CloudConfig {
 
     public void setNumberOfLayers(int numberOfLayers) {
         this.numberOfLayers = numberOfLayers;
+
+        if (cloudLayers == null) return;
 
         if (cloudLayers.length > this.numberOfLayers){
             CloudLayer[] aux = new CloudLayer[this.numberOfLayers];
