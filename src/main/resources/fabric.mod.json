@@ -22,6 +22,9 @@
     "main": [
       "com.github.Soulphur0.ElytraAeronautics"
     ],
+    "client": [
+      "com.github.Soulphur0.ElytraAeronauticsClient"
+    ],
     "preLaunch": [
       "com.llamalad7.mixinextras.MixinExtrasBootstrap::init"
     ]

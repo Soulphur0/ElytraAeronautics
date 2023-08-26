@@ -1,8 +1,11 @@
 package com.github.Soulphur0.behaviour;
 
+import com.github.Soulphur0.config.EanServerSettings;
 import com.github.Soulphur0.config.singletons.FlightConfig;
+import com.github.Soulphur0.networking.EanNetworkingUtilities;
 import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -10,12 +13,28 @@ public class EanFlightBehaviour {
 
     // : Flight entry point for injection/modification.
     static public Vec3d ean_flightBehaviour(LivingEntity player){
-        return ean_setupFlightCalc(player);
+        return ean_loadAndSyncFlightConfiguration(player);
+    }
+
+    // : Read FlightConfig from disk and sync it with the client.
+    private static Vec3d ean_loadAndSyncFlightConfiguration(LivingEntity player){
+
+        // . Order the client to sync settings with the server if the config has changed.
+        if (!player.getWorld().isClient()) {
+            if (EanServerSettings.settingsChanged){
+                EanNetworkingUtilities.syncAllClientsConfigWithServer((PlayerEntity) player);
+                EanServerSettings.settingsChanged = false;
+            }
+        }
+
+        // + Get config instance.
+        FlightConfig configInstance = FlightConfig.getOrCreateInstance();
+
+        return ean_setupFlightCalc(player, configInstance);
     }
 
     // : Calculations.
-    private static Vec3d ean_setupFlightCalc(LivingEntity player){
-        FlightConfig configInstance = FlightConfig.getOrCreateInstance();
+    private static Vec3d ean_setupFlightCalc(LivingEntity player, FlightConfig configInstance){
 
         // + Gradual pitch realignment
         if(configInstance.isSneakingRealignsPitch() && player.isSneaking()){

@@ -133,19 +133,20 @@ public class EanCommands {
                             String value = StringArgumentType.getString(context, "arg2");
                             String message = "";
 
-                            if (configMode.equals("FlightConfig")){
-                                switch (arg1) {
-                                    case "altitudeDeterminesSpeed" -> message = setAltitudeDeterminesSpeed(value);
-                                    case "minSpeed" -> message = setMinSpeed(value);
-                                    case "maxSpeed" -> message = setMaxSpeed(value);
-                                    case "minHeight" -> message = setMinHeight(value);
-                                    case "maxHeight" -> message = setMaxHeight(value);
-                                    case "sneakingRealignsPitch" -> message = setSneakingRealignsPitch(value);
-                                    case "realignAngle" -> message = setRealignAngle(value);
-                                    case "realignRate" -> message = setRealignRate(value);
-                                    default -> {
-                                    }
-                                }
+                            if (configMode.equals("FlightConfig") && (context.getSource().hasPermissionLevel(4) || context.getSource().getServer().isSingleplayer())){
+                                message = switch (arg1) {
+                                    case "altitudeDeterminesSpeed" -> setAltitudeDeterminesSpeed(value);
+                                    case "minSpeed" -> setMinSpeed(value);
+                                    case "maxSpeed" -> setMaxSpeed(value);
+                                    case "minHeight" -> setMinHeight(value);
+                                    case "maxHeight" -> setMaxHeight(value);
+                                    case "sneakingRealignsPitch" -> setSneakingRealignsPitch(value);
+                                    case "realignAngle" -> setRealignAngle(value);
+                                    case "realignRate" -> setRealignRate(value);
+                                    default -> throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
+                                };
+                            } else if (configMode.equals("FlightConfig") && !context.getSource().hasPermissionLevel(4)){
+                                context.getSource().sendMessage(Text.literal("You require to be an operator in order to change elytra flight settings.").formatted(Formatting.RED));
                             } else if (configMode.equals("CloudConfig")) {
                                 message = switch (arg1) {
                                     case "useEanCloudRendering" -> setUseEanCloudRendering(value);
@@ -209,7 +210,7 @@ public class EanCommands {
                                             suggestions.add("FFFFFF");
                                         } else if (Objects.equals(layerAttribute, "opacity")){
                                             suggestions.add("-help");
-                                            suggestions.add("1.0");
+                                            suggestions.add("0.8");
                                         } else if (Objects.equals(layerAttribute, "shading")){
                                             suggestions.add("-help");
                                             suggestions.add("true");
@@ -275,9 +276,13 @@ public class EanCommands {
                         """;
         try{
             boolean altitudeDeterminesSpeed = Boolean.parseBoolean(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setAltitudeDeterminesSpeed(altitudeDeterminesSpeed);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return (altitudeDeterminesSpeed) ? "Altitude now determines elytra flight speed." : "Altitude no longer determines elytra flight speed.";
         } catch (Exception e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -295,9 +300,13 @@ public class EanCommands {
                         """;
         try{
             double minSpeed = Double.parseDouble(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setMinSpeed(minSpeed);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return "Minimum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -315,9 +324,13 @@ public class EanCommands {
                         """;
         try{
             double maxSpeed = Double.parseDouble(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setMaxSpeed(maxSpeed);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return "Maximum flight speed is now " + value + "m/s";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -335,9 +348,13 @@ public class EanCommands {
                         """;
         try{
             double minHeight = Double.parseDouble(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setMinHeight(minHeight);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return "The minimum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -355,9 +372,13 @@ public class EanCommands {
                         """;
         try{
             double maxHeight = Double.parseDouble(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setMaxHeight(maxHeight);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return "The maximum height at which flight speed increases is now " + value + "m of altitude.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -376,9 +397,13 @@ public class EanCommands {
                         """;
         try{
             boolean sneakingRealignsPitch = Boolean.parseBoolean(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setSneakingRealignsPitch(sneakingRealignsPitch);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return (sneakingRealignsPitch) ? "Sneaking mid flight now realigns flight pitch." : "Sneaking mid flight no longer realigns flight pitch.";
         } catch (Exception e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -396,9 +421,13 @@ public class EanCommands {
                         """;
         try{
             float realignAngle = Float.parseFloat(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setRealignAngle(realignAngle);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return "The realign angle is now set to " + value + " degrees.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
@@ -416,9 +445,13 @@ public class EanCommands {
                         """;
         try{
             float realignRate = Float.parseFloat(value);
+
+            // Write new value to current config instance.
             FlightConfig.getOrCreateInstance().setRealignRate(realignRate);
 
+            // Write new value to disk, notifying settings change to the server.
             FlightConfig.writeToDisk();
+
             return "The realign rate is now set to " + value + " degrees-per-tick.";
         } catch (NumberFormatException e){
             throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();

@@ -1,13 +1,16 @@
 package com.github.Soulphur0.config.singletons;
 
+import com.github.Soulphur0.config.EanServerSettings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Scanner;
+import java.nio.file.Path;
 
 public class FlightConfig {
 
@@ -43,56 +46,96 @@ public class FlightConfig {
         return instance;
     }
 
-    // $ Non-ClothConfig config updater
-    // € Updates are done via setters in the command methods, where the writeToDisk method is called right after.
+    // $ Constructors
+    // € These are used within the scope of the class or EanServerSettings, networking is always handled around the latter.
+
+    // ? Without parameters.
+    // ¿ Used in the instance initializer method above.
+    public FlightConfig(){}
+
+    // ? With parameters.
+    // ¿ Used in the createFromBuffer() method of the ServerSettings class.
+    public FlightConfig(boolean altitudeDeterminesSpeed, double minSpeed, double maxSpeed, double minHeight, double maxHeight, boolean sneakingRealignsPitch, float realignAngle, float realignRate) {
+        this.altitudeDeterminesSpeed = altitudeDeterminesSpeed;
+        this.minSpeed = minSpeed;
+        this.maxSpeed = maxSpeed;
+        this.minHeight = minHeight;
+        this.maxHeight = maxHeight;
+        this.sneakingRealignsPitch = sneakingRealignsPitch;
+        this.realignAngle = realignAngle;
+        this.realignRate = realignRate;
+    }
+
+    //. NETWORKING
+    // ? Method to update the current singleton instance with the server's.
+    // ¿ Called in the EanClientPacketHandler class' receive() method. Basically a named setter; although not really related with networking, labeled as such for clarity purposes.
+    public static void updateClientSettings(FlightConfig flightConfig){
+        instance = flightConfig;
+    }
+
+    // $ Disk read/write
 
     // ? Reads flight config values from the flight config file.
-    // ¿ Only called once, in mod initialization.
-    public static void readFromDisk(){
-        // - Extract json as string
-        StringBuilder json = new StringBuilder();
+    // ¿ Called on upon joining any world, and whenever configuration is changed. // TODO: MAKE ITS USAGES REFLECT ITS DESCRIPTION
+    public static void readFromDisk() {
+        // Obtain the configuration directory
+        Path configDir = FabricLoader.getInstance().getConfigDir();
 
-        try{
-            // Create dir if it doesn't exist
-            File directory = new File("config/ElytraAeronautics");
+        // Define the path for the cloud config file within the config directory
+        Path configFile = configDir.resolve("ElytraAeronautics/elytra_flight_settings.json");
+
+        StringBuilder json = new StringBuilder();
+        try {
+            // Create dir if it doesn't exist.
+            File directory = configFile.getParent().toFile();
             if (!directory.exists())
                 directory.mkdir();
 
-            File file = new File("config/ElytraAeronautics/elytra_flight_settings.json");
+            File file = configFile.toFile();
 
-            // If file doesn't exist yet, create instance with default values and write it to disk.
+            // If the file doesn't exist yet, create instance with default values and write it to disk.
             if (file.createNewFile()) {
                 getOrCreateInstance();
                 writeToDisk();
             } else {
-                Scanner reader = new Scanner(file);
-                while(reader.hasNextLine()){
-                    json.append(reader.nextLine());
+                FileReader reader = new FileReader(file);
+                int character;
+                while ((character = reader.read()) != -1) {
+                    json.append((char) character);
                 }
                 reader.close();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        // - Convert extracted string into the config instance.
+        // Convert extracted string into the config instance.
         Gson gson = new Gson();
-        instance = gson.fromJson(String.valueOf(json), FlightConfig.class);
+        instance = gson.fromJson(json.toString(), FlightConfig.class);
     }
 
     // ? Writes flight config values to the flight config file.
     // ¿ Called every time the config is updated via command.
-    public static void writeToDisk(){
+    public static void writeToDisk() {
         Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
         String json = gson.toJson(instance);
 
+        // Obtain the configuration directory
+        Path configDir = FabricLoader.getInstance().getConfigDir();
+
+        // Define the path for the config file within the config directory
+        Path configFile = configDir.resolve("ElytraAeronautics/elytra_flight_settings.json");
+
         try {
-            FileWriter writer = new FileWriter("config/ElytraAeronautics/elytra_flight_settings.json");
+            // Write JSON to the config file
+            FileWriter writer = new FileWriter(configFile.toFile());
             writer.write(json);
             writer.close();
-        } catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
+
+        EanServerSettings.settingsChanged = true;
     }
 
     // $ GETTERS & SETTERS
