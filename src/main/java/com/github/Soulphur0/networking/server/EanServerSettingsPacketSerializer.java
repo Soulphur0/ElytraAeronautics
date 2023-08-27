@@ -1,4 +1,4 @@
-package com.github.Soulphur0.networking;
+package com.github.Soulphur0.networking.server;
 
 import net.minecraft.network.PacketByteBuf;
 

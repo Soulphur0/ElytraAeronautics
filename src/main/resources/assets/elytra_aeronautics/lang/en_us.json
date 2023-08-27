@@ -1,5 +1,6 @@
 {
   "command.error.attribute" : "The selected attribute doesn't exist",
   "command.error.value" : "Invalid or missing value for the selected attribute.",
+  "command.error.value.boolean": "Invalid value, it must be either 'true' or 'false'.",
   "command.error.layerNumber": "The layer specified doesn't exist."
 }

@@ -1,8 +1,9 @@
-package com.github.Soulphur0.config;
+package com.github.Soulphur0.config.commands;
 
-import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.EanClientSettings;
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.config.singletons.FlightConfig;
+import com.github.Soulphur0.networking.server.EanServerPacketSender;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -79,10 +80,15 @@ public class EanCommands {
                             // ? Suggestions for CloudConfig
                             if (configMode.equals("CloudConfig") && arg1.equals("configCloudLayer")) {
                                 suggestions.add("all");
-                                for(int i = 1; i <= CloudConfig.cloudLayers.length; i++){
-                                    suggestions.add(String.valueOf(i));
+                                try {
+                                    for(int i = 1; i <= CloudConfig.cloudLayers.length; i++){
+                                        suggestions.add(String.valueOf(i));
+                                    }
+                                } catch (NullPointerException e){
+                                    suggestions.add("all");
                                 }
                             } else if (configMode.equals("CloudConfig") && arg1.equals("loadPreset")){
+                                suggestions.add("-help");
                                 for(CloudConfig.Presets preset : CloudConfig.Presets.values()){
                                     suggestions.add(preset.toString());
                                 }
@@ -128,6 +134,7 @@ public class EanCommands {
                         })
                         // < FlightConfigScreen & GeneralCloudConfig config execution.
                         .executes(context -> {
+                            ServerPlayerEntity executor = context.getSource().getPlayer();
                             String configMode = StringArgumentType.getString(context, "configMode");
                             String arg1 = StringArgumentType.getString(context, "arg1");
                             String value = StringArgumentType.getString(context, "arg2");
@@ -148,10 +155,10 @@ public class EanCommands {
                             } else if (configMode.equals("FlightConfig") && !context.getSource().hasPermissionLevel(4)){
                                 context.getSource().sendMessage(Text.literal("You require to be an operator in order to change elytra flight settings.").formatted(Formatting.RED));
                             } else if (configMode.equals("CloudConfig")) {
-                                message = switch (arg1) {
-                                    case "useEanCloudRendering" -> setUseEanCloudRendering(value);
-                                    case "setCloudLayerAmount" -> setCloudLayerAmount(value);
-                                    case "loadPreset" -> loadPreset(value);
+                                switch (arg1) {
+                                    case "useEanCloudRendering" -> setUseEanCloudRendering(executor, value);
+                                    case "setCloudLayerAmount" -> setCloudLayerAmount(executor, value);
+                                    case "loadPreset" -> loadPreset(executor, value);
                                     default -> throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
                                 };
                             }
@@ -228,30 +235,28 @@ public class EanCommands {
                                 })
                                     // < CloudLayer config execution.
                                     .executes(context -> {
+                                        ServerPlayerEntity executor = context.getSource().getPlayer();
                                         String configMode = StringArgumentType.getString(context, "configMode");
 
                                         if (configMode.equals("CloudConfig")){
                                             String layerNumber = StringArgumentType.getString(context, "arg2");
                                             String layerAttribute = StringArgumentType.getString(context, "arg3");
                                             String value = StringArgumentType.getString(context, "value");
-                                            String message = "";
 
                                             switch (layerAttribute) {
-                                                case "altitude" -> message = setLayerAltitude(layerNumber, value);
-                                                case "cloudType" -> message = setLayerCloudType(layerNumber, value);
-                                                case "verticalRenderDistance" -> message = setLayerVerticalRenderDistance(layerNumber, value);
-                                                case "horizontalRenderDistance" -> message = setLayerHorizontalRenderDistance(layerNumber, value);
-                                                case "lodRenderDistance" -> message = setLodRenderDistance(layerNumber, value);
-                                                case "thickness" -> message = setLayerCloudThickness(layerNumber, value);
-                                                case "color" -> message = setCloudColor(layerNumber, value);
-                                                case "opacity" -> message = setCloudOpacity(layerNumber, value);
-                                                case "shading" -> message = setShading(layerNumber, value);
-                                                case "speed" -> message = setCloudSpeed(layerNumber, value);
-                                                case "skyEffects" -> message = setSkyEffects(layerNumber, value);
+                                                case "altitude" -> setLayerAltitude(executor, layerNumber, value);
+                                                case "cloudType" -> setLayerCloudType(executor, layerNumber, value);
+                                                case "verticalRenderDistance" -> setLayerVerticalRenderDistance(executor, layerNumber, value);
+                                                case "horizontalRenderDistance" -> setLayerHorizontalRenderDistance(executor, layerNumber, value);
+                                                case "lodRenderDistance" -> setLodRenderDistance(executor, layerNumber, value);
+                                                case "thickness" -> setLayerCloudThickness(executor, layerNumber, value);
+                                                case "color" -> setCloudColor(executor, layerNumber, value);
+                                                case "opacity" -> setCloudOpacity(executor, layerNumber, value);
+                                                case "shading" -> setShading(executor, layerNumber, value);
+                                                case "speed" -> setCloudSpeed(executor, layerNumber, value);
+                                                case "skyEffects" -> setSkyEffects(executor, layerNumber, value);
                                                 default -> throw new SimpleCommandExceptionType(Text.translatable("command.error.attribute")).create();
                                             }
-                                            if (!message.equals(""))
-                                                context.getSource().sendMessage(Text.of(message));
                                         }
                                         return 1;
                                     })
@@ -458,446 +463,77 @@ public class EanCommands {
         }
     }
 
+    // : CLIENT CONFIG ---------------------------------------------------------------------------------------------------
+
     // $ Cloud general configuration
-    private static String setUseEanCloudRendering(String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Use Elytra Aeronautics' cloud rendering ---
-                        Set to true to use the multi-layer cloud rendering and cloud customization.
-                        Set to false to disable this feature.
-                        
-                        Default value: true
-                        """;
-        try{
-            boolean useEanCloudRendering = Boolean.parseBoolean(value);
-            CloudConfig.getOrCreateInstance().setUseEanClouds(useEanCloudRendering);
-
-            CloudConfig.writeToDisk();
-            return (useEanCloudRendering) ? "Elytra Aeronautics cloud rendering is now enabled." : "Elytra Aeronautics cloud rendering is now disabled.";
-        } catch (Exception e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        }
+    private static void setUseEanCloudRendering(ServerPlayerEntity executor, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor, new EanClientSettings("generalCloudConfig","useEanCloudRendering", value));
     }
 
-    private static String setCloudLayerAmount(String value) throws CommandSyntaxException{
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud layer amount ---
-                        Amount of cloud layers to render and make available for customization.
-                        Use the 'configCloudLayer' option to select a specific layer or all layers.
-                        
-                        Default value: 3
-                        """;
-        try {
-            int amount = Integer.parseInt(value);
-            CloudConfig.getOrCreateInstance().setNumberOfLayers(amount);
-
-            CloudConfig.writeToDisk();
-            return "Set number of cloud layers to " + amount;
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        }
+    private static void setCloudLayerAmount(ServerPlayerEntity executor, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor, new EanClientSettings("generalCloudConfig","setCloudLayerAmount", value));
     }
 
-    private static String loadPreset(String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Load cloud preset ---
-                        Elytra Aeronautics comes with various cloud presets in order to showcase some of the awesome stuff that can be done with cloud layer customization.
-                        Use this option to select a cloud preset.
-                        
-                        Default value: DEFAULT
-                        """;
-        try{
-            String preset = value.toUpperCase();
-
-            switch (preset){
-                case "DEFAULT" -> CloudConfig.cloudPreset_default();
-                case "DENSE_AND_PUFFY" -> CloudConfig.cloudPreset_denseAndPuffy();
-                case "WINDY" -> CloudConfig.cloudPreset_windy();
-                case "RAINBOW" -> CloudConfig.cloudPreset_rainbow();
-                case "SKY_HIGHWAY" -> CloudConfig.cloudPreset_skyHighway();
-                case "SEA_MIST" -> CloudConfig.cloudPreset_seaMist();
-            }
-
-            CloudConfig.writeToDisk();
-            return "Loaded the " + value + " cloud preset.";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void loadPreset(ServerPlayerEntity executor, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor, new EanClientSettings("generalCloudConfig","loadPreset", value));
     }
 
     // $ Cloud layer configuration
-    private static String setLayerAltitude(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Layer altitude ---
-                        Altitude (Y) at which the selected cloud layer/s will render.
-                        The altitude of the two additional cloud layers that come by default mark where flight speed starts to increase and where it reaches its maximum by default configuration, although these parameters are also modifiable in the FlightConfig section. 
-                        
-                        Default values:
-                        First layer: 192.0 (Vanilla value)
-                        Second layer: 250.0
-                        Third layer: 1000.0
-                        """;
-        try{
-            double altitude = Double.parseDouble(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setAltitude(altitude);
-                }
-                CloudConfig.writeToDisk();
-                return "Set altitude of all layers to " + altitude;
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setAltitude(altitude);
-
-            CloudConfig.writeToDisk();
-            return "Set altitude of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getAltitude();
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setLayerAltitude(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","altitude", layerNumberArg, value));
     }
 
-    private static String setLayerCloudType(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud type ---
-                        The type of cloud to render for the selected cloud layer/s. 
-                        There are three types:
-                        
-                        FAST - Vanilla fast clouds
-                        FANCY - Vanilla fancy clouds
-                        LOD (Level Of Detail) - Clouds that are rendered as 'FAST' when far away and as 'FANCY' when close.
-                        
-                        The LOD clouds' FAST to FANCY transition distance can be configured.
-                        
-                        Default values:
-                        First layer: FANCY
-                        Second layer: LOD
-                        Third layer: LOD
-                        """;
-        try{
-            CloudConfig.CloudTypes cloudType = CloudConfig.CloudTypes.valueOf(value.toUpperCase());
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setCloudType(cloudType);
-                }
-                CloudConfig.writeToDisk();
-                return "Set cloud type of all layers to " + cloudType;
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setCloudType(cloudType);
-
-            CloudConfig.writeToDisk();
-            return "Set cloud type of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getCloudType();
-        } catch (IllegalArgumentException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setLayerCloudType(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","cloudType", layerNumberArg, value));
     }
 
-    private static String setLayerVerticalRenderDistance(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud layer vertical render distance ---
-                        Maximum vertical distance at which the selected cloud layer/s will be rendered.
-                        
-                        Default value: 1000 (blocks)
-                        """;
-        try{
-            float verticalRenderDistance = Float.parseFloat(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setVerticalRenderDistance(verticalRenderDistance);
-                }
-                CloudConfig.writeToDisk();
-                return "Set vertical render distance of all layers to " + verticalRenderDistance + " blocks.";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setVerticalRenderDistance(verticalRenderDistance);
-
-            CloudConfig.writeToDisk();
-            return "Set vertical render distance of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getVerticalRenderDistance() + " blocks.";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setLayerVerticalRenderDistance(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","verticalRenderDistance", layerNumberArg, value));
     }
 
-    private static String setLayerHorizontalRenderDistance(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud layer horizontal render distance ---
-                        Area of the sky that the selected cloud layer/s will occupy.
-                        
-                        Default value: 15 (chunks) (Vanilla value)
-                        """;
-        try{
-            int horizontalRenderDistance = Integer.parseInt(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setHorizontalRenderDistance(horizontalRenderDistance);
-                }
-                CloudConfig.writeToDisk();
-                return "Set horizontal render distance of all layers to " + horizontalRenderDistance + " chunks.";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setHorizontalRenderDistance(horizontalRenderDistance);
-
-            CloudConfig.writeToDisk();
-            return "Set horizontal render distance of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getHorizontalRenderDistance() + " chunks.";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setLayerHorizontalRenderDistance(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","horizontalRenderDistance", layerNumberArg, value));
     }
 
-    private static String setLodRenderDistance(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud layer LOD render distance ---
-                        Vertical distance from selected cloud layer/s at which LOD clouds will transition its rendering mode.
-                        
-                        Being a distance greater than this value from the layer will show the clouds as FAST clouds.
-                        
-                        Being a distance smaller than this value from the layer will show the clouds as FANCY clouds.
-                        
-                        The cloud type for the layer must be configured as LOD for this to work. 
-                        
-                        Default value: 150 (blocks)
-                        """;
-        try{
-            float lodRenderDistance = Float.parseFloat(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setLodRenderDistance(lodRenderDistance);
-                }
-                CloudConfig.writeToDisk();
-                return "Set LOD render distance of all layers to " + lodRenderDistance + " blocks.";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setLodRenderDistance(lodRenderDistance);
-
-            CloudConfig.writeToDisk();
-            return "Set LOD render distance of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getLodRenderDistance() + " blocks.";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setLodRenderDistance(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","lodRenderDistance", layerNumberArg, value));
     }
 
-    private static String setLayerCloudThickness(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud thickness ---
-                        Amount of blocks that the clouds of the selected layer/s will occupy vertically.
-                        
-                        Default value: 4 (blocks) (Vanilla value)
-                        """;
-        try{
-            float cloudThickness = Float.parseFloat(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setCloudThickness(cloudThickness);
-                }
-                CloudConfig.writeToDisk();
-                return "Set cloud thickness of all layers to " + cloudThickness + " blocks.";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setCloudThickness(cloudThickness);
-
-            CloudConfig.writeToDisk();
-            return "Set cloud thickness of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getCloudThickness() + " blocks.";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setLayerCloudThickness(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","thickness", layerNumberArg, value));
     }
 
-    private static String setCloudColor(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud color ---
-                        Color that the clouds of the selected cloud layer/s will be rendered with.
-                        This value must be introduced as an hexadecimal color code.
-                        
-                        Default value: FFFFFF (white) (Vanilla value)
-                        """;
-        try{
-            int cloudColor = Integer.parseInt(value,16);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setCloudColor(cloudColor);
-                }
-                CloudConfig.writeToDisk();
-                return "Set cloud color of all layers to " + value + ".";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setCloudColor(cloudColor);
-
-            CloudConfig.writeToDisk();
-            return "Set cloud color of layer " + layerNumber + " to " + value + ".";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setCloudColor(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","color", layerNumberArg, value));
     }
 
-    private static String setCloudOpacity(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud opacity ---
-                        Opacity that the clouds of the selected cloud layer/s will be rendered with.
-                        This value ranges between 1.0 (fully opaque) and 0.0 (fully invisible).
-                        
-                        Default value: 0.8 (Vanilla value)
-                        """;
-        try{
-            float cloudOpacity = Float.parseFloat(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setCloudOpacity(cloudOpacity);
-                }
-                CloudConfig.writeToDisk();
-                return "Set cloud opacity of all layers to " + value + ".";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setCloudOpacity(cloudOpacity);
-
-            CloudConfig.writeToDisk();
-            return "Set cloud opacity of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].getCloudOpacity() + ".";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setCloudOpacity(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","opacity", layerNumberArg, value));
     }
 
-    private static String setShading(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud shading ---
-                        Set to true to enable cloud shading, the different sides of the clouds will have different tones.
-                        Set to false to disable this feature and render clouds with a solid, monochromatic, color.
-                        
-                        Default value: true (Vanilla value)
-                        """;
-        try{
-            boolean shading = Boolean.parseBoolean(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setShading(shading);
-                }
-                CloudConfig.writeToDisk();
-                return "Set shading of all layers to " + value + ".";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setShading(shading);
-
-            CloudConfig.writeToDisk();
-            return "Set shading of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].isShading() + ".";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setShading(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","shading", layerNumberArg, value));
     }
 
-    private static String setCloudSpeed(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud speed ---
-                        Speed at which the clouds will travel.
-                        The input value represents a multiplier for the vanilla cloud speed.
-                        This means '2.0' will mean x2 the vanilla cloud speed, '100.0' will mean x100 and so on.
-                        
-                        Default value: 1.0 (x1.0 speed) (Vanilla value)
-                        """;
-        try{
-            float cloudSpeed = Float.parseFloat(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setCloudSpeed(cloudSpeed);
-                }
-                CloudConfig.writeToDisk();
-                return "Set speed of all layers to x" + value + " speed.";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setCloudSpeed(cloudSpeed);
-
-            CloudConfig.writeToDisk();
-            return "Set speed of layer " + layerNumber + " to x" + CloudConfig.cloudLayers[layerNumber-1].getCloudSpeed() + " speed.";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setCloudSpeed(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","speed", layerNumberArg, value));
     }
 
-    private static String setSkyEffects(String layerNumberArg, String value) throws CommandSyntaxException {
-        if (Objects.equals(value, "-help"))
-            return """
-                        
-                        --- Cloud layer sky effects ---
-                        Set to true to let the clouds of the selected layer/s turn darker at night and under weather conditions.
-                        Set to false to disable this feature and always render clouds bright, as if they had an emissive texture.
-                        When set to false, clouds appear as if they were glowing when the sky is dark.
-                        
-                        Default value: true (Vanilla value)
-                        """;
-        try{
-            boolean skyEffects = Boolean.parseBoolean(value);
-
-            if (layerNumberArg.equals("all")){
-                for(CloudLayer cloudLayer : CloudConfig.cloudLayers){
-                    cloudLayer.setSkyEffects(skyEffects);
-                }
-                CloudConfig.writeToDisk();
-                return "Set sky effects of all layers to " + value + ".";
-            }
-            int layerNumber = Integer.parseInt(layerNumberArg);
-            CloudConfig.cloudLayers[layerNumber-1].setSkyEffects(skyEffects);
-
-            CloudConfig.writeToDisk();
-            return "Set sky effects of layer " + layerNumber + " to " + CloudConfig.cloudLayers[layerNumber-1].isSkyEffects() + ".";
-        } catch (NumberFormatException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.value")).create();
-        } catch (IndexOutOfBoundsException e){
-            throw new SimpleCommandExceptionType(Text.translatable("command.error.layerNumber")).create();
-        }
+    private static void setSkyEffects(ServerPlayerEntity executor, String layerNumberArg, String value) {
+        // Send config change to the command executor's client.
+        EanServerPacketSender.sendClientConfig(executor,new EanClientSettings("cloudLayerConfig","skyEffects", layerNumberArg, value));
     }
 }

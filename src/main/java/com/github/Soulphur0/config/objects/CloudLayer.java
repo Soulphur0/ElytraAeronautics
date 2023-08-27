@@ -2,8 +2,11 @@ package com.github.Soulphur0.config.objects;
 
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.google.gson.annotations.Expose;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.render.BufferBuilder;
 
+@Environment(EnvType.CLIENT)
 public class CloudLayer {
     // ; Cloud positioning settings
     @Expose

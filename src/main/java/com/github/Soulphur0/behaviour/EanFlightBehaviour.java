@@ -2,7 +2,7 @@ package com.github.Soulphur0.behaviour;
 
 import com.github.Soulphur0.config.EanServerSettings;
 import com.github.Soulphur0.config.singletons.FlightConfig;
-import com.github.Soulphur0.networking.EanNetworkingUtilities;
+import com.github.Soulphur0.networking.server.EanServerPacketSender;
 import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,7 +22,7 @@ public class EanFlightBehaviour {
         // . Order the client to sync settings with the server if the config has changed.
         if (!player.getWorld().isClient()) {
             if (EanServerSettings.settingsChanged){
-                EanNetworkingUtilities.syncAllClientsConfigWithServer((PlayerEntity) player);
+                EanServerPacketSender.syncAllClientsConfigWithServer((PlayerEntity) player);
                 EanServerSettings.settingsChanged = false;
             }
         }

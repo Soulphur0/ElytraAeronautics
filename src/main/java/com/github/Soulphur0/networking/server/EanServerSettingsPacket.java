@@ -1,4 +1,4 @@
-package com.github.Soulphur0.networking;
+package com.github.Soulphur0.networking.server;
 
 import com.github.Soulphur0.config.EanServerSettings;
 import net.minecraft.network.PacketByteBuf;

@@ -1,13 +1,15 @@
 package com.github.Soulphur0.config;
 
 import com.github.Soulphur0.config.singletons.FlightConfig;
+import com.github.Soulphur0.networking.server.EanServerSettingsPacket;
+import com.github.Soulphur0.networking.server.EanServerSettingsPacketSerializer;
 import net.minecraft.network.PacketByteBuf;
 
 /**
  * Class for EanServerSettings objects.<br><br>
  * This class, unlike the rest of config classes, is not a singleton, but rather an object that is instantiated whenever server's settings need to be packed to be sent to a client.<br><br>
- * @see com.github.Soulphur0.networking.EanServerSettingsPacket
- * @see com.github.Soulphur0.networking.EanServerSettingsPacketSerializer
+ * @see EanServerSettingsPacket
+ * @see EanServerSettingsPacketSerializer
  * */
 public class EanServerSettings {
 
@@ -18,7 +20,7 @@ public class EanServerSettings {
     // $ CONSTRUCTORS
 
     // ? Without parameters.
-    // ¿ Used in the EanNetworkingUtilities class, syncClientConfigWithServer() method: packs the server's config instances into this object to send it to the client.
+    // ¿ Used in the EanServerPacketSender class, syncClientConfigWithServer() method: packs the server's config instances into this object to send it to the client.
     public EanServerSettings(){
         flightConfigInstance = FlightConfig.getOrCreateInstance();
     }
@@ -33,6 +35,9 @@ public class EanServerSettings {
 
     // ? Write to the packet buff all server-dependant config values sequentially.
     public void writeToBuffer(PacketByteBuf buf){
+        // + Packet type identifier
+        buf.writeInt(0);
+
         // + Flight settings
         buf.writeBoolean(flightConfigInstance.isAltitudeDeterminesSpeed());
         buf.writeDouble(flightConfigInstance.getMinSpeed());
@@ -45,7 +50,12 @@ public class EanServerSettings {
     }
 
     // ? Read from the packet buff all server-dependant config values sequentially.
+    // ¿ Used to rebuild this class object from a received packet.
     public static EanServerSettings createFromBuffer(PacketByteBuf buf){
+        // + Skip the packet type identifier.
+        // * This is not needed to build the server settings object.
+        buf.skipBytes(0);
+
         // + Flight settings
         boolean altitudeDeterminesSpeed = buf.readBoolean();
         double minSpeed = buf.readDouble();
