@@ -5,7 +5,11 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "FireworkRocketEntityMixin",
-    "LivingEntityMixin"
+    "LivingEntityMixin",
+    "ServerChunkManagerAccess",
+    "ServerPlayerEntityMixin",
+    "ServerWorldAccess",
+    "ThreadedAnvilChunkStorageAccess"
   ],
   "client": [
     "CameraMixin",
