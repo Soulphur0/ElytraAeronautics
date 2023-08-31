@@ -41,6 +41,10 @@ dependencies {
 	include(implementation ('com.google.code.gson:gson:2.10.1'));
 }
 
+loom {
+	accessWidenerPath = file("src/main/resources/ean.accesswidener")
+}
+
 processResources {
 	inputs.property "version", project.version
 

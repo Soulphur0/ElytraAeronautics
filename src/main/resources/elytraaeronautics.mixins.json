@@ -6,13 +6,13 @@
   "mixins": [
     "FireworkRocketEntityMixin",
     "LivingEntityMixin",
-    "ServerChunkManagerAccess",
-    "ServerPlayerEntityMixin",
-    "ServerWorldAccess",
-    "ThreadedAnvilChunkStorageAccess"
+    "ServerChunkManagerMixin",
+    "ThreadedAnvilStorageMixin",
+    "WorldMixin"
   ],
   "client": [
     "CameraMixin",
+    "ChunkRendererRegionBuilderMixin",
     "WorldRendererAccessors",
     "WorldRendererMixin"
   ],
