@@ -16,7 +16,7 @@ public class EanClientSettings {
 
     // ? Constructor with arbitrary number of parameters.
     // ¿ The first String determines the setting type, the rest of string depend on the setting in particular.
-    // ¿ The EanClientPacketHandler class redirects to the setting processing method for each client setting in its corresponding class.
+    // ¿ The EanClientPacketDispatcher class redirects to the setting processing method for each client setting in its corresponding class.
     public EanClientSettings (String ...values){
         settingValues = values;
     }

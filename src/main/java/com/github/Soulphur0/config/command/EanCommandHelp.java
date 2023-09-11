@@ -1,8 +1,145 @@
-package com.github.Soulphur0.config.commands;
+package com.github.Soulphur0.config.command;
 
 import net.minecraft.text.Text;
 
-public class EanCommandsHelp {
+public class EanCommandHelp {
+
+    // : FLIGHT CONFIG ---------------------------------------------------------------------------------------------------
+    public static Text setAltitudeDeterminesSpeed(){
+        return Text.of("""
+                        
+                        --- Altitude determines flight speed ---
+                        Set to true to make elytra flight faster at higher altitudes. 
+                        Set to false to disable this feature.
+                        Flight speed will be determined by the minSpeed setting.
+                        
+                        Default value: true
+                        """);
+    }
+
+    public static Text setMinSpeed(){
+        return Text.of("""
+                        
+                        --- Minimal flight speed ---
+                        Minimal flight speed achieved by travelling at a zero degree angle.
+                        
+                        Default value: 30.35 (m/s) (Vanilla flight speed)
+                        """);
+    }
+
+    public static Text setMaxSpeed(){
+        return Text.of("""
+                        
+                        --- Maximum flight speed ---
+                        Maximum flight speed achieved by travelling at a zero degree angle.
+                        
+                        Default value: 257.22 (m/s)
+                        """);
+    }
+
+    public static Text setMinHeight(){
+        return Text.of("""
+                        
+                        --- Minimal height ---
+                        Altitude (Y) at which flight speed starts to increase.
+                        
+                        Default value: 250
+                        """);
+    }
+
+    public static Text setMaxHeight(){
+        return Text.of("""
+                        
+                        --- Maximum height ---
+                        Altitude (Y) at which flight speed reaches its maximum.
+                        
+                        Default value: 1000
+                        """);
+    }
+
+    public static Text setSneakingRealignsPitch(){
+        return Text.of("""
+                        
+                        --- Sneaking realigns pitch ---
+                        Set to true to realign your pitch when sneaking mid-flight.
+                        Set to false to disable this feature.
+                        
+                        Default value: true
+                        """);
+    }
+
+    public static Text setRealignAngle(){
+        return Text.of("""
+                        
+                        --- Pitch realignment angle ---
+                        Pitch angle at which the player will align towards when sneaking mid-flight.
+                        
+                        Default value: 0.0 (degrees)
+                        """);
+    }
+
+    public static Text setRealignRate(){
+        return Text.of("""
+                        
+                        --- Pitch realignment rate ---
+                        Amount of rotation at which the player will realign towards the "realignAngle".
+                        
+                        Default value: 0.1 (degrees-per-tick)
+                        """);
+    }
+
+    // : WORLD RENDERING CONFIG ---------------------------------------------------------------------------------------------------
+    public static Text setUseEanChunkUnloading(){
+        return Text.of("""
+                        
+                        --- Use Elytra Aeronautics' chunk unloading feature ---
+                        Set to true to not load or generate chunks when flying above a established altitude.
+                        Set to false to disable this feature.
+                        
+                        Default value: true
+                        """);
+    }
+
+    public static Text setChunkUnloadingCondition(){
+        return Text.of("""
+                        
+                        --- Chunk unloading condition ---
+                        Determines when will chunks stop loading and generating.
+                        There are four options:
+                        
+                        SPEED => chunk loading will stop when exceeding the established speed threshold.
+                        HEIGHT => chunk loading will stop when exceeding the established altitude threshold.
+                        SPEED_OR_HEIGHT => chunk loading will stop when exceeding either of the established speed or altitude thresholds.
+                        SPEED_AND_HEIGHT => chunk loading will stop when exceeding both of the established speed and altitude thresholds.
+                        
+                        The thresholds' limits can be set with the 'setChunkUnloadingSpeed' and 'setChunkUnloadingHeight' options.
+                        
+                        Default value: SPEED_AND_HEIGHT
+                        """);
+    }
+
+    public static Text setChunkUnloadingSpeed(){
+        return Text.of("""
+                        
+                        --- Chunk unloading speed ---
+                        Speed (in blocks/meters per second) at which chunks will stop to load and generate when flying with elytra.
+                        
+                        Default value: 100
+                        """);
+    }
+
+    public static Text setChunkUnloadingHeight(){
+        return Text.of("""
+                        
+                        --- Chunk unloading height ---
+                        Altitude (Y) at which chunks will stop to load and generate when flying with elytra.
+                        
+                        Default value: 350
+                        """);
+    }
+
+
+    // : CLOUD CONFIG ---------------------------------------------------------------------------------------------------
 
     public static Text useEanCloudRendering(){
         return Text.of( """

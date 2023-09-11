@@ -2,6 +2,7 @@
 package com.github.Soulphur0.behaviour;
 
 import com.github.Soulphur0.config.objects.CloudLayer;
+import com.github.Soulphur0.config.options.CloudTypes;
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -227,7 +228,7 @@ public class EanCloudRenderBehaviour {
         int northwestSpan = (int)Math.round((-layer.getHorizontalRenderDistance() / 4.0F));
         int southeastSpan = (int)Math.round((layer.getHorizontalRenderDistance() / 4.0F) - 1);
 
-        if ((layer.getCloudType().equals(CloudConfig.CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudConfig.CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
+        if ((layer.getCloudType().equals(CloudTypes.FANCY) && layer.isWithinRenderDistance()) || (layer.getCloudType().equals(CloudTypes.LOD) && layer.isWithinLodRenderDistance())) {
             // + The following 'for' loop counters determine cloud render distance.
             // * Much like the Minecraft world, cloud are rendered in chunks that I will call 'quadrants'.
             // * Cloud quadrants are made out 8x8 flat blocks. One quadrant would equal 1 single iteration of this loop.
@@ -315,7 +316,7 @@ public class EanCloudRenderBehaviour {
                     }
                 }
             }
-        } else if ((layer.getCloudType().equals(CloudConfig.CloudTypes.FAST) || layer.getCloudType().equals(CloudConfig.CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
+        } else if ((layer.getCloudType().equals(CloudTypes.FAST) || layer.getCloudType().equals(CloudTypes.LOD)) && layer.isWithinRenderDistance()) {
             for(westToEastSpan = northwestSpan - displacementInQuadrants; westToEastSpan <= southeastSpan - displacementInQuadrants; ++westToEastSpan) {
                 for(northToSouthSpan = northwestSpan; northToSouthSpan <= southeastSpan; ++northToSouthSpan) {
                     float westToEastDrawPos = (float)(westToEastSpan * 8);

@@ -1,11 +1,8 @@
 package com.github.Soulphur0.behaviour;
 
-import com.github.Soulphur0.config.EanServerSettings;
 import com.github.Soulphur0.config.singletons.FlightConfig;
-import com.github.Soulphur0.networking.server.EanServerPacketSender;
 import com.github.Soulphur0.utility.EanMath;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -13,20 +10,11 @@ public class EanFlightBehaviour {
 
     // : Flight entry point for injection/modification.
     static public Vec3d ean_flightBehaviour(LivingEntity player){
-        return ean_loadAndSyncFlightConfiguration(player);
+        return ean_loadFlightConfiguration(player);
     }
 
     // : Read FlightConfig from disk and sync it with the client.
-    private static Vec3d ean_loadAndSyncFlightConfiguration(LivingEntity player){
-
-        // . Order the client to sync settings with the server if the config has changed.
-        if (!player.getWorld().isClient()) {
-            if (EanServerSettings.settingsChanged){
-                EanServerPacketSender.syncAllClientsConfigWithServer((PlayerEntity) player);
-                EanServerSettings.settingsChanged = false;
-            }
-        }
-
+    private static Vec3d ean_loadFlightConfiguration(LivingEntity player){
         // + Get config instance.
         FlightConfig configInstance = FlightConfig.getOrCreateInstance();
 

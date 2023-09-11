@@ -1,6 +1,6 @@
 package com.github.Soulphur0.config.objects;
 
-import com.github.Soulphur0.config.singletons.CloudConfig;
+import com.github.Soulphur0.config.options.CloudTypes;
 import com.google.gson.annotations.Expose;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -14,7 +14,7 @@ public class CloudLayer {
 
     // ; Cloud rendering settings
     @Expose
-    private CloudConfig.CloudTypes cloudType = CloudConfig.CloudTypes.LOD;
+    private CloudTypes cloudType = CloudTypes.LOD;
     @Expose
     private float verticalRenderDistance = 1000.0F;
     @Expose
@@ -58,11 +58,11 @@ public class CloudLayer {
         this.altitude = altitude;
     }
 
-    public CloudConfig.CloudTypes getCloudType() {
+    public CloudTypes getCloudType() {
         return cloudType;
     }
 
-    public void setCloudType(CloudConfig.CloudTypes cloudType) {
+    public void setCloudType(CloudTypes cloudType) {
         this.cloudType = cloudType;
     }
 

@@ -47,7 +47,7 @@ public class FlightConfig {
     }
 
     // $ Constructors
-    // € These are used within the scope of the class or EanServerSettings, networking is always handled around the latter.
+    // € These are used within the scope of this class or EanServerSettings, networking is always handled around the latter.
 
     // ? Without parameters.
     // ¿ Used in the instance initializer method above.
@@ -68,7 +68,7 @@ public class FlightConfig {
 
     //. NETWORKING
     // ? Method to update the current singleton instance with the server's.
-    // ¿ Called in the EanClientPacketHandler class' receive() method. Basically a named setter; although not really related with networking, labeled as such for clarity purposes.
+    // ¿ Called in the EanClientPacketDispatcher class' receive() method. Basically a named setter; although not directly related with networking, labeled as such for clarity purposes.
     public static void updateClientSettings(FlightConfig flightConfig){
         instance = flightConfig;
     }
@@ -76,7 +76,7 @@ public class FlightConfig {
     // $ Disk read/write
 
     // ? Reads flight config values from the flight config file.
-    // ¿ Called on upon joining any world, and whenever configuration is changed. // TODO: MAKE ITS USAGES REFLECT ITS DESCRIPTION
+    // ¿ Called on upon joining any world, and whenever configuration is changed.
     public static void readFromDisk() {
         // Obtain the configuration directory
         Path configDir = FabricLoader.getInstance().getConfigDir();

@@ -1,6 +1,8 @@
 package com.github.Soulphur0.config;
 
+import com.github.Soulphur0.config.options.ChunkUnloadingConditions;
 import com.github.Soulphur0.config.singletons.FlightConfig;
+import com.github.Soulphur0.config.singletons.WorldRenderingConfig;
 import com.github.Soulphur0.networking.server.EanServerSettingsPacket;
 import com.github.Soulphur0.networking.server.EanServerSettingsPacketSerializer;
 import net.minecraft.network.PacketByteBuf;
@@ -16,6 +18,7 @@ public class EanServerSettings {
     public static boolean settingsChanged = false;
 
     private FlightConfig flightConfigInstance;
+    private WorldRenderingConfig worldRenderingConfigInstance;
 
     // $ CONSTRUCTORS
 
@@ -23,12 +26,14 @@ public class EanServerSettings {
     // ¿ Used in the EanServerPacketSender class, syncClientConfigWithServer() method: packs the server's config instances into this object to send it to the client.
     public EanServerSettings(){
         flightConfigInstance = FlightConfig.getOrCreateInstance();
+        worldRenderingConfigInstance = WorldRenderingConfig.getOrCreateInstance();
     }
 
     // ? With parameters.
     // ¿ Used in this class createFromBuffer() method: packs the received server settings into this object to override the client's settings.
-    public EanServerSettings(FlightConfig flightConfig){
+    public EanServerSettings(FlightConfig flightConfig, WorldRenderingConfig worldRenderingConfig){
         flightConfigInstance = flightConfig;
+        worldRenderingConfigInstance = worldRenderingConfig;
     }
 
     // . NETWORKING
@@ -47,6 +52,12 @@ public class EanServerSettings {
         buf.writeBoolean(flightConfigInstance.isSneakingRealignsPitch());
         buf.writeFloat(flightConfigInstance.getRealignAngle());
         buf.writeFloat(flightConfigInstance.getRealignRate());
+
+        // + World rendering settings
+        buf.writeBoolean(worldRenderingConfigInstance.isUseEanChunkUnloading());
+        buf.writeEnumConstant(worldRenderingConfigInstance.getChunkUnloadingCondition());
+        buf.writeDouble(worldRenderingConfigInstance.getUnloadingSpeed());
+        buf.writeDouble(worldRenderingConfigInstance.getUnloadingHeight());
     }
 
     // ? Read from the packet buff all server-dependant config values sequentially.
@@ -66,10 +77,17 @@ public class EanServerSettings {
         float realignAngle = buf.readFloat();
         float realignRate = buf.readFloat();
 
+        // + World rendering settings
+        boolean useEanChunkUnloading = buf.readBoolean();
+        ChunkUnloadingConditions chunkUnloadingCondition = buf.readEnumConstant(ChunkUnloadingConditions.class);
+        double chunkUnloadingSpeed = buf.readDouble();
+        double chunkUnloadingHeight = buf.readDouble();
+
         // = Config instances with server values
         FlightConfig flightConfig = new FlightConfig(altitudeDeterminesSpeed, minSpeed, maxSpeed, minHeight, maxHeight, sneakingRealignsPitch, realignAngle, realignRate);
+        WorldRenderingConfig worldRenderingConfig = new WorldRenderingConfig(useEanChunkUnloading, chunkUnloadingCondition, chunkUnloadingSpeed, chunkUnloadingHeight);
 
-        return new EanServerSettings(flightConfig);
+        return new EanServerSettings(flightConfig, worldRenderingConfig);
     }
 
     // $ GETTERS/SETTERS
@@ -79,5 +97,13 @@ public class EanServerSettings {
 
     public void setFlightConfigInstance(FlightConfig flightConfigInstance) {
         this.flightConfigInstance = flightConfigInstance;
+    }
+
+    public WorldRenderingConfig getWorldRenderingConfigInstance() {
+        return worldRenderingConfigInstance;
+    }
+
+    public void setWorldRenderingConfigInstance(WorldRenderingConfig worldRenderingConfigInstance) {
+        this.worldRenderingConfigInstance = worldRenderingConfigInstance;
     }
 }
