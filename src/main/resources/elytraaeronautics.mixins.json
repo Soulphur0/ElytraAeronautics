@@ -4,15 +4,21 @@
   "package": "com.github.Soulphur0.mixin",
   "compatibilityLevel": "JAVA_16",
   "mixins": [
+    "EntityMixin",
     "FireworkRocketEntityMixin",
     "LivingEntityMixin",
-    "PlayerEntityMixin",
-    "ThreadedAnvilStorageMixin",
-    "WorldMixin"
+    "ServerPlayerEntityMixin",
+    "ThreadedAnvilStorageMixin"
   ],
   "client": [
+    "BackgroundRendererMixin",
+    "BubbleColumnSoundPlayerMixin",
     "CameraMixin",
     "ClientPlayerEntityMixin",
+    "ClientWorldMixin",
+    "DebugHudMixin",
+    "GameRendererMixin",
+    "MinecraftClientMixin",
     "WorldRendererAccessors",
     "WorldRendererMixin"
   ],
