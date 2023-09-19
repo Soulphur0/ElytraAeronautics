@@ -19,11 +19,11 @@ public class WorldRenderingConfig {
     @Expose
     private boolean useEanChunkUnloading = true;
     @Expose
-    private ChunkUnloadingConditions chunkUnloadingCondition = ChunkUnloadingConditions.SPEED_AND_HEIGHT;
+    private ChunkUnloadingConditions chunkUnloadingCondition = ChunkUnloadingConditions.SPEED_OR_HEIGHT;
     @Expose
     private double unloadingSpeed = 100.0D;
     @Expose
-    private double unloadingHeight = 350.0D;
+    private double unloadingHeight = 320.0D;
 
     // = Config instance
     public static WorldRenderingConfig instance;

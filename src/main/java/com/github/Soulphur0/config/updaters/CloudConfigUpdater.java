@@ -111,7 +111,7 @@ public class CloudConfigUpdater {
                 case "altitude"->{
                     // _ Print help if the value was -help.
                     if (value.equals("-help")){
-                        player.sendMessage(EanCommandHelp.setCloudLayerAmount());
+                        player.sendMessage(EanCommandHelp.altitude());
                         return;
                     }
 

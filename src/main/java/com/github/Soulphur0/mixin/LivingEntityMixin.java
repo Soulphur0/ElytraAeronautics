@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 
-@Mixin(value = LivingEntity.class, priority = 500)
+@Mixin(value = LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
 
     protected LivingEntityMixin(EntityType<? extends LivingEntity> entityType, World world){
