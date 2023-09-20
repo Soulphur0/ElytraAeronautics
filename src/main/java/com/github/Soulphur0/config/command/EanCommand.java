@@ -43,18 +43,11 @@ public class EanCommand {
                 // $ Argument 2
                 // € Choose config option/subcommand.
                 .then(argument("arg2", string())
-                    .suggests((commandContext, suggestionsBuilder) -> {
-                        String configMode = StringArgumentType.getString(commandContext, "configMode");
-                        return CommandSource.suggestMatching(EanCommandSuggester.suggestArgument2(configMode), suggestionsBuilder);
-                    })
+                    .suggests((commandContext, suggestionsBuilder) -> CommandSource.suggestMatching(EanCommandSuggester.suggestArgument2(commandContext), suggestionsBuilder))
                     // $ Argument 3
                     // € Choose option value/subcommand option.
                     .then(argument("arg3", string())
-                        .suggests((commandContext, suggestionsBuilder) -> {
-                            String configMode = StringArgumentType.getString(commandContext, "configMode");
-                            String arg2 = StringArgumentType.getString(commandContext, "arg2");
-                            return CommandSource.suggestMatching(EanCommandSuggester.suggestArgument3(configMode, arg2), suggestionsBuilder);
-                        })
+                        .suggests((commandContext, suggestionsBuilder) -> CommandSource.suggestMatching(EanCommandSuggester.suggestArgument3(commandContext), suggestionsBuilder))
                         // > Execution point 2
                         // < Set value for FlightConfig, GeneralCloudConfig or WorldRenderingConfig options.
                         .executes(context -> {
@@ -68,17 +61,11 @@ public class EanCommand {
                         // $ Argument 4
                         // € Choose option/subcommand.
                         .then(argument("arg4", string())
-                            .suggests((commandContext, suggestionsBuilder) -> {
-                                String configMode = StringArgumentType.getString(commandContext, "configMode");
-                                return CommandSource.suggestMatching(EanCommandSuggester.suggestArgument4(configMode), suggestionsBuilder);
-                            })
+                            .suggests((commandContext, suggestionsBuilder) -> CommandSource.suggestMatching(EanCommandSuggester.suggestArgument4(commandContext), suggestionsBuilder))
                             // $ Argument 5
                             // € Choose option/subcommand/value.
                             .then(argument("arg5", string())
-                                .suggests((commandContext, suggestionsBuilder) -> {
-                                    String configMode = StringArgumentType.getString(commandContext, "configMode");
-                                    return CommandSource.suggestMatching(EanCommandSuggester.suggestArgument5(configMode), suggestionsBuilder);
-                                })
+                                .suggests((commandContext, suggestionsBuilder) -> CommandSource.suggestMatching(EanCommandSuggester.suggestArgument5(commandContext), suggestionsBuilder))
                                     // > Execution point 3
                                     // < Set value for configCloudLayer options.
                                     .executes(context -> {
