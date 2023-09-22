@@ -77,12 +77,12 @@ public class EanCommandSuggester {
                 }
                 default -> suggestions.add("-help");
             }
-        } else if (configMode.equals("WorldRenderingConfig") && arg2.equals("setChunkUnloadingCondition")){
+        } else if (configMode.equals("WorldRenderingConfig")){
             suggestions.add("-help");
-            for(ChunkUnloadingConditions condition : ChunkUnloadingConditions.values()){
-                suggestions.add(condition.toString());
-            }
-        }
+            if (arg2.equals("setChunkUnloadingCondition"))
+                for(ChunkUnloadingConditions condition : ChunkUnloadingConditions.values())
+                    suggestions.add(condition.toString());
+        } else suggestions.add("-help");
 
         return suggestions;
     }
