@@ -82,7 +82,7 @@ public class CloudConfigUpdater {
                     String preset = value.toUpperCase();
                     switch (preset){
                         case "DEFAULT" -> CloudConfig.cloudPreset_default();
-                        case "DENSE_AND_PUFFY" -> CloudConfig.cloudPreset_denseAndPuffy();
+                        case "PUFFY" -> CloudConfig.cloudPreset_denseAndPuffy();
                         case "WINDY" -> CloudConfig.cloudPreset_windy();
                         case "RAINBOW" -> CloudConfig.cloudPreset_rainbow();
                         case "SKY_HIGHWAY" -> CloudConfig.cloudPreset_skyHighway();
