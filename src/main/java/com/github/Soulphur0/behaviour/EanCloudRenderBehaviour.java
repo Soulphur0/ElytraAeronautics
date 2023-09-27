@@ -75,7 +75,7 @@ public class EanCloudRenderBehaviour {
             int blue = cloudColor & 0xFF;
 
             Vec3d configuredCloudColorVec3d = new Vec3d(red / 255.0, green / 255.0, blue / 255.0);
-            worldRenderer.setCloudsBuffer(new VertexBuffer());
+            worldRenderer.setCloudsBuffer(new VertexBuffer(VertexBuffer.Usage.STATIC));
 
             // ; Speed of the cloud layer
             double k = (double) (((float) worldRenderer.getTicks() + tickDelta) * 0.03F * layer.getCloudSpeed()); // The multiplying constant determines the speed of clouds; default => 0.03F
