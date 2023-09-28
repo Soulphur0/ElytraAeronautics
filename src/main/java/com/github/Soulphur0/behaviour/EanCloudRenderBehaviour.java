@@ -140,7 +140,7 @@ public class EanCloudRenderBehaviour {
                 // * Get shader, texture and background to draw with cloud geometry.
                 RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
                 RenderSystem.setShaderTexture(0, CLOUDS);
-                BackgroundRenderer.setFogBlack();
+                BackgroundRenderer.applyFogColor();
 
                 // * Scale cloud geometry to cloud size and translate it.
                 matrices.push();
