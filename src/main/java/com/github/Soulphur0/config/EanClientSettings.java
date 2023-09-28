@@ -38,7 +38,7 @@ public class EanClientSettings {
     // ? Read from the packet buf all the values of the setting sequentially.
     // ¿ Used to rebuild this class object from a received packet.
     public static EanClientSettings createFromBuffer(PacketByteBuf buf){
-        int byteAmount = buf.getWrittenBytes().length;
+        int byteAmount = buf.array().length;
         String[] settingValues = new String[byteAmount];
 
         for (int i = 1; i<byteAmount; i++) {
