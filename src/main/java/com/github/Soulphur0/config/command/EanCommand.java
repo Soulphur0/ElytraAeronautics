@@ -17,7 +17,7 @@ import static net.minecraft.server.command.CommandManager.literal;
  */
 public class EanCommand {
 
-    public static void register(){
+    public static void buildAndRegister(){
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("ean")
             // > Execution point 1
             // < Print help if only '/ean' was run.

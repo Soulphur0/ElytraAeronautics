@@ -1,6 +1,6 @@
 package com.github.Soulphur0.config;
 
-import com.github.Soulphur0.config.options.ChunkUnloadingConditions;
+import com.github.Soulphur0.config.constants.ChunkUnloadingConditions;
 import com.github.Soulphur0.config.singletons.FlightConfig;
 import com.github.Soulphur0.config.singletons.WorldRenderingConfig;
 import com.github.Soulphur0.networking.server.EanServerSettingsPacket;

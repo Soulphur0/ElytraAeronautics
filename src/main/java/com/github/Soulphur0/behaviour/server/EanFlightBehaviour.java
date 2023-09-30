@@ -1,7 +1,7 @@
-package com.github.Soulphur0.behaviour;
+package com.github.Soulphur0.behaviour.server;
 
 import com.github.Soulphur0.config.singletons.FlightConfig;
-import com.github.Soulphur0.utility.EanMath;
+import com.github.Soulphur0.utils.EanFlight;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -9,67 +9,27 @@ import net.minecraft.util.math.Vec3d;
 public class EanFlightBehaviour {
 
     // : Flight entry point for injection/modification.
-    static public Vec3d ean_flightBehaviour(LivingEntity player){
-        return ean_loadFlightConfiguration(player);
-    }
-
-    // : Read FlightConfig from disk and sync it with the client.
-    private static Vec3d ean_loadFlightConfiguration(LivingEntity player){
-        // + Get config instance.
+    static public Vec3d ean_flightBehaviour(LivingEntity player, Vec3d original){
         FlightConfig configInstance = FlightConfig.getOrCreateInstance();
 
-        return ean_setupFlightCalc(player, configInstance);
-    }
-
-    // : Calculations.
-    private static Vec3d ean_setupFlightCalc(LivingEntity player, FlightConfig configInstance){
-
-        // + Gradual pitch realignment
-        if(configInstance.isSneakingRealignsPitch() && player.isSneaking()){
-            float pitch = player.getPitch();
-
-            float alignmentAngle = configInstance.getRealignAngle();
-            float alignementRate = configInstance.getRealignRate();
-
-            if (Math.abs(pitch) <= alignementRate*2){
-                player.setPitch(alignmentAngle);
-            } else {
-                if (pitch > alignmentAngle){
-                    player.setPitch(pitch-alignementRate);
-                } else {
-                    player.setPitch(pitch+alignementRate);
-                }
-            }
-        }
-
-        // = Return null vector if altitude-determined speed is disabled
+        // = Return original vector if altitude-determined speed is disabled.
         if (!configInstance.isAltitudeDeterminesSpeed())
-            return null;
+            return original;
 
-        // + Get player altitude
-        Vec3d positionVector = player.getPos();
-        double playerAltitude = positionVector.y;
-
-        // % Calculate player speed based on altitude and return
-        Vec3d movementVector = ean_calcFlightMovementVector(configInstance, player, playerAltitude);
-
+        // + Calculate movement vector with speed based on altitude and apply vanilla transformation.
+        Vec3d movementVector = ean_calcFlightMovementVector(player);
         return movementVector.multiply(0.99f, 0.98f, 0.99f);
     }
 
-    private static Vec3d ean_calcFlightMovementVector(FlightConfig configInstance, LivingEntity player, double playerAltitude){
+    // : Calculations.
+    private static Vec3d ean_calcFlightMovementVector(LivingEntity player){
         double fallSpeedConstant = 0.08;
         double verticalSpeedValue;
         double horizontalSpeedValue;
 
-        // ? Read config file values
-        double minSpeed = configInstance.getMinSpeed();
-        double maxSpeed = configInstance.getMaxSpeed();
-        double curveStart = configInstance.getMinHeight();
-        double curveEnd = configInstance.getMaxHeight();
-
         // + Calculate additional speed based on player altitude.
         // * Clamp the calculated modified speed to not be below or over the speed range.
-        double altitudeCalculatedSpeed = (configInstance.isAltitudeDeterminesSpeed()) ? MathHelper.clamp(EanMath.getLinealValue(curveStart,minSpeed,curveEnd,maxSpeed,playerAltitude), minSpeed, maxSpeed) : minSpeed;
+        double altitudeCalculatedSpeed = EanFlight.getAltitudeCalculatedSpeed(player);
 
         Vec3d movementVector = player.getVelocity();
         if (movementVector.y > -0.5) {

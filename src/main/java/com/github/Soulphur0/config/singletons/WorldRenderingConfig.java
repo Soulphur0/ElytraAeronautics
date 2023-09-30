@@ -1,7 +1,7 @@
 package com.github.Soulphur0.config.singletons;
 
 import com.github.Soulphur0.config.EanServerSettings;
-import com.github.Soulphur0.config.options.ChunkUnloadingConditions;
+import com.github.Soulphur0.config.constants.ChunkUnloadingConditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;

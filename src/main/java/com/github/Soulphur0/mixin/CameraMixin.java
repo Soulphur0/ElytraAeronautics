@@ -1,6 +1,6 @@
 package com.github.Soulphur0.mixin;
 
-import com.github.Soulphur0.utility.EanClientPlayerData;
+import com.github.Soulphur0.networking.EanClientPlayerData;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.render.Camera;
 import org.joml.Vector3f;

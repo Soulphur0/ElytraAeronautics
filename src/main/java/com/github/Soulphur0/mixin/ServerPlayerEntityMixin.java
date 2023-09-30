@@ -1,6 +1,6 @@
 package com.github.Soulphur0.mixin;
 
-import com.github.Soulphur0.utility.EanPlayerDataCache;
+import com.github.Soulphur0.networking.EanPlayerDataCache;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;

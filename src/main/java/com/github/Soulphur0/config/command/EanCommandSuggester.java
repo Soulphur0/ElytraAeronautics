@@ -1,6 +1,6 @@
 package com.github.Soulphur0.config.command;
 
-import com.github.Soulphur0.config.options.*;
+import com.github.Soulphur0.config.constants.*;
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.config.singletons.FlightConfig;
 import com.mojang.brigadier.arguments.StringArgumentType;

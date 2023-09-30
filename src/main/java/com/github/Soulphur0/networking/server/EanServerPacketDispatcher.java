@@ -1,6 +1,6 @@
 package com.github.Soulphur0.networking.server;
 
-import com.github.Soulphur0.utility.EanPlayerDataCache;
+import com.github.Soulphur0.networking.EanPlayerDataCache;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;

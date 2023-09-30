@@ -1,4 +1,4 @@
-package com.github.Soulphur0.utility;
+package com.github.Soulphur0.utils;
 
 public class EanMath {
     static public float getLinealValue(float pointAX, float pointAY, float pointBX, float pointBY, float valueToGetX){
