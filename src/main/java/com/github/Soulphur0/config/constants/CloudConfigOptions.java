@@ -1,4 +1,4 @@
-package com.github.Soulphur0.config.options;
+package com.github.Soulphur0.config.constants;
 
 public enum CloudConfigOptions {
     useEanCloudRendering,

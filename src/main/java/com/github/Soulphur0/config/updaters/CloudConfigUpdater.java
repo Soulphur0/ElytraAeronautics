@@ -1,8 +1,8 @@
 package com.github.Soulphur0.config.updaters;
 
 import com.github.Soulphur0.config.command.EanCommandHelp;
+import com.github.Soulphur0.config.constants.CloudTypes;
 import com.github.Soulphur0.config.objects.CloudLayer;
-import com.github.Soulphur0.config.options.CloudTypes;
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.networking.client.EanClientPacketDispatcher;
 import net.minecraft.client.MinecraftClient;

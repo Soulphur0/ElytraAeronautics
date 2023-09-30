@@ -1,7 +1,7 @@
 package com.github.Soulphur0.config.singletons;
 
+import com.github.Soulphur0.config.constants.CloudTypes;
 import com.github.Soulphur0.config.objects.CloudLayer;
-import com.github.Soulphur0.config.options.CloudTypes;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

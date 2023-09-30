@@ -1,4 +1,4 @@
-package com.github.Soulphur0.utility;
+package com.github.Soulphur0.networking;
 
 public class EanClientPlayerData {
 

@@ -1,10 +1,10 @@
 package com.github.Soulphur0.networking.server;
 
-import com.github.Soulphur0.ElytraAeronautics;
 import com.github.Soulphur0.config.EanClientSettings;
 import com.github.Soulphur0.config.EanServerSettings;
 import com.github.Soulphur0.networking.client.EanClientSettingsPacket;
 import com.github.Soulphur0.networking.client.EanClientSettingsPacketSerializer;
+import com.github.Soulphur0.registries.EanNetworkingRegistry;
 import com.mojang.brigadier.context.CommandContext;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -33,7 +33,7 @@ public class EanServerPacketSender {
 
         // + Send sync order to all connected clients.
         for (ServerPlayerEntity serverPlayer : PlayerLookup.all(server)){
-            ServerPlayNetworking.send(serverPlayer, ElytraAeronautics.CONFIG_SYNC_PACKET_ID, buf);
+            ServerPlayNetworking.send(serverPlayer, EanNetworkingRegistry.CONFIG_SYNC_PACKET_ID, buf);
         }
     }
 
@@ -47,7 +47,7 @@ public class EanServerPacketSender {
         EanServerSettingsPacketSerializer.write(buf, new EanServerSettingsPacket(new EanServerSettings()));
 
         // + Send sync order to the joined player.
-        ServerPlayNetworking.send((ServerPlayerEntity) user, ElytraAeronautics.CONFIG_SYNC_PACKET_ID, buf);
+        ServerPlayNetworking.send((ServerPlayerEntity) user, EanNetworkingRegistry.CONFIG_SYNC_PACKET_ID, buf);
     }
 
     // : CLIENT CONFIG ---------------------------------------------------------------------------------------------------
@@ -63,6 +63,6 @@ public class EanServerPacketSender {
         EanClientSettingsPacketSerializer.write(buf, new EanClientSettingsPacket(setting));
 
         // + Send packet to the client.
-        ServerPlayNetworking.send(context.getSource().getPlayer(), ElytraAeronautics.CLIENT_CONFIG_PACKET_ID, buf);
+        ServerPlayNetworking.send(context.getSource().getPlayer(), EanNetworkingRegistry.CLIENT_CONFIG_PACKET_ID, buf);
     }
 }

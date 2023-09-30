@@ -1,4 +1,4 @@
-package com.github.Soulphur0.behaviour;
+package com.github.Soulphur0.behaviour.client;
 
 import com.github.Soulphur0.config.singletons.WorldRenderingConfig;
 import net.fabricmc.api.EnvType;

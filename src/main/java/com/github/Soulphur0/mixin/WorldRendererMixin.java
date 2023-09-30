@@ -1,8 +1,8 @@
 package com.github.Soulphur0.mixin;
 
-import com.github.Soulphur0.behaviour.EanCloudRenderBehaviour;
+import com.github.Soulphur0.behaviour.client.EanCloudRenderBehaviour;
 import com.github.Soulphur0.config.singletons.CloudConfig;
-import com.github.Soulphur0.utility.EanClientPlayerData;
+import com.github.Soulphur0.networking.EanClientPlayerData;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;

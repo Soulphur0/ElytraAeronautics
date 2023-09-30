@@ -1,8 +1,8 @@
 
-package com.github.Soulphur0.behaviour;
+package com.github.Soulphur0.behaviour.client;
 
+import com.github.Soulphur0.config.constants.CloudTypes;
 import com.github.Soulphur0.config.objects.CloudLayer;
-import com.github.Soulphur0.config.options.CloudTypes;
 import com.github.Soulphur0.config.singletons.CloudConfig;
 import com.github.Soulphur0.mixin.WorldRendererAccessors;
 import com.mojang.blaze3d.platform.GlStateManager;

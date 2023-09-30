@@ -1,7 +1,7 @@
 package com.github.Soulphur0.config.updaters;
 
 import com.github.Soulphur0.config.command.EanCommandHelp;
-import com.github.Soulphur0.config.options.ChunkUnloadingConditions;
+import com.github.Soulphur0.config.constants.ChunkUnloadingConditions;
 import com.github.Soulphur0.config.singletons.WorldRenderingConfig;
 import com.github.Soulphur0.networking.server.EanServerPacketSender;
 import com.mojang.brigadier.context.CommandContext;

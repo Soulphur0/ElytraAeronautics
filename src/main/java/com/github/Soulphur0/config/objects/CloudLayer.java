@@ -1,6 +1,6 @@
 package com.github.Soulphur0.config.objects;
 
-import com.github.Soulphur0.config.options.CloudTypes;
+import com.github.Soulphur0.config.constants.CloudTypes;
 import com.google.gson.annotations.Expose;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

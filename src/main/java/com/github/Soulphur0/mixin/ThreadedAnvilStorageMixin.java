@@ -1,6 +1,6 @@
 package com.github.Soulphur0.mixin;
 
-import com.github.Soulphur0.utility.EanPlayerDataCache;
+import com.github.Soulphur0.networking.EanPlayerDataCache;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.server.network.ServerPlayerEntity;

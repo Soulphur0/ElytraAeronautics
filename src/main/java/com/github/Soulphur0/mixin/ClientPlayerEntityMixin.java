@@ -1,11 +1,12 @@
 package com.github.Soulphur0.mixin;
 
-import com.github.Soulphur0.behaviour.EanWorldRenderingBehaviour;
+import com.github.Soulphur0.behaviour.client.EanWorldRenderingBehaviour;
+import com.github.Soulphur0.networking.EanClientPlayerData;
 import com.github.Soulphur0.networking.client.EanClientPacketSender;
-import com.github.Soulphur0.utility.EanClientPlayerData;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -13,8 +14,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientPlayerEntity.class)
 public class ClientPlayerEntityMixin {
 
+    @Unique
     Vec3d lastPos = Vec3d.ZERO;
+    @Unique
     double playerSpeed;
+    @Unique
     double playerAltitude;
 
     // ? Player speed is calculated on the client and sent to the server.
