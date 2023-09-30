@@ -1,7 +1,7 @@
 package com.github.Soulphur0;
 
 import com.github.Soulphur0.config.singletons.CloudConfig;
-import com.github.Soulphur0.registries.EanNetworkingRegistry;
+import com.github.Soulphur0.registries.EanClientNetworkingRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -15,6 +15,6 @@ public class ElytraAeronauticsClient implements ClientModInitializer {
         CloudConfig.readFromDisk();
 
         // ? Call registries.
-        EanNetworkingRegistry.registerEanClientReceivers();
+        EanClientNetworkingRegistry.registerEanClientReceivers();
     }
 }
