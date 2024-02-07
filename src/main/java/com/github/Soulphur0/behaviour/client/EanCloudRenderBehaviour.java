@@ -9,15 +9,14 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.gl.VertexBuffer;
 import net.minecraft.client.option.CloudRenderMode;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
 
 @Environment(EnvType.CLIENT)
 public class EanCloudRenderBehaviour {
@@ -138,7 +137,7 @@ public class EanCloudRenderBehaviour {
                 VertexBuffer.unbind();
 
                 // * Get shader, texture and background to draw with cloud geometry.
-                RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+                RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
                 RenderSystem.setShaderTexture(0, CLOUDS);
                 BackgroundRenderer.setFogBlack();
 
@@ -161,7 +160,7 @@ public class EanCloudRenderBehaviour {
                             }
                         }
 
-                        ShaderProgram shaderProgram = RenderSystem.getShader();
+                        Shader shaderProgram = RenderSystem.getShader();
                         worldRenderer.getCloudsBuffer().draw(matrices.peek().getPositionMatrix(), projectionMatrix, shaderProgram);
                     }
 
@@ -180,7 +179,7 @@ public class EanCloudRenderBehaviour {
     }
 
     private static BufferBuilder.BuiltBuffer ean_preProcessCloudLayerGeometry(CloudLayer layer, BufferBuilder bufferBuilder, double camX, double camY, double camZ, Vec3d color) {
-        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalProgram);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorNormalShader);
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR_NORMAL);
 
         // + Draw cloud layer into the buffer.
