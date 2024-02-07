@@ -36,7 +36,7 @@ public abstract class LivingEntityMixin extends Entity {
     }
 
     // $ Pitch realignment injection point.
-    @Inject(method="travel", at = @At(value ="INVOKE", target = "Lnet/minecraft/entity/LivingEntity;limitFallDistance()V"))
+    @Inject(method="travel", at = @At(value ="INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getRotationVector()Lnet/minecraft/util/math/Vec3d;")) // This isnt the exact same injection point, but it should be close enough that it *shouldn't* affect anything
     private void ean_realignPitch(Vec3d movementInput, CallbackInfo ci){
         EanPitchRealignmentBehaviour.realignPitch(((LivingEntity)(Object)this));
     }
